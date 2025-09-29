@@ -9,7 +9,7 @@ Model:
 Csr:
 	'csr' name=ID
 		description=STRING
-		address=HEX
+		address=HEX 
 		reset_value=STRING
 		';';
 		
@@ -17,3 +17,48 @@ Csr:
 terminal HEX: 
 	('0x' | '0X')('0'..'9' | 'A'..'F' | 'a'..'f' | '_')+
 ;
+
+/* Schemas: */
+// chat with team about implementing schemas?
+
+// how do we control whitespace at the beginning of a line? is it an important consideration or no?
+/* Extension Basic Info */
+Extension:
+	//potentially can make "kind" the new designator for all filetypes? enables better parsing of YAML files
+	'kind:'        'extension' // these should all end in a newline character that idk how to generate
+	'name:'        name=ID
+	'type:'        priv_type=('privileged'|'unprivileged')
+	'long_name:'   short_desc=STRING
+	'description:' full_desc=STRING
+	'company:'     company=STRING
+	'version:'     version=Version // array vs single element? how do i specify array
+	'params:'      params=Parameter
+;
+
+Version:
+	'-' 'version:'      name=ID
+	'state:'            state=('ratified'|'development')
+	'ratification_date' date=STRING
+	'contributors:'     contributors=Contributor
+	'url:'              url=STRING
+	'implies:'          imp=Implication //is this necessary? I feel like it is but I'm not sure
+;
+
+Contributor:
+	'name:'    name=ID
+	'email:'   email=STRING
+	'company:' company=STRING	
+;
+
+Implication:
+	'name' name=ID
+	'version' version=STRING
+;
+
+Parameter:
+	'name:'        name=ID
+	'description:' desc=STRING
+	'schema:'
+;
+
+
