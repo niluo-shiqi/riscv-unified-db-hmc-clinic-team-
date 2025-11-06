@@ -44,9 +44,3 @@ node_modules/
 udb-vscode/server/*
 !udb-vscode/server/udb-ls-all.jar
 udb-vscode/.vscode-test/
-**/src-gen/
-**/xtend-gen/
-**/.classpath
-**/.project
-**/.settings/
-

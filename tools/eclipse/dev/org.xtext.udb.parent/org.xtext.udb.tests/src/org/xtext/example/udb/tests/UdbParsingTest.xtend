@@ -90,7 +90,6 @@ class UdbParsingTest {
 
 	@Test
 	def void rejectsBadHex() throws Exception {
-
 	    
 	}
 	
