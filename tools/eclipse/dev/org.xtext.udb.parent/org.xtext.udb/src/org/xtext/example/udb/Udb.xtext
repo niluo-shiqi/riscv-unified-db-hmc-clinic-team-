@@ -20,7 +20,7 @@ Model:
 
 Kind: 'kind' ':' kind=KIND_TYPE ';';
 Name: 'name' ':' name=ID';';
-LongName: 'long_name' ':' long_name+=ID*';';
+LongName: 'long_name' ':' long_name=STRING';';
 Address: 'address' ':' address=Hex';'; /* need to make this only accept 3 digit hex */
 Writable: 'writable' ':' writable=BOOLEAN';';
 PrivMode:'priv_mode' ':' priv_mode=PRIV_TYPE';';
