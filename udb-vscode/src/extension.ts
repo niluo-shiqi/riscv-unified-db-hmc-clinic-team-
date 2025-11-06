@@ -16,8 +16,7 @@ export async function activate(ctx: vscode.ExtensionContext) {
     proc.on('error', (e) => chan.appendLine(`spawn error: ${String(e)}`));
     proc.on('exit',  (code, sig) => chan.appendLine(`server exit code=${code} signal=${sig}`));
     proc.stderr.on('data', d => chan.appendLine(String(d)));
-    // optional if you want to see server stdout too:
-    // proc.stdout.on('data', d => chan.appendLine('[LS] ' + String(d)));
+
 
     return { reader: proc.stdout!, writer: proc.stdin! } as StreamInfo;
   };
