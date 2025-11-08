@@ -17,7 +17,7 @@ Model:
 	fields += Fields
 ;
 
-
+/* Required fields for the CSR schema */
 Kind: 'kind' ':' kind=KIND_TYPE ';';
 Name: 'name' ':' name=ID';';
 LongName: 'long_name' ':' long_name=STRING';';
@@ -30,8 +30,11 @@ Description: 'description' ':' description=STRING ';';
 /* will need to change this to include valid extensions */
 DefinedBy:'definedBy' ':'extension_name=ID ';';
 
+/* this will need to be an enum once we  
+ * expand to include other schemas
+ */
 KIND_TYPE:
-	type=('csr'|'extension') /* this will need to be an enum */
+	type=('csr'|'extension') 
 ;
 
 PRIV_TYPE:
