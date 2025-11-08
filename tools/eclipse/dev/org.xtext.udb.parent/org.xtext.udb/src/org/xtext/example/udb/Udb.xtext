@@ -18,26 +18,28 @@ Model:
 ;
 
 /* Required fields for the CSR schema */
-Kind: 'kind' ':' kind=KIND_TYPE ';';
-Name: 'name' ':' name=ID';';
+Kind: 'kind' ':' kind=KindType ';';
+Name: 'name' ':' name=NameType';';
 LongName: 'long_name' ':' long_name=STRING';';
 Address: 'address' ':' address=Hex';'; /* need to make this only accept 3 digit hex */
 Writable: 'writable' ':' writable=BOOLEAN';';
-PrivMode:'priv_mode' ':' priv_mode=PRIV_TYPE';';
+PrivMode:'priv_mode' ':' priv_mode=PrivType';';
 Length: 'length' ':' length=STRING ';'; /* need to change string into an enum (?) */
 Description: 'description' ':' description=STRING ';';
-
-/* will need to change this to include valid extensions */
-DefinedBy:'definedBy' ':'extension_name=ID ';';
+DefinedBy:'definedBy' ':'extension_name=ID ';'; /* will need to change this to include valid extensions */
 
 /* this will need to be an enum once we  
  * expand to include other schemas
  */
-KIND_TYPE:
+KindType:
 	type=('csr'|'extension') 
 ;
 
-PRIV_TYPE:
+NameType:
+	type=(CSR_NAME)
+;
+
+PrivType:
 	priv_type=('U'|'S'|'M') /* may need to turn into an enum */
 ;
 
@@ -89,6 +91,9 @@ LocationRV64:
 Hex:
 	value=HEX_VALUE
 ;
+
+/* Definitions for different names */
+terminal CSR_NAME: ('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+;
 		
 /* Terminals */
 terminal HEX_VALUE returns ecore::EInt:
