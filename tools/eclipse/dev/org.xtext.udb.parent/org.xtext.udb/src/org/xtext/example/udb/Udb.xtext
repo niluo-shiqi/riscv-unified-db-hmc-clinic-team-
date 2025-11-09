@@ -28,6 +28,7 @@ Length: 'length' ':' length=STRING ';'; /* need to change string into an enum (?
 Description: 'description' ':' description=STRING ';';
 DefinedBy:'definedBy' ':'extension_name=ID ';'; /* will need to change this to include valid extensions */
 
+
 /* this will need to be an enum once we  
  * expand to include other schemas
  */
@@ -45,12 +46,12 @@ PrivType:
 
 Fields:
 	{Fields} 'fields' '{'
-    fields+=FIELD_DEF+
+    fields+=FieldDef+
   '}'
 ;
 
-FIELD_DEF:
-	name=FIELD_TYPE '{'
+FieldDef:
+	name=FIELD_NAME '{'
 		field_location += Location
 		field_description += Description
 		field_type += Type
@@ -61,14 +62,14 @@ FIELD_DEF:
 	
 ;
 
-FIELD_TYPE: 
+FieldType: 
 	('VXRM' | 'VXSAT') /* should be an enum */
 ;
 
 Location: GeneralLocation | SpecificLocation;
 Type: "type" ":" type=STRING ';';
 Alias: "alias" ":" alias=STRING ';'; /* not sure what this is supposed to be */
-SWWrite: "sw_write(csr_value)" ":" STRING ';'; /* this should be IDL */
+SWWrite: "sw_write(csr_value)" ":" IDL ';'; /* this should be IDL */
 ResetValue: "reset_value" ":" STRING ';'; /* should be an enum */
 
 GeneralLocation: 
@@ -92,8 +93,13 @@ Hex:
 	value=HEX_VALUE
 ;
 
+
+/* IDL Grammar */
+IDL: STRING;
+
 /* Definitions for different names */
 terminal CSR_NAME: ('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+;
+terminal FIELD_NAME: ('a'..'z' | 'A'..'Z')+;
 		
 /* Terminals */
 terminal HEX_VALUE returns ecore::EInt:
