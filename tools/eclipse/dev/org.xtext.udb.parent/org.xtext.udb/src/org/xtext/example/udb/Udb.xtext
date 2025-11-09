@@ -20,11 +20,10 @@ Model:
 	virtualAddress = VirtualAddress?
 	requires = Requires?
 	fields = Fields?
-	swRead = SWRead?
+	swRead = SwRead?
 	source = Source?
 	certNormativeRules = CertNormativeRules?
 	certTestProcedures = CertTestProcedures?
-	
 ;
 
 /* Required fields for the CSR schema */
@@ -34,32 +33,33 @@ LongName: 'long_name' ':' longName=STRING';';
 Address: 'address' ':' address=Hex';'; /* need to make this only accept 3 digit hex */
 Writable: 'writable' ':' writable=Boolean';';
 PrivMode:'priv_mode' ':' privMode=PrivType';';
-Length: 'length' ':' length=STRING ';';
+Length: 'length' ':' length=LengthType ';';
 Description: 'description' ':' description=STRING ';'; /* TODO: Not fully implemented yet */
 DefinedBy:'definedBy' ':'extensionName=STRING ';'; /* TODO: Not implemented yet */
 
 /* Optional fields for the CSR schema */
 Base: 'base' ':' base=INT ';';
-IndirectAddress:'indirect_address' ':' indirectAddress=Hex';'; /* this is supposed to be hex right? */
-IndirectSlot:'indirect_slot' ':' indirectSlot=INT';';
-VirtualAddress:'virtual_address' ':' virtualAddress=Boolean ';';  /* TODO: Not fully implemented yet */
-Requires:'requires' ':' requires=STRING ';';
-SWRead:'sw_read()' ':' swRead=STRING';';
+IndirectAddress:'indirect_address' ':' indirectAddress=INT';';
+IndirectSlot:'indirect_slot' ':' indirectSlot=INT';'; /* min:1 max:6 */
+
+/* TODO:
+ * Should be true if included, but 
+ * should be hex if priv_mode is set to VS
+ */
+VirtualAddress:'virtual_address' ':' virtualAddress=Hex';'; 
+Requires:'requires' ':' requires=STRING;
+SwRead:'sw_read()' ':' swRead=STRING';';
 Source:'$source' ':' source=STRING ';';
 CertNormativeRules: 'cert_normative_rules' ':' certNormativeRules=CNRType ';';
 CertTestProcedures: 'cert_test_procedures' ':' certTestProcedures=CTPType ';';
 
 /* CSR Schema Types */
-KindType:
-	type=('csr'|'extension') 
-;
-
-NameType:
-	type=(CSR_NAME)
-;
-
-PrivType:
-	privType=('U'|'S'|'M') /* may need to turn into an enum */
+KindType: type=('csr'|'extension');
+NameType: type=(CSR_NAME);
+PrivType: type=('M'|'S'|'U'|'VS'|'D');
+LengthType: type=LengthTypeValue;
+LengthTypeValue:
+	INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN'
 ;
 
 // TODO: not implemented yet
