@@ -14,7 +14,17 @@ Model:
 	length += Length
 	description += Description
 	definedBy += DefinedBy
-	fields += Fields
+	base += Base?
+	indirectAddress += IndirectAddress?
+	indirectSlot += IndirectSlot?
+	virtualAddress += VirtualAddress?
+	requires += Requires?
+	fields += Fields?
+	swRead += SwRead?
+	source += Source?
+	certNormativeRules += CertNormativeRules?
+	certTestProcedures += CertTestProcedures?
+	
 ;
 
 /* Required fields for the CSR schema */
@@ -27,6 +37,22 @@ PrivMode:'priv_mode' ':' priv_mode=PrivType';';
 Length: 'length' ':' length=STRING ';'; /* need to change string into an enum (?) */
 Description: 'description' ':' description=STRING ';';
 DefinedBy:'definedBy' ':'extension_name=ID ';'; /* will need to change this to include valid extensions */
+
+/* Optional fields for the CSR schema */
+Base: 'base' ':' base=INT ';';
+IndirectAddress:'indirect_address' ':' indirect_address=INT';';
+IndirectSlot:'indirect_slot' ':' indirect_slot=INT';';
+VirtualAddress:'virtual_address' ':' virtual_address=BOOLEAN ';'; 
+Requires:'requires' ':' requires=STRING ';';
+SwRead:'sw_read()' ':' sw_read=STRING';';
+Source:'$source' ':' source=STRING ';';
+CertNormativeRules: 'cert_normative_rules' ':' cert_normative_rules=CNRType ';';
+CertTestProcedures: 'cert_test_procedures' ':' cert_test_procedures=CTPType ';';
+
+
+
+
+
 
 /* this will need to be an enum once we  
  * expand to include other schemas
@@ -43,6 +69,14 @@ PrivType:
 	priv_type=('U'|'S'|'M') /* may need to turn into an enum */
 ;
 
+// ask about these two in tuesday meeting
+CNRType:
+	type=[Entity] (array?='['']')
+;
+CTPType:
+	type=[Entity] (array?='['']')
+;
+// 
 Fields:
 	{Fields} 'fields' '{'
     fields+=FIELD_DEF+
@@ -91,6 +125,7 @@ LocationRV64:
 Hex:
 	value=HEX_VALUE
 ;
+
 
 /* Definitions for different names */
 terminal CSR_NAME: ('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+;
