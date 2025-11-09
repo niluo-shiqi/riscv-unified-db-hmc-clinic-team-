@@ -31,26 +31,23 @@ Model:
 Kind: 'kind' ':' kind=KindType ';';
 Name: 'name' ':' name=NameType';';
 LongName: 'long_name' ':' long_name=STRING';';
-Address: 'address' ':' address=Hex';'; /* need to make this only accept 3 digit hex */
+Address: 'address' ':' address=Hex';'; /* min=0 max=4095 */
 Writable: 'writable' ':' writable=BOOLEAN';';
 PrivMode:'priv_mode' ':' priv_mode=PrivType';';
-Length: 'length' ':' length=STRING ';'; /* need to change string into an enum (?) */
+Length: 'length' ':' length=LengthType ';'; /* need to change string into an enum (?) */
 Description: 'description' ':' description=STRING ';';
 DefinedBy:'definedBy' ':'extension_name=ID ';'; /* will need to change this to include valid extensions */
 
 /* Optional fields for the CSR schema */
 Base: 'base' ':' base=INT ';';
 IndirectAddress:'indirect_address' ':' indirect_address=INT';';
-IndirectSlot:'indirect_slot' ':' indirect_slot=INT';';
-VirtualAddress:'virtual_address' ':' virtual_address=BOOLEAN ';'; 
-Requires:'requires' ':' requires=STRING ';';
+IndirectSlot:'indirect_slot' ':' indirect_slot=INT';'; /* min:1 max:6 */
+VirtualAddress:'virtual_address' ':' (BOOLEAN|Hex); /* Should be hex if priv_mode is set to VS */
+Requires:'requires' ':' type=STRING;
 SwRead:'sw_read()' ':' sw_read=STRING';';
 Source:'$source' ':' source=STRING ';';
 CertNormativeRules: 'cert_normative_rules' ':' cert_normative_rules=CNRType ';';
 CertTestProcedures: 'cert_test_procedures' ':' cert_test_procedures=CTPType ';';
-
-
-
 
 
 
@@ -66,7 +63,11 @@ NameType:
 ;
 
 PrivType:
-	priv_type=('U'|'S'|'M') /* may need to turn into an enum */
+	priv_type=('M'|'S'|'U'|'VS'|'D') /* may need to turn into an enum */
+;
+
+LengthType:
+	type=(INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN')
 ;
 
 // ask about these two in tuesday meeting
@@ -125,7 +126,6 @@ LocationRV64:
 Hex:
 	value=HEX_VALUE
 ;
-
 
 /* Definitions for different names */
 terminal CSR_NAME: ('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+;
