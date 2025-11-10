@@ -58,17 +58,11 @@ KindType: type=('csr'|'extension');
 NameType: type=(CSR_NAME);
 PrivType: type=('M'|'S'|'U'|'VS'|'D');
 LengthType: type=LengthTypeValue;
-LengthTypeValue:
-	INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN'
-;
-
-// TODO: not implemented yet
-CNRType:
-	cnrType = STRING
-;
-CTPType:
-	ctpType = STRING
-;
+LengthTypeValue: (INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
+CNRType: '[' id=STRING ',' name=STRING ',' docLinks=StringArray ',' 
+			 description=STRING ']';
+CTPType: '[' id=STRING ',' name=STRING ',' description=STRING ',' 
+			 normativeRules=StringArray ',' list=STRING?']';
 
 
 
@@ -145,6 +139,8 @@ IDL: idl=STRING;
 UndefinedLegal: "UNDEFINED_LEGAL";
 Boolean returns ecore::EBoolean: "true" | "false";
 
+/* Array Types */
+StringArray: '[' items+=STRING ']';
 
 /* Terminals */
 terminal CSR_NAME:  
