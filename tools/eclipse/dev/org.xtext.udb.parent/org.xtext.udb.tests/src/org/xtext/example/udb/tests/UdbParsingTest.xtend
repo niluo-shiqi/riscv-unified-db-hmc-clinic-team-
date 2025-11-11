@@ -23,33 +23,35 @@ class UdbParsingTest {
 		val result = parseHelper.parse('''
 			kind: csr;
 			name: vcsr;
-			long_name: Vector Control and Status Register;
+			long_name: "Vector Control and Status Register";
+			description: "Contains aliases to vxrm and vxsat CSRs";
+			definedBy: "V";
 			address: 0x00F;
 			writable: true;
 			priv_mode: U;
-			length: "MXLEN";
-			description: "Contains aliases to vxrm and vxsat CSRs";
-			definedBy: V;
+			length: MXLEN;
 			fields {
 			  VXRM {
-			    location: "2-1";
-			    description: "See vxrm.";
-			    type: "RW-RH";
-			    alias: "vxrm.VALUE[1:0]";
-			    sw_write(csr_value): "|
+			    location: 2-1;
+			    reset_value: UNDEFINED_LEGAL;
+				sw_write(csr_value): "|
 			      CSR[vxrm].VALUE = csr_value.VXRM;
 			      return csr_value.VXRM;";
-			    reset_value: "UNDEFINED_LEGAL";
+			    description: "See vxrm.";
+			    type: RW-RH;
+			    alias: vxrm.VALUE[1:0];
 			  }
 			  VXSAT {
-			    location: "0";
-			    description: "See vxsat.";
-			    type: "RW-RH";
-			    alias: "vxsat.VALUE[0]";
-			    sw_write(csr_value): "|
+			    location: 0;
+			    reset_value: UNDEFINED_LEGAL;
+				sw_write(csr_value): "|
 			      CSR[vxsat].VALUE = csr_value.VXSAT;
 			      return csr_value.VXSAT;";
-			    reset_value: "UNDEFINED_LEGAL";
+			    description: "See vxsat.";
+			    type: RW-RH;
+			    alias: vxsat.VALUE[0];
+			    
+			    
 			  }
 			}
 			
@@ -60,30 +62,72 @@ class UdbParsingTest {
 		
 		
 		// check basic inputs
-		var k = result.kind.get(0);
-		//Assertions.assertEquals("csr", k.getKind()); // testing enums isnt quite working t
-		var n = result.csrName.get(0);
-		Assertions.assertEquals("vcsr", n.getName());
-		var ln = result.longname.get(0);
-		Assertions.assertEquals("Vector Control and Status Register", ln.getLong_name());
-		var add = result.address.get(0);
-		Assertions.assertEquals("0x00F", add.getAddress());
-		var writ = result.writable.get(0);
-		Assertions.assertEquals(true, writ.isWritable()); // what
-		var priv = result.privmode.get(0);
-		Assertions.assertEquals("U", priv.getPriv_mode());
-		var len = result.length.get(0);
-		Assertions.assertEquals("MXLEN", len.getLength());
-		var desc = result.description.get(0);
-		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc.getDescription());
-		var def = result.definedBy.get(0);
-		Assertions.assertEquals("V", def.getExtension_name());
+		var k = result.getKind().getKind().getType();
+		Assertions.assertEquals("csr", k as String); 
+		var n = result.getCsrName().getName().getType();
+		Assertions.assertEquals("vcsr", n as String);
+		var ln = result.getLongName().getLongName();
+		Assertions.assertEquals("Vector Control and Status Register", ln);
+		var add = result.getAddress().getAddress().getValue();
+		Assertions.assertEquals(0x00F, add);
+		var writ = result.getWritable().isWritable();
+		Assertions.assertEquals(true, writ);
+		var priv = result.getPrivmode().getPrivMode().getType();
+		Assertions.assertEquals("U", priv);
+		var len = result.getLength().getLength().getType();
+		Assertions.assertEquals("MXLEN", len as String);
+		var desc = result.getDescription().getDescription();
+		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc);
+		var def = result.getDefinedBy().getExtensionName();
+		Assertions.assertEquals("V", def);
 		
 		// test fields
+		var vxrm = result.getFields().getFields().get(0);
+		var vxsat = result.getFields().getFields().get(1);
+		Assertions.assertEquals("VXRM", vxrm.getName());
+		Assertions.assertEquals("VXSAT", vxsat.getName());
 		
-//		var field0 = result.fields.get(0);
-//		var field1 = result.fields.get(1);
-//		Assertions.assertEquals("VXRM", field0.name)
+		// location testing has strange to parse EObject
+//		var rmrange = vxrm.getLocation().getLocation().getLocation().getRange();
+//		var satloc = vxsat.getLocation().getLocation().getLocation().getValue();
+//		Assertions.assertEquals(2, rmrange.getStart());
+//		Assertions.assertEquals(1, rmrange.getEnd());
+//		Assertions.assertEquals(0, satloc);
+		
+		// reset value has same issue
+//		var rmreset = vxrm.getResetValue().getResetValue().getResetValue().getUndefinedLegal();
+//		var satreset = vxsat.getResetValue().getResetValue().getUndefinedLegal();
+//		Assertions.assertEquals("UNDEFINED_LEGAL", rmreset as String);
+//		var rmsw = vxrm.getSwWriteFunc().getSwWriteFunc().getIdl();
+//		var satsw = vxsat.getSwWriteFunc().getSwWriteFunc().getIdl();
+		
+		// testing multi-line IDL has whitespace issues
+//		Assertions.assertEquals("|
+//			CSR[vxrm].VALUE = csr_value.VXRM;
+//			return csr_value.VXRM;", rmsw);
+//		Assertions.assertEquals("|
+//			   CSR[vxsat].VALUE = csr_value.VXSAT;
+//			   return csr_value.VXSAT;", satsw);
+
+		// testing description of fields
+		var rmdesc = vxrm.getDescription().getDescription();
+		var satdesc = vxsat.getDescription().getDescription();
+		Assertions.assertEquals("See vxrm.", rmdesc);
+		Assertions.assertEquals("See vxsat.", satdesc);
+		
+		// testing field type, eobject issue as well
+//		var rmtype = vxrm.getType().getType().getType();
+//		var sattype = vxsat.getType().getType().getType();
+//		Assertions.assertEquals("RW-RH", rmtype);
+//		Assertions.assertEquals("RW-RH", sattype);
+
+		// testing alias
+		var vxalias = vxrm.getAlias().getAlias().getAlias().get(0);
+		var satalias = vxsat.getAlias().getAlias().getAlias().get(0);
+		Assertions.assertEquals("vxrm.VALUE[1:0]", vxalias);
+		Assertions.assertEquals("vxsat.VALUE[0]", satalias);
+		
+
 		
 	}
 	
