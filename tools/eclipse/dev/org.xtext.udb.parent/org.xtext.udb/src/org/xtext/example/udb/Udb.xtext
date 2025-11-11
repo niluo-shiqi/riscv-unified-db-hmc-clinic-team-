@@ -7,17 +7,17 @@ import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 Model:
 	kind = Kind
 	csrName = Name
-	longName = LongName
-	address = Address
-	writable = Writable
-	privmode = PrivMode
-	length = Length
-	description = Description
-	definedBy += DefinedBy
 	base = Base?
+	longName = LongName
+	description = Description
+	definedBy = DefinedBy
+	address = Address
 	indirectAddress = IndirectAddress?
 	indirectSlot = IndirectSlot?
+	writable = Writable
+	privmode = PrivMode
 	virtualAddress = VirtualAddress?
+	length = Length
 	requires = Requires?
 	fields = Fields?
 	swRead = SwRead?
@@ -42,33 +42,25 @@ Base: 'base' ':' base=INT ';';
 IndirectAddress:'indirect_address' ':' indirectAddress=INT';';
 IndirectSlot:'indirect_slot' ':' indirectSlot=INT';'; /* min:1 max:6 */
 
-/* TODO:
- * Should be true if included, but 
- * should be hex if priv_mode is set to VS
- */
+
 VirtualAddress:'virtual_address' ':' virtualAddress=Hex';'; 
+CertNormativeRules: 'cert_normative_rules' ':' certNormativeRules=CNRType ';';
+CertTestProcedures: 'cert_test_procedures' ':' certTestProcedures=CTPType ';';
 Requires:'requires' ':' requires=STRING;
 SwRead:'sw_read()' ':' swRead=STRING';';
 Source:'$source' ':' source=STRING ';';
-CertNormativeRules: 'cert_normative_rules' ':' certNormativeRules=CNRType ';';
-CertTestProcedures: 'cert_test_procedures' ':' certTestProcedures=CTPType ';';
+
 
 /* CSR Schema Types */
 KindType: type=('csr'|'extension');
 NameType: type=(CSR_NAME);
 PrivType: type=('M'|'S'|'U'|'VS'|'D');
 LengthType: type=LengthTypeValue;
-LengthTypeValue:
-	INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN'
-;
-
-// TODO: not implemented yet
-CNRType:
-	cnrType = STRING
-;
-CTPType:
-	ctpType = STRING
-;
+LengthTypeValue: (INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
+CNRType: '[' id=STRING ',' name=STRING ',' docLinks=StringArray ',' 
+			 description=STRING ']';
+CTPType: '[' id=STRING ',' name=STRING ',' description=STRING ',' 
+			 normativeRules=StringArray ',' list=STRING?']';
 
 
 
@@ -84,19 +76,19 @@ Fields:
 FieldDef:
 	name=FIELD_NAME '{'
 		('name' ':' fieldName = STRING ';')?
-		longName += LongName?
-		location += LocationType
-		resetValue += ResetValueType
-		swWriteFunc += SWWriteFunc?
-		legalFunc += LegalFunc?
-		base += Base?
-		description += Description
-		type += TypeType
-		alias += Alias?
-		definedBy += DefinedBy?
-		affectedBy += AffectedBy?
-		certNormativeRules += CertNormativeRules?
-		certTestProcedures += CertTestProcedures?
+		longName = LongName?
+		location = LocationType
+		resetValue = ResetValueType
+		swWriteFunc = SWWriteFunc?
+		legalFunc = LegalFunc?
+		base = Base?
+		description = Description
+		type = TypeType
+		alias = Alias?
+		definedBy = DefinedBy?
+		affectedBy = AffectedBy?
+		certNormativeRules = CertNormativeRules?
+		certTestProcedures = CertTestProcedures?
 	'}'
 	
 ;
@@ -145,6 +137,8 @@ IDL: idl=STRING;
 UndefinedLegal: "UNDEFINED_LEGAL";
 Boolean returns ecore::EBoolean: "true" | "false";
 
+/* Array Types */
+StringArray: '[' items+=STRING ']';
 
 /* Terminals */
 terminal CSR_NAME:  

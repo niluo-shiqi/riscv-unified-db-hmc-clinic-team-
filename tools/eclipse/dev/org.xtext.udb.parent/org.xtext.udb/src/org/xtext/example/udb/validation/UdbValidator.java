@@ -3,6 +3,9 @@
  */
 package org.xtext.example.udb.validation;
 
+import org.eclipse.xtext.validation.Check;
+import org.xtext.example.udb.udb.Model;
+import org.xtext.example.udb.udb.UdbPackage;
 
 /**
  * This class contains custom validation rules. 
@@ -21,5 +24,17 @@ public class UdbValidator extends AbstractUdbValidator {
 //					INVALID_NAME);
 //		}
 //	}
+	
+	@Check
+	public void checkVirtualAddress(Model m) {
+		String mode = m.getPrivmode() != null ? m.getPrivmode().getPrivMode().getType() : null;
+		
+		if (mode.equals("VS")) {
+			if (m.getVirtualAddress() == null) {
+				error("VS mode requires a virtual address.", UdbPackage.Literals.MODEL__VIRTUAL_ADDRESS);
+			}
+		}
+		
+	}
 	
 }
