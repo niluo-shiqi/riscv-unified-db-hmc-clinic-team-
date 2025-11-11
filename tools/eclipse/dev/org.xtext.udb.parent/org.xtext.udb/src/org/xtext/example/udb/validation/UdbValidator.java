@@ -31,7 +31,7 @@ public class UdbValidator extends AbstractUdbValidator {
 		
 		if (mode.equals("VS")) {
 			if (m.getVirtualAddress() == null) {
-				error("VS mode requires a virtual address.", UdbPackage.Literals.MODEL__VIRTUAL_ADDRESS);
+				error("VS mode requires a virtual address.", UdbPackage.Literals.MODEL__PRIVMODE);
 			}
 		}
 		
