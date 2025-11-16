@@ -87,27 +87,27 @@ class UdbParsingTest {
 		Assertions.assertEquals("VXRM", vxrm.getName());
 		Assertions.assertEquals("VXSAT", vxsat.getName());
 		
-		// location testing has strange to parse EObject
-//		var rmrange = vxrm.getLocation().getLocation().getLocation().getRange();
-//		var satloc = vxsat.getLocation().getLocation().getLocation().getValue();
-//		Assertions.assertEquals(2, rmrange.getStart());
-//		Assertions.assertEquals(1, rmrange.getEnd());
-//		Assertions.assertEquals(0, satloc);
+		// test location
+		var rmrange = vxrm.getLocation().getStaticLoc().getLocValue().getRange();
+		var satloc = vxsat.getLocation().getStaticLoc().getLocValue().getValue();
+		Assertions.assertEquals(2, rmrange.getUpper());
+		Assertions.assertEquals(1, rmrange.getLower());
+		Assertions.assertEquals(0, satloc);
 		
 		// reset value has same issue
-//		var rmreset = vxrm.getResetValue().getResetValue().getResetValue().getUndefinedLegal();
-//		var satreset = vxsat.getResetValue().getResetValue().getUndefinedLegal();
-//		Assertions.assertEquals("UNDEFINED_LEGAL", rmreset as String);
-//		var rmsw = vxrm.getSwWriteFunc().getSwWriteFunc().getIdl();
-//		var satsw = vxsat.getSwWriteFunc().getSwWriteFunc().getIdl();
+		var rmreset = vxrm.getResetValue().getValue().getResetValue().getUndefinedLegal();
+		var satreset = vxsat.getResetValue().getValue().getResetValue().getUndefinedLegal();
+		Assertions.assertEquals("UNDEFINED_LEGAL", rmreset as String);
+		var rmsw = vxrm.getSwWriteFunc().getSwWriteFunc().getIdl();
+		var satsw = vxsat.getSwWriteFunc().getSwWriteFunc().getIdl();
 		
 		// testing multi-line IDL has whitespace issues
-//		Assertions.assertEquals("|
-//			CSR[vxrm].VALUE = csr_value.VXRM;
-//			return csr_value.VXRM;", rmsw);
-//		Assertions.assertEquals("|
-//			   CSR[vxsat].VALUE = csr_value.VXSAT;
-//			   return csr_value.VXSAT;", satsw);
+		Assertions.assertEquals("|
+			CSR[vxrm].VALUE = csr_value.VXRM;
+			return csr_value.VXRM;", rmsw);
+		Assertions.assertEquals("|
+			   CSR[vxsat].VALUE = csr_value.VXSAT;
+			   return csr_value.VXSAT;", satsw);
 
 		// testing description of fields
 		var rmdesc = vxrm.getDescription().getDescription();
@@ -116,10 +116,10 @@ class UdbParsingTest {
 		Assertions.assertEquals("See vxsat.", satdesc);
 		
 		// testing field type, eobject issue as well
-//		var rmtype = vxrm.getType().getType().getType();
-//		var sattype = vxsat.getType().getType().getType();
-//		Assertions.assertEquals("RW-RH", rmtype);
-//		Assertions.assertEquals("RW-RH", sattype);
+		var rmtype = vxrm.getType().getTypeVal().getPerms();
+		var sattype = vxsat.getType().getTypeVal().getPerms();
+		Assertions.assertEquals("RW-RH", rmtype);
+		Assertions.assertEquals("RW-RH", sattype);
 
 		// testing alias
 		var vxalias = vxrm.getAlias().getAlias().getAlias().get(0);
