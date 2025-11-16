@@ -7,6 +7,7 @@ import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.Model;
 import org.xtext.example.udb.udb.UdbPackage;
 
+
 /**
  * This class contains custom validation rules. 
  *
@@ -14,16 +15,14 @@ import org.xtext.example.udb.udb.UdbPackage;
  */
 public class UdbValidator extends AbstractUdbValidator {
 	
-//	public static final String INVALID_NAME = "invalidName";
-//
-//	@Check
-//	public void checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.getName().charAt(0))) {
-//			warning("Name should start with a capital",
-//					UdbPackage.Literals.GREETING__NAME,
-//					INVALID_NAME);
-//		}
-//	}
+	@Check
+	public void checkAddress(Model m) {
+		int address = m.getAddress().getAddress().getValue();
+		
+		if(address < 0 || address > 4096) {
+			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.MODEL__ADDRESS);
+		}
+	}
 	
 	@Check
 	public void checkVirtualAddress(Model m) {
