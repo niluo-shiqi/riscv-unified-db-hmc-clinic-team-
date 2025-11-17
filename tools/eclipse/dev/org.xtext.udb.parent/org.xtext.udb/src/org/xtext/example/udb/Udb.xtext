@@ -39,7 +39,7 @@ DefinedBy:'definedBy' ':'extensionName=STRING';';
 
 /* Optional fields for the CSR schema */
 Base: 'base' ':' base=INT ';';
-IndirectAddress:'indirect_address' ':' indirectAddress=INT';'; /* TODO: max 64 bits */
+IndirectAddress:'indirect_address' ':' indirectAddress=Hex';'; /* TODO: max 64 bits */
 IndirectSlot:'indirect_slot' ':' indirectSlot=INT';'; /* TODO: validator: min:1 max:6 */
 
 
