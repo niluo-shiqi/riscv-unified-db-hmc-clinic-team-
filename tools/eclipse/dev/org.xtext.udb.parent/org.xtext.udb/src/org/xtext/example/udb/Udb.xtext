@@ -79,20 +79,17 @@ FieldDef:
 		properties+=FieldProperty*
 ;
 
+
 FieldProperty:
       FieldDisplayName
     | LongName
-    | StaticLocation
-    | LocationRV32
-    | LocationRV64
-    | ResetValue
-    | ResetValueFunc
+    | LocationType
+    | ResetValueType
     | SWWriteFunc
     | LegalFunc
     | Base
     | Description
     | Type
-    | TypeFunc
     | Alias
     | DefinedBy
     | AffectedBy
@@ -120,6 +117,7 @@ Alias: "alias" ":" alias=AliasType NL;
 AffectedBy: "affectedBy" ":" affectedBy=AffectedByType NL;
 
 /* Types for Fields */
+
 LocationType: staticLoc = StaticLocation | funcLoc = FuncLocation;
 FuncLocation: 
 	locationRV32=LocationRV32 
@@ -190,3 +188,4 @@ terminal HEX_VALUE returns ecore::EInt:
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
 terminal NL: '\r'? '\n';
 terminal WS: (' ' | '\t')+;
+
