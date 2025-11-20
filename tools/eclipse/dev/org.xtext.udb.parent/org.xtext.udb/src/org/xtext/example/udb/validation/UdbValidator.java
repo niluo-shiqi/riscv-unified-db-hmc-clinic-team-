@@ -63,8 +63,10 @@ public class UdbValidator extends AbstractUdbValidator {
 		/* If length is an integer, value is either 32 or 64 */
 		String length = m.getLength() != null ? m.getLength().getLength().getType() : null;
 		
-		if (Integer.valueOf(length) != 32 && Integer.valueOf(length) != 64) {
+		if (length != null && length != "MXLEN" && length != "SXLEN" && length != "VSXLEN" && length != "XLEN") {
+			if (Integer.valueOf(length) != 32 && Integer.valueOf(length) != 64) {
 			error("Integer length value must be 32 or 64.", UdbPackage.Literals.MODEL__LENGTH);	
+			}
 		}
 	
 	}
