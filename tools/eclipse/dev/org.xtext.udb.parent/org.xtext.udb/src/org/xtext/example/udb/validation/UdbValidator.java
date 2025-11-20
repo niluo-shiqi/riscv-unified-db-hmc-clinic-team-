@@ -3,7 +3,9 @@
  */
 package org.xtext.example.udb.validation;
 
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.xtext.validation.Check;
+import org.xtext.example.udb.udb.FieldDef;
 import org.xtext.example.udb.udb.Model;
 import org.xtext.example.udb.udb.UdbPackage;
 
@@ -17,10 +19,63 @@ public class UdbValidator extends AbstractUdbValidator {
 	
 	@Check
 	public void checkAddress(Model m) {
-		int address = m.getAddress().getAddress().getValue();
+		int address = m.getAddress() != null ? m.getAddress().getAddress().getValue() : null;
 		
 		if(address < 0 || address > 4096) {
 			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.MODEL__ADDRESS);
+		}
+	}
+	
+	@Check
+	public void checkVirtualAddressValue(Model m) {
+		/* Ensure virtual address is in required range 0-4095 */
+		int vaddress = m.getVirtualAddress() != null ? 
+					   m.getVirtualAddress().getVirtualAddress().getValue() : null;
+		
+		if (vaddress < 0 || vaddress > 4095) {
+			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.MODEL__VIRTUAL_ADDRESS);
+		}
+	}
+
+	@Check
+	public void checkIndirectAddressValue(Model m) {
+		/* Ensure indirect address is in required range */
+		int iaddress = m.getIndirectAddress() != null ? 
+					   m.getIndirectAddress().getIndirectAddress().getValue() : null;
+		
+		if(iaddress < 0 || iaddress > (2^64)) {
+			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.MODEL__INDIRECT_ADDRESS);	
+		}
+	}
+	
+	@Check
+	public void checkBaseValue(Model m) {
+		/* Ensure base value is either 32 or 64 */
+		int base = m.getBase() != null ? m.getBase().getBase() : null;
+		
+		if (base != 32 && base != 64) {
+			error("Base must have value of 32 or 64.", UdbPackage.Literals.MODEL__BASE);
+		}
+	}
+	
+	@Check
+	public void checkLengthValue(Model m) {
+		/* If length is an integer, value is either 32 or 64 */
+		String length = m.getLength() != null ? m.getLength().getLength().getType() : null;
+		
+		if (Integer.valueOf(length) != 32 && Integer.valueOf(length) != 64) {
+			error("Integer length value must be 32 or 64.", UdbPackage.Literals.MODEL__LENGTH);	
+		}
+	
+	}
+	
+	@Check
+	public void checkIndirectSlotValue(Model m) {
+		/* Ensure indirect_slot is between 1 and 6 */
+		int slot = m.getIndirectSlot() != null ? m.getIndirectSlot().getIndirectSlot() : null;
+		
+		if (slot < 1 || slot > 6) {
+			error("Indirect slot value must be between 1 and 6.", UdbPackage.Literals.MODEL__INDIRECT_SLOT);
 		}
 	}
 	
