@@ -27,30 +27,30 @@ Model:
 ;
 
 /* Required fields for the CSR schema */
-Kind: 'kind' ':' kind=KindType NL+;
-Name: 'name' ':' name=NameType NL+;
-LongName: 'long_name' ':' longName=STRING NL+;
-Address: 'address' ':' address=Hex NL+; /* need to make this only accept 3 digit hex */
-Writable: 'writable' ':' writable=Boolean NL+;
-PrivMode:'priv_mode' ':' privMode=PrivType NL+;
-Length: 'length' ':' length=LengthType NL+;
-Description: 'description' ':' description=STRING NL+;
-DefinedBy:'definedBy' ':'extensionName=STRING NL+;
+Kind: 'kind' ':' kind=KindType ;
+Name: 'name' ':' name=NameType ;
+LongName: 'long_name' ':' longName=STRING ;
+Address: 'address' ':' address=Hex ; /* need to make this oy accept 3 digit hex */
+Writable: 'writable' ':' writable=Boolean ;
+PrivMode:'priv_mode' ':' privMode=PrivType ;
+Length: 'length' ':' length=LengthType ;
+Description: 'description' ':' description=STRING ;
+DefinedBy:'definedBy' ':'extensionName=STRING ;
 
 /* Optional fields for the CSR schema */
-Base: 'base' ':' base=INT NL+;
-IndirectAddress:'indirect_address' ':' indirectAddress=Hex NL+; /* TODO: max 64 bits */
-IndirectSlot:'indirect_slot' ':' indirectSlot=INT NL; /* TODO: validator: min:1 max:6 */
+Base: 'base' ':' base=INT ;
+IndirectAddress:'indirect_address' ':' indirectAddress=Hex ; /* TODO: max 64 bits */
+IndirectSlot:'indirect_slot' ':' indirectSlot=INT ; /* TODO: validator: min:1 max:6 */
 
 
-VirtualAddress:'virtual_address' ':' virtualAddress=Hex NL+; /* TODO: validator: up to 12 bits */
-CertNormativeRules: 'cert_normative_rules' ':' certNormativeRules=CNRType NL+;
-CertTestProcedures: 'cert_test_procedures' ':' certTestProcedures=CTPType NL+;
+VirtualAddress:'virtual_address' ':' virtualAddress=Hex ; /* TODO: validator: up to 12 bits */
+CertNormativeRules: 'cert_normative_rules' ':' certNormativeRules=CNRType ;
+CertTestProcedures: 'cert_test_procedures' ':' certTestProcedures=CTPType ;
 
 // implement in validator?
-Requires:'requires' ':' requires=STRING NL+;
-SwRead:'sw_read()' ':' swRead=STRING NL+;
-Source:'$source' ':' source=STRING NL+;
+Requires:'requires' ':' requires=STRING ;
+SwRead:'sw_read()' ':' swRead=STRING ;
+Source:'$source' ':' source=STRING ;
 
 
 /* CSR Schema Types */
@@ -70,12 +70,15 @@ CTPType: '[' id=STRING ',' name=STRING ',' description=STRING ','
 
 /* Grammar for fields */
 Fields:
-	{Fields} 'fields' ':' NL
-    INDENT fields += FieldDef+
+	{Fields} 'fields' ':'
+	INDENT
+    	fields += FieldDef+
+    DEDENT
 ;
 
 FieldDef:
-	name=FIELD_NAME ':' NL
+	 name=FIELD_NAME ':'
+	 INDENT
 		('name' ':' fieldName = STRING ';')? &
 		longName = LongName? &
 		location = LocationType &
@@ -90,27 +93,27 @@ FieldDef:
 		affectedBy = AffectedBy? &
 		certNormativeRules = CertNormativeRules? &
 		certTestProcedures = CertTestProcedures?
-	
+	DEDENT
 ;
 
-FieldDisplayName: 'name' ':' fieldName=STRING NL;
+FieldDisplayName: 'name' ':' fieldName=STRING ;
 
 
 
 /* fields for Fields */
-StaticLocation: 'location' ':' locValue=FieldLocation NL;
-LocationRV32: "location_rv32" ":" locationRV32=FieldLocation NL;
-LocationRV64: "location_rv64" ":" locationRV64=FieldLocation NL;
+StaticLocation: 'location' ':' locValue=FieldLocation ;
+LocationRV32: "location_rv32" ":" locationRV32=FieldLocation ;
+LocationRV64: "location_rv64" ":" locationRV64=FieldLocation ;
 
 
-ResetValue: "reset_value" ":" resetValue=ResetValueValue NL; 
-ResetValueFunc: "reset_value()" ":" resetValueFunc=IDL NL;
-SWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL NL;
-LegalFunc: "legal?(csr_value)" ":" legalFunc=IDL NL;
-Type: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH") NL;
-TypeFunc: "type()" ":" idl=IDL NL;
-Alias: "alias" ":" alias=AliasType NL; 
-AffectedBy: "affectedBy" ":" affectedBy=AffectedByType NL;
+ResetValue: "reset_value" ":" resetValue=ResetValueValue ; 
+ResetValueFunc: "reset_value()" ":" resetValueFunc=IDL ;
+SWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL ;
+LegalFunc: "legal?(csr_value)" ":" legalFunc=IDL ;
+Type: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH") ;
+TypeFunc: "type()" ":" idl=IDL ;
+Alias: "alias" ":" alias=AliasType ; 
+AffectedBy: "affectedBy" ":" affectedBy=AffectedByType ;
 
 /* Types for Fields */
 
@@ -180,18 +183,17 @@ terminal HEX_VALUE returns ecore::EInt:
 	(('0'..'9' | 'A'..'F' | 'a'..'f' | '_')*('0'..'9' | 'A'..'F' | 'a'..'f'))?
 ;
 
-terminal BEGIN: 'synthetic:BEGIN';
-terminal END: 'synthetic:END';
+terminal INDENT: 'synthetic:INDENT';
+terminal DEDENT: 'synthetic:DEDENT'; 
 
 @Override
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
+
 @Override
-terminal WS: (' ' | '\t')+;
-
-terminal NL: ('\r' | '\n')+;
+terminal WS: ('\r'|'\n'|'\t'|' ')+;
 
 
-terminal INDENT: ('    ' | '\t');
+
 
 
 
