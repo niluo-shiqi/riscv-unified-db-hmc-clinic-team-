@@ -133,11 +133,35 @@ AffectedByArray:
     '[' names+=AFFECTED_BY_NAME (',' names+=AFFECTED_BY_NAME)* ']'
 ;
 
+
+
 /* Conditions */
-//Condition: YAMLCondition | IDLCondition;
-//YAMLCondition:
-//	
-//;
+Condition: yamlCond=YAMLCondition | idlCond=IDLCondition;
+
+YAMLCondition:
+//	yaml = YAMLCondition /* TODO: implement */
+	  extensionCond = ExtensionCondition
+	| paramCond = ParamCondition
+	| xlenCond = XLenCondition
+;
+
+IDLCondition: 
+	"idl()" ":" idl=IDL
+	reason?=Reason
+;
+
+ExtensionCondition:
+	STRING /* TODO */
+;
+
+ParamCondition:
+	STRING /* TODO */
+;
+
+XLenCondition: INT; /* can be 32 or 64 (TODO: implement in validator */
+
+Reason: "reason" ":" reasonStr=STRING;
+
 
 
 
