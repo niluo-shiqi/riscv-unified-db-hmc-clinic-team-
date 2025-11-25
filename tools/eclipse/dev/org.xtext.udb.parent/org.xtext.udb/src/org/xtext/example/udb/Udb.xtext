@@ -32,7 +32,7 @@ Name: 'name' ':' name=NameType ;
 LongName: 'long_name' ':' longName=STRING ;
 Address: 'address' ':' address=Hex ;
 Writable: 'writable' ':' writable=Boolean ;
-PrivMode:'priv_mode' ':' privMode=PrivType ;
+PrivMode:'priv_mode' ':' privMode=PrivLevel ;
 Length: 'length' ':' length=LengthType ;
 Description: 'description' ':' description=STRING ;
 DefinedBy:'definedBy' ':'extensionName=STRING ;
@@ -56,7 +56,7 @@ Source:'$source' ':' source=STRING ;
 /* CSR Schema Types */
 KindType: type=('csr'|'extension');
 NameType: type=(CSR_NAME);
-PrivType: type=('M'|'S'|'U'|'VS'|'D');
+PrivLevel: type=('M'|'S'|'U'|'VS'|'D');
 LengthType: type=LengthTypeValue;
 LengthTypeValue: (INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 CNRType: '[' id=STRING ',' name=STRING ',' docLinks=StringArray ','
@@ -117,8 +117,8 @@ AffectedBy: "affectedBy" ":" affectedBy=AffectedByType ;
 
 /* Types for Fields */
 
-LocationType: staticLoc = StaticLocation | funcLoc = FuncLocation;
-FuncLocation: 
+LocationType: staticLoc = StaticLocation | funcLoc = VarLocation;
+VarLocation: 
 	locationRV32=LocationRV32 
 	locationRV64=LocationRV64
 ;
