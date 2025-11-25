@@ -39,11 +39,11 @@ DefinedBy:'definedBy' ':'extensionName=STRING ;
 
 /* Optional fields for the CSR schema */
 Base: 'base' ':' base=INT ;
-IndirectAddress:'indirect_address' ':' indirectAddress=Hex ; /* TODO: max 64 bits */
+IndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 IndirectSlot:'indirect_slot' ':' indirectSlot=INT ; /* TODO: validator: min:1 max:6 */
 
 
-VirtualAddress:'virtual_address' ':' virtualAddress=Hex ; /* TODO: validator: up to 12 bits */
+VirtualAddress:'virtual_address' ':' virtualAddress=Hex ;
 CertNormativeRules: 'cert_normative_rules' ':' certNormativeRules=CNRType ;
 CertTestProcedures: 'cert_test_procedures' ':' certTestProcedures=CTPType ;
 
@@ -77,8 +77,8 @@ Fields:
 ;
 
 FieldDef:
-	 name=FIELD_NAME ':'
-	 INDENT
+	name=FIELD_NAME ':'
+	INDENT
 		('name' ':' fieldName = STRING ';')? &
 		longName = LongName? &
 		location = LocationType &
@@ -141,7 +141,7 @@ AffectedByArray:
 //Condition: yamlCond=YAMLCondition | idlCond=IDLCondition;
 
 //YAMLCondition:
-////	yaml = YAMLCondition (TODO: implement)
+//	yaml = YAMLCondition (TODO: implement)
 //	  extensionCond = ExtensionCondition
 //	| paramCond = ParamCondition
 //	| xlenCond = XLenCondition
@@ -160,7 +160,7 @@ ParamCondition:
 	STRING /* TODO */
 ;
 
-XLenCondition: INT; /* can be 32 or 64 (TODO: implement in validator) */
+XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
 
 Reason: "reason" ":" reasonStr=STRING;
 
@@ -182,17 +182,17 @@ StringArray: '[' items+=STRING ']';
 
 /* Terminals */
 terminal CSR_NAME:  
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+ /* .? */
+	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
 ;
 terminal FIELD_NAME: 
 	('a'..'z' | 'A'..'Z')+
 ;
 terminal CSR_FIELD:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+  /* .? */
+	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
 	('.')('A'..'Z' | '0'..'9')+
 ;
 terminal CSR_FIELD_BITS:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+ /* .? */
+	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
 	'.'('A'..'Z' | '0'..'9')+
 	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
 ;
@@ -209,7 +209,7 @@ terminal HEX_VALUE returns ecore::EInt:
 ;
 
 terminal INDENT: 'synthetic:INDENT';
-terminal DEDENT: 'synthetic:DEDENT'; 
+terminal DEDENT: 'synthetic:DEDENT';
 
 @Override
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
