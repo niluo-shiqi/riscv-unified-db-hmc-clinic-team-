@@ -31,24 +31,24 @@ class UdbParsingTest {
 			description: "Contains aliases to vxrm and vxsat CSRs"
 			definedBy: "V"
 			fields:
-			  VXRM:
-			    location: 2-1
-			    description: "See vxrm."
-			    type: RW-RH
-			    alias: vxrm.VALUE[1:0]
-			    sw_write(csr_value): "|
-			      CSR[vxrm].VALUE = csr_value.VXRM;
-			      return csr_value.VXRM;"
-			    reset_value: UNDEFINED_LEGAL
-			  VXSAT:
-			    location: 0
-			    description: "See vxsat."
-			    type: RW-RH
-			    alias: vxsat.VALUE[0]
-			    sw_write(csr_value): "|
-			      CSR[vxsat].VALUE = csr_value.VXSAT;
-			      return csr_value.VXSAT;"
-			    reset_value: UNDEFINED_LEGAL
+				VXRM:
+					location: 2-1
+					description: "See vxrm."
+					type: RW-RH
+					alias: vxrm.VALUE[1:0]
+					sw_write(csr_value): "|
+					  CSR[vxrm].VALUE = csr_value.VXRM;
+					  return csr_value.VXRM;"
+					reset_value: UNDEFINED_LEGAL
+				VXSAT:
+					location: 0
+					description: "See vxsat."
+					type: RW-RH
+					alias: vxsat.VALUE[0]
+					sw_write(csr_value): "|
+					  CSR[vxsat].VALUE = csr_value.VXSAT;
+					  return csr_value.VXSAT;"
+					reset_value: UNDEFINED_LEGAL
 			
 		''')
 		Assertions.assertNotNull(result)
@@ -99,11 +99,11 @@ class UdbParsingTest {
 //		var rmsw = vxrm.getSwWriteFunc().getSwWriteFunc().getIdl();
 //		var satsw = vxsat.getSwWriteFunc().getSwWriteFunc().getIdl();
 //		Assertions.assertEquals("|
-//			CSR[vxrm].VALUE = csr_value.VXRM;
-//			return csr_value.VXRM;", rmsw);
+//		  CSR[vxrm].VALUE = csr_value.VXRM;
+//		  return csr_value.VXRM;", rmsw);
 //		Assertions.assertEquals("|
-//			   CSR[vxsat].VALUE = csr_value.VXSAT;
-//			   return csr_value.VXSAT;", satsw);
+//		  CSR[vxsat].VALUE = csr_value.VXSAT;
+//		  return csr_value.VXSAT;", satsw);
 
 		// testing description of fields
 		var rmdesc = vxrm.getDescription().getDescription();
