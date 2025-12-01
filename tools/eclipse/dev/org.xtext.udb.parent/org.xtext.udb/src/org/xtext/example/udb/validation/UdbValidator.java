@@ -5,8 +5,12 @@ package org.xtext.example.udb.validation;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.xtext.validation.Check;
+import org.xtext.example.udb.parser.antlr.UdbParser;
 import org.xtext.example.udb.udb.FieldDef;
+import org.xtext.example.udb.udb.IntType;
+import org.xtext.example.udb.udb.LengthType;
 import org.xtext.example.udb.udb.Model;
+import org.xtext.example.udb.udb.ParmType;
 import org.xtext.example.udb.udb.UdbPackage;
 
 
@@ -60,14 +64,25 @@ public class UdbValidator extends AbstractUdbValidator {
 	
 	@Check
 	public void checkLengthValue(Model m) {
-		/* If length is an integer, value is either 32 or 64 */
-		String length = m.getLength() != null ? m.getLength().getLength().getType() : null;
-		
-		if (length != null && length != "MXLEN" && length != "SXLEN" && length != "VSXLEN" && length != "XLEN") {
-			if (Integer.valueOf(length) != 32 && Integer.valueOf(length) != 64) {
-			error("Integer length value must be 32 or 64.", UdbPackage.Literals.MODEL__LENGTH);	
+		// Containment reference is always instantiated
+		LengthType length_t = m.getLength().getLength();
+		if (length_t == null) {
+			error("length should not be null", 
+					UdbPackage.Literals.MODEL__LENGTH);
+		}
+		// If length is an integer, value is either 32 or 64
+		if (length_t instanceof IntType) {
+			Integer length = ((IntType) m.getLength().getLength()).getIntVal();
+			if (length != 32 && length != 64) {
+				error("length if specified as integer, should be 32 or 64", 
+						UdbPackage.Literals.MODEL__LENGTH);
 			}
 		}
+//		if (length != null && length != "MXLEN" && length != "SXLEN" && length != "VSXLEN" && length != "XLEN") {
+//			if (Integer.valueOf(length) != 32 && Integer.valueOf(length) != 64) {
+//			error("Integer length value must be 32 or 64.", UdbPackage.Literals.MODEL__LENGTH);	
+//			}
+//		}
 	
 	}
 	

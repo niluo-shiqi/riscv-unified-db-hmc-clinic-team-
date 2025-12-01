@@ -57,7 +57,9 @@ Source:'$source' ':' source=STRING ;
 KindType: type=('csr'|'extension');
 NameType: type=(CSR_NAME);
 PrivType: type=('M'|'S'|'U'|'VS'|'D');
-LengthType: type=LengthTypeValue;
+LengthType: IntType | ParmType;
+IntType: intVal=INT; //('32' | '64');
+ParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 LengthTypeValue: (INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 CNRType: '[' id=STRING ',' name=STRING ',' docLinks=StringArray ','
 			 description=STRING ']';

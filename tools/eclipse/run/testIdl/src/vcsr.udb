@@ -7,7 +7,7 @@ description: "Contains aliases to vxrm and vxsat CSRs"
 writable: true
 priv_mode: VS
 virtual_address: 0x00
-length: 32 # validator currently doesn't work for stuff like MXLEN
+length: XLEN
 # single line comment works
 fields:
 	VXRM:
