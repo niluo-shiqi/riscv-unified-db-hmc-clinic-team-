@@ -132,12 +132,9 @@ ResetValueType: value=ResetValue | function=ResetValueFunc;
 ResetValueValue: value=INT | undefinedLegal=UndefinedLegal;
 TypeType: typeVal=Type | typeFunc=TypeFunc;
 AliasType: alias+=(CSR_FIELD | CSR_FIELD_BITS)+;
-AffectedByType: affectedBy += AFFECTED_BY_NAME | AffectedByArray;
-AffectedByArray:
-    '[' names+=AFFECTED_BY_NAME (',' names+=AFFECTED_BY_NAME)* ']'
-;
 
-
+// TODO: we probably will want a cross ref thing for this
+AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
 
 
 
@@ -182,7 +179,7 @@ UndefinedLegal: "UNDEFINED_LEGAL";
 Boolean returns ecore::EBoolean: "true" | "false";
 
 /* Helpers*/
-StringArray: '[' items+=STRING ']';
+StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
 
 /* Terminals */
 terminal CSR_NAME:  
@@ -200,10 +197,7 @@ terminal CSR_FIELD_BITS:
 	'.'('A'..'Z' | '0'..'9')+
 	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
 ;
-terminal AFFECTED_BY_NAME:
-	 "RV64" | ('A'..'W' | 'Y') 
-	| ('Z' | 'S') ('a'..'z')+
-;
+		
 		
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
