@@ -5,6 +5,7 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
+	schema = Schema
 	kind = Kind &
 	csrName = Name &
 	base = Base? &
@@ -25,6 +26,9 @@ Model:
 	certNormativeRules = CertNormativeRules? &
 	certTestProcedures = CertTestProcedures?
 ;
+
+// This is so we can directly copy+paste from a UDB .yaml file
+Schema: "$schema" ":" STRING;
 
 /* Required fields for the CSR schema */
 Kind: 'kind' ':' kind=KindType ;
@@ -57,16 +61,15 @@ Source:'$source' ':' source=STRING ;
 KindType: type=('csr'|'extension');
 NameType: type=(CSR_NAME);
 PrivType: type=('M'|'S'|'U'|'VS'|'D');
+
 LengthType: IntType | ParmType;
 IntType: intVal=INT; //('32' | '64');
 ParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
-LengthTypeValue: (INT|'MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
+
 CNRType: '[' id=STRING ',' name=STRING ',' docLinks=StringArray ','
 			 description=STRING ']';
 CTPType: '[' id=STRING ',' name=STRING ',' description=STRING ',' 
 			 normativeRules=StringArray ',' list=STRING?']';
-
-
 
 
 
@@ -119,8 +122,8 @@ AffectedBy: "affectedBy" ":" affectedBy=AffectedByType ;
 
 /* Types for Fields */
 
-LocationType: staticLoc = StaticLocation | funcLoc = FuncLocation;
-FuncLocation: 
+LocationType: staticLoc = StaticLocation | funcLoc = VarLocation;
+VarLocation: 
 	locationRV32=LocationRV32 
 	locationRV64=LocationRV64
 ;
@@ -130,12 +133,9 @@ ResetValueType: value=ResetValue | function=ResetValueFunc;
 ResetValueValue: value=INT | undefinedLegal=UndefinedLegal;
 TypeType: typeVal=Type | typeFunc=TypeFunc;
 AliasType: alias+=(CSR_FIELD | CSR_FIELD_BITS)+;
-AffectedByType: affectedBy += AFFECTED_BY_NAME | AffectedByArray;
-AffectedByArray:
-    '[' names+=AFFECTED_BY_NAME (',' names+=AFFECTED_BY_NAME)* ']'
-;
 
-
+// TODO: we probably will want a cross ref thing for this
+AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
 
 
 
@@ -180,7 +180,7 @@ UndefinedLegal: "UNDEFINED_LEGAL";
 Boolean returns ecore::EBoolean: "true" | "false";
 
 /* Helpers*/
-StringArray: '[' items+=STRING ']';
+StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
 
 /* Terminals */
 terminal CSR_NAME:  
@@ -198,10 +198,7 @@ terminal CSR_FIELD_BITS:
 	'.'('A'..'Z' | '0'..'9')+
 	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
 ;
-terminal AFFECTED_BY_NAME:
-	 "RV64" | ('A'..'W' | 'Y') 
-	| ('Z' | 'S') ('a'..'z')+
-;
+		
 		
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
