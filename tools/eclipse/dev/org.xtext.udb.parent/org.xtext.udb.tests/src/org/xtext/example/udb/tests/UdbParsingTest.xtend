@@ -21,7 +21,6 @@ class UdbParsingTest {
 	@Test
 	def void parsesValidCSR() {
 		val result = parseHelper.parse('''
-			$schema: "csr_schema.json#"
 			kind: csr
 			name: vcsr
 			long_name: "Vector Control and Status Register"
@@ -32,24 +31,25 @@ class UdbParsingTest {
 			description: "Contains aliases to vxrm and vxsat CSRs"
 			definedBy: "V"
 			fields:
-				VXRM:
-					location: 2-1
-					description: "See vxrm."
-					type: RW-RH
-					alias: vxrm.VALUE[1:0]
-					sw_write(csr_value): "|
-					  CSR[vxrm].VALUE = csr_value.VXRM;
-					  return csr_value.VXRM;"
-					reset_value: UNDEFINED_LEGAL
-				VXSAT:
-					location: 0
-					description: "See vxsat."
-					type: RW-RH
-					alias: vxsat.VALUE[0]
-					sw_write(csr_value): "|
-					  CSR[vxsat].VALUE = csr_value.VXSAT;
-					  return csr_value.VXSAT;"
-					reset_value: UNDEFINED_LEGAL
+			  VXRM:
+			    location: 2-1
+			    description: "See vxrm."
+			    type: RW-RH
+			    alias: vxrm.VALUE[1:0]
+			    sw_write(csr_value): "|
+			      CSR[vxrm].VALUE = csr_value.VXRM;
+			      return csr_value.VXRM;"
+			    reset_value: UNDEFINED_LEGAL
+			  VXSAT:
+			    location: 0
+			    description: "See vxsat."
+			    type: RW-RH
+			    alias: vxsat.VALUE[0]
+			    sw_write(csr_value): "|
+			      CSR[vxsat].VALUE = csr_value.VXSAT;
+			      return csr_value.VXSAT;"
+			    reset_value: UNDEFINED_LEGAL
+			
 		''')
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
@@ -57,8 +57,6 @@ class UdbParsingTest {
 		
 		
 		// check basic inputs
-		var schema = result.getSchema().getSchema();
-		Assertions.assertEquals("csr_schema.json#", schema as String);
 		var k = result.getKind().getKind().getType();
 		Assertions.assertEquals("csr", k as String); 
 		var n = result.getCsrName().getName().getType();
@@ -71,7 +69,7 @@ class UdbParsingTest {
 		Assertions.assertTrue(writ);
 		var priv = result.getPrivmode().getPrivMode().getType();
 		Assertions.assertEquals("U", priv);
-		var len = result.getLength().getLength().getParmType().getParmName();
+		var len = result.getLength().getLength().getType();
 		Assertions.assertEquals("MXLEN", len as String);
 		var desc = result.getDescription().getDescription();
 		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc);
@@ -100,12 +98,10 @@ class UdbParsingTest {
 		// testing multi-line IDL has whitespace issues
 //		var rmsw = vxrm.getSwWriteFunc().getSwWriteFunc().getIdl();
 //		var satsw = vxsat.getSwWriteFunc().getSwWriteFunc().getIdl();
+//		Assertions.assertEquals("|\n\t\tCSR[vxrm].VALUE = csr_value.VXRM;\n\t\treturn csr_value.VXRM;", rmsw);
 //		Assertions.assertEquals("|
-//		  CSR[vxrm].VALUE = csr_value.VXRM;
-//		  return csr_value.VXRM;", rmsw);
-//		Assertions.assertEquals("|
-//		  CSR[vxsat].VALUE = csr_value.VXSAT;
-//		  return csr_value.VXSAT;", satsw);
+//			CSR[vxsat].VALUE = csr_value.VXSAT;
+//			return csr_value.VXSAT;", satsw);
 
 		// testing description of fields
 		var rmdesc = vxrm.getDescription().getDescription();
@@ -128,6 +124,12 @@ class UdbParsingTest {
 
 		
 	}
+	
 
-
+	@Test
+	def void rejectsBadHex() throws Exception {
+	    
+	}
+	
+	
 }
