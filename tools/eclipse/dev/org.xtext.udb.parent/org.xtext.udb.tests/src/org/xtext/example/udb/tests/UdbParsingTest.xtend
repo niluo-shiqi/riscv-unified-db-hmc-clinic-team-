@@ -21,6 +21,7 @@ class UdbParsingTest {
 	@Test
 	def void parsesValidCSR() {
 		val result = parseHelper.parse('''
+			$schema: "csr_schema.json#"
 			kind: csr
 			name: vcsr
 			long_name: "Vector Control and Status Register"
@@ -49,7 +50,6 @@ class UdbParsingTest {
 					  CSR[vxsat].VALUE = csr_value.VXSAT;
 					  return csr_value.VXSAT;"
 					reset_value: UNDEFINED_LEGAL
-			
 		''')
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
@@ -57,6 +57,8 @@ class UdbParsingTest {
 		
 		
 		// check basic inputs
+		var schema = result.getSchema().getSchema();
+		Assertions.assertEquals("csr_schema.json#", schema as String);
 		var k = result.getKind().getKind().getType();
 		Assertions.assertEquals("csr", k as String); 
 		var n = result.getCsrName().getName().getType();
@@ -69,7 +71,7 @@ class UdbParsingTest {
 		Assertions.assertTrue(writ);
 		var priv = result.getPrivmode().getPrivMode().getType();
 		Assertions.assertEquals("U", priv);
-		var len = result.getLength().getLength().getType();
+		var len = result.getLength().getLength().getParmType().getParmName();
 		Assertions.assertEquals("MXLEN", len as String);
 		var desc = result.getDescription().getDescription();
 		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc);
@@ -126,12 +128,6 @@ class UdbParsingTest {
 
 		
 	}
-	
 
-	@Test
-	def void rejectsBadHex() throws Exception {
-	    
-	}
-	
-	
+
 }
