@@ -169,18 +169,36 @@ Reason: "reason" ":" reasonStr=STRING;
 
 
 /* IDL Grammar (based on the treetop grammar) */
-Idl: WS* // is WS* needed?
-	"%version:" WS+ version=VersionString WS+  
+Idl: isa=IdlIsa;
+
+IdlIsa:
+	"%version:" versionStr=VERSION_STRING
+	definitions += [IdlElement] /* TODO: this doesn't work */
 ;
 
-VersionString: INT '.' INT;
+IdlElement: 
+	includeStmt = IncludeStatement
+    | globalDef = GlobalDefinition
+    | enumDef = EnumDefinition
+    | bitfieldDef = BitfieldDefinition
+    | structDef = StructDefinition
+    | functionDef = FunctionDefinition
+    | fetch = Fetch
+;
 
+IncludeStatement: statement=STRING;
+GlobalDefinition: definition=STRING;
+EnumDefinition: definition=STRING;
+BitfieldDefinition: definition=STRING;
+StructDefinition: definition=STRING;
+FunctionDefinition: definition=STRING;
+Fetch: fetch=STRING;
 
 /* Keywords */
 UndefinedLegal: "UNDEFINED_LEGAL";
 Boolean returns ecore::EBoolean: "true" | "false";
 
-/* Helpers*/
+/* Helpers */
 StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
 
 /* Terminals */
@@ -207,6 +225,8 @@ terminal HEX_VALUE returns ecore::EInt:
 	('0'..'9' | 'A'..'F' | 'a'..'f')
 	(('0'..'9' | 'A'..'F' | 'a'..'f' | '_')*('0'..'9' | 'A'..'F' | 'a'..'f'))?
 ;
+
+terminal VERSION_STRING: INT '.' INT;
 
 terminal INDENT: 'synthetic:INDENT';
 terminal DEDENT: 'synthetic:DEDENT';
