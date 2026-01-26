@@ -112,11 +112,11 @@ LocationRV64: "location_rv64" ":" locationRV64=FieldLocation ;
 
 
 ResetValue: "reset_value" ":" resetValue=ResetValueValue ;
-ResetValueFunc: "reset_value()" ":" resetValueFunc=IDL ;
-SWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL ;
-LegalFunc: "legal?(csr_value)" ":" legalFunc=IDL ;
+ResetValueFunc: "reset_value()" ":" resetValueFunc=Idl ;
+SWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=Idl ;
+LegalFunc: "legal?(csr_value)" ":" legalFunc=Idl ;
 Type: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH") ;
-TypeFunc: "type()" ":" idl=IDL ;
+TypeFunc: "type()" ":" idl=Idl ;
 Alias: "alias" ":" alias=AliasType ;
 AffectedBy: "affectedBy" ":" affectedBy=AffectedByType ;
 
@@ -150,7 +150,7 @@ AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
 //;
 
 IDLCondition:
-	"idl()" ":" idl=IDL
+	"idl()" ":" idl=Idl
 	reason?=Reason
 ;
 
@@ -168,10 +168,10 @@ Reason: "reason" ":" reasonStr=STRING;
 
 
 
-/* IDL Grammar */
-IDL: idl=STRING;
+/* IDL Grammar (based on the treetop grammar) */
+Idl: WS*;
 
-
+IdlIsa: STRING;
 
 
 
