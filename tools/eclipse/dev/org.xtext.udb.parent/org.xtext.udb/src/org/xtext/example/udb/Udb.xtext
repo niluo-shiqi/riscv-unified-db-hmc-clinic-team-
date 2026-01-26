@@ -169,10 +169,11 @@ Reason: "reason" ":" reasonStr=STRING;
 
 
 /* IDL Grammar (based on the treetop grammar) */
-Idl: WS*;
+Idl: WS* // is WS* needed?
+	"%version:" WS+ version=VersionString WS+  
+;
 
-IdlIsa: STRING;
-
+VersionString: INT '.' INT;
 
 
 /* Keywords */
