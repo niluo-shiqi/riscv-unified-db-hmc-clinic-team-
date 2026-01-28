@@ -1,7 +1,7 @@
 # Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
-
+$schema: "csr_schema.json#"
 kind: csr
 name: vsstatus
 long_name: "Virtual Supervisor Status"

@@ -10,6 +10,7 @@ import org.xtext.example.udb.udb.FieldDef;
 import org.xtext.example.udb.udb.IntType;
 import org.xtext.example.udb.udb.LengthType;
 import org.xtext.example.udb.udb.Model;
+import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.ParmType;
 import org.xtext.example.udb.udb.UdbPackage;
 
@@ -22,60 +23,60 @@ import org.xtext.example.udb.udb.UdbPackage;
 public class UdbValidator extends AbstractUdbValidator {
 
 	@Check
-	public void checkAddress(Model m) {
-		int address = m.getAddress() != null ? m.getAddress().getAddress().getValue() : null;
+	public void checkAddress(CsrModel csr) {
+		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
 
 		if(address < 0 || address > 4096) {
-			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.MODEL__ADDRESS);
+			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__ADDRESS);
 		}
 	}
 
 	@Check
-	public void checkVirtualAddressValue(Model m) {
+	public void checkVirtualAddressValue(CsrModel csr) {
 		/* Ensure virtual address is in required range 0-4095 */
-		int vaddress = m.getVirtualAddress() != null ?
-					   m.getVirtualAddress().getVirtualAddress().getValue() : null;
+		int vaddress = csr.getVirtualAddress() != null ?
+					   csr.getVirtualAddress().getVirtualAddress().getValue() : null;
 
 		if (vaddress < 0 || vaddress > 4095) {
-			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.MODEL__VIRTUAL_ADDRESS);
+			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__VIRTUAL_ADDRESS);
 		}
 	}
 
 	@Check
-	public void checkIndirectAddressValue(Model m) {
+	public void checkIndirectAddressValue(CsrModel csr) {
 		/* Ensure indirect address is in required range */
-		int iaddress = m.getIndirectAddress() != null ?
-					   m.getIndirectAddress().getIndirectAddress().getValue() : null;
+		int iaddress = csr.getIndirectAddress() != null ?
+					   csr.getIndirectAddress().getIndirectAddress().getValue() : null;
 
 		if(iaddress < 0 || iaddress > (2^64)) {
-			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.MODEL__INDIRECT_ADDRESS);
+			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
 		}
 	}
 
 	@Check
-	public void checkBaseValue(Model m) {
+	public void checkBaseValue(CsrModel csr) {
 		/* Ensure base value is either 32 or 64 */
-		int base = m.getBase() != null ? m.getBase().getBase() : null;
+		int base = csr.getBase() != null ?csr.getBase().getBase() : null;
 
 		if (base != 32 && base != 64) {
-			error("Base must have value of 32 or 64.", UdbPackage.Literals.MODEL__BASE);
+			error("Base must have value of 32 or 64.", UdbPackage.Literals.CSR_MODEL__BASE);
 		}
 	}
 
 	@Check
-	public void checkLengthValue(Model m) {
+	public void checkLengthValue(CsrModel csr) {
 		// Containment reference is always instantiated
-		LengthType length_t = m.getLength().getLength();
+		LengthType length_t = csr.getLength().getLength();
 		if (length_t == null) {
 			error("length should not be null",
-					UdbPackage.Literals.MODEL__LENGTH);
+					UdbPackage.Literals.CSR_MODEL__LENGTH);
 		}
 		// If length is an integer, value is either 32 or 64
 		if (length_t instanceof IntType) {
-			Integer length = ((IntType) m.getLength().getLength()).getIntVal();
+			Integer length = ((IntType) csr.getLength().getLength()).getIntVal();
 			if (length != 32 && length != 64) {
 				error("length if specified as integer, should be 32 or 64",
-						UdbPackage.Literals.MODEL__LENGTH);
+						UdbPackage.Literals.CSR_MODEL__LENGTH);
 			}
 		}
 //		if (length != null && length != "MXLEN" && length != "SXLEN" && length != "VSXLEN" && length != "XLEN") {
@@ -87,22 +88,22 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 
 	@Check
-	public void checkIndirectSlotValue(Model m) {
+	public void checkIndirectSlotValue(CsrModel csr) {
 		/* Ensure indirect_slot is between 1 and 6 */
-		int slot = m.getIndirectSlot() != null ? m.getIndirectSlot().getIndirectSlot() : null;
+		int slot = csr.getIndirectSlot() != null ? csr.getIndirectSlot().getIndirectSlot() : null;
 
 		if (slot < 1 || slot > 6) {
-			error("Indirect slot value must be between 1 and 6.", UdbPackage.Literals.MODEL__INDIRECT_SLOT);
+			error("Indirect slot value must be between 1 and 6.", UdbPackage.Literals.CSR_MODEL__INDIRECT_SLOT);
 		}
 	}
 
 	@Check
-	public void checkVirtualAddress(Model m) {
-		String mode = m.getPrivmode() != null ? m.getPrivmode().getPrivMode().getType() : null;
+	public void checkVirtualAddress(CsrModel csr) {
+		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode().getType() : null;
 
 		if (mode.equals("VS")) {
-			if (m.getVirtualAddress() == null) {
-				error("VS mode requires a virtual address.", UdbPackage.Literals.MODEL__PRIVMODE);
+			if (csr.getVirtualAddress() == null) {
+				error("VS mode requires a virtual address.", UdbPackage.Literals.CSR_MODEL__PRIVMODE);
 			}
 		}
 

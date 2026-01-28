@@ -57,30 +57,32 @@ class UdbParsingTest {
 
 
 		// check basic inputs
-		var schema = result.getSchema().getSchema();
+		var csr = result.getCsr()
+		
+		var schema = csr.getSchema().getSchema();
 		Assertions.assertEquals("csr_schema.json#", schema as String);
-		var k = result.getKind().getKind().getType();
+		var k = csr.getKind().getKind().getType();
 		Assertions.assertEquals("csr", k as String);
-		var n = result.getCsrName().getName().getType();
+		var n = csr.getCsrName().getName().getType();
 		Assertions.assertEquals("vcsr", n as String);
-		var ln = result.getLongName().getLongName();
+		var ln = csr.getLongName().getLongName();
 		Assertions.assertEquals("Vector Control and Status Register", ln);
-		var add = result.getAddress().getAddress().getValue();
+		var add = csr.getAddress().getAddress().getValue();
 		Assertions.assertEquals(0x00F, add);
-		var writ = result.getWritable().isWritable();
+		var writ = csr.getWritable().isWritable();
 		Assertions.assertTrue(writ);
-		var priv = result.getPrivmode().getPrivMode().getType();
+		var priv = csr.getPrivmode().getPrivMode().getType();
 		Assertions.assertEquals("U", priv);
-		var len = result.getLength().getLength().getParmType().getParmName();
+		var len = csr.getLength().getLength().getParmType().getParmName();
 		Assertions.assertEquals("MXLEN", len as String);
-		var desc = result.getDescription().getDescription();
+		var desc = csr.getDescription().getDescription();
 		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc);
-		var def = result.getDefinedBy().getExtensionName();
+		var def = csr.getDefinedBy().getExtensionName();
 		Assertions.assertEquals("V", def);
 
 		// test fields
-		var vxrm = result.getFields().getFields().get(0);
-		var vxsat = result.getFields().getFields().get(1);
+		var vxrm = csr.getFields().getFields().get(0);
+		var vxsat = csr.getFields().getFields().get(1);
 		Assertions.assertEquals("VXRM", vxrm.getName());
 		Assertions.assertEquals("VXSAT", vxsat.getName());
 
