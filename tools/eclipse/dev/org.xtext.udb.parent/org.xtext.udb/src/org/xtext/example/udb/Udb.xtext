@@ -11,13 +11,35 @@ Model:
 ;
 
 
-InstModel: placeholder=STRING;
+InstModel: 
+	schema = Schema &
+	kind = Kind &
+	name = InstName &
+	longName = LongName &
+	description = Description &
+	definedBy = DefinedBy &
+	hints = Hints? &
+	access = Access &
+	accessDetail = AccessDetail? &
+	operation = Operation? &
+	sail = Sail? &
+	certNormativeRules = CertNormativeRules? &
+	certTestProcedures = CertTestProcedures? &
+	assembly = Assembly &
+	dataIndependentTiming = DataIndependentTiming? &
+	pseudoInstructions = PseudoInstructions? &
+	source = Source? &
+	format = Format? &
+	encoding = Encoding? 
+	
+	
+;
 ExtModel: placeholder=STRING;
 
 CsrModel:
 	schema = Schema
 	kind = Kind &
-	csrName = Name &
+	name = CSRName &
 	base = Base? &
 	longName = LongName &
 	description = Description &
@@ -37,12 +59,46 @@ CsrModel:
 	certTestProcedures = CertTestProcedures?
 ;
 
+
+/* Required fields for the INST schema */
+InstName: 'name' ':' instName=instNameType;
+Access: 
+	'access' ':' & 
+	INDENT
+	('m' ':' m=AccessType)? &
+
+	's' ':' s=AccessType &
+
+	'u' ':' u=AccessType &
+
+	'vs' ':' vs=AccessType &
+
+	'vu' ':' vu=AccessType
+	DEDENT
+;
+
+Assembly: 'assembly' ':' assembly=STRING;
+
+/* Optional fields for the INST schema */
+
+
+Hints: 'hints' ':' hints=StringArray; // for now, should ask what type this array holds TODO
+AccessDetail: 'access_detail' ':' accessDetail=STRING;
+Operation: 'operation()' ':' operation=STRING; // string for now, IDL later TODO
+Sail: 'sail()' ':' sail=STRING; // string for now, IDL later TODO
+DataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
+PseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=StringArray; // type TODO
+Format: 'format' ':' format=STRING; //TODO
+Encoding: 'encoding' ':' encoding=STRING; //TODO
+
+
+
 // This is so we can directly copy+paste from a UDB .yaml file
-Schema: "$schema" ":" schema=STRING;
+Schema: "$schema" ":" schema=STRING ;
 
 /* Required fields for the CSR schema */
 Kind: 'kind' ':' kind=KindType ;
-Name: 'name' ':' name=NameType ;
+CSRName: 'name' ':' csrName=csrNameType ;
 LongName: 'long_name' ':' longName=STRING ;
 Address: 'address' ':' address=Hex ;
 Writable: 'writable' ':' writable=Boolean ;
@@ -68,8 +124,9 @@ Source:'$source' ':' source=STRING ;
 
 
 /* CSR Schema Types */
-KindType: type=('csr'|'extension');
-NameType: type=(CSR_NAME);
+KindType: type=('csr'|'extension'|'instruction'); // This OR structure seems incorrect. 
+csrNameType: type=(CSR_NAME);
+instNameType: type=(INST_NAME);
 PrivType: type=('M'|'S'|'U'|'VS'|'D');
 
 LengthType: intType = IntType | parmType = ParmType;
@@ -82,6 +139,9 @@ CTPType: '[' id=STRING ',' name=STRING ',' description=STRING ','
 			 normativeRules=StringArray ',' list=STRING?']';
 
 
+AccessType:
+	accessLevel=('always'|'sometimes'|'never')
+;
 
 /* Grammar for fields */
 Fields:
@@ -159,6 +219,8 @@ AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
 //	| xlenCond = XLenCondition
 //;
 
+
+
 IDLCondition:
 	"idl()" ":" idl=IDL
 	reason?=Reason
@@ -195,6 +257,9 @@ StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
 /* Terminals */
 terminal CSR_NAME:
 	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
+;
+terminal INST_NAME:
+	('a'..'z' | '0'..'9' | '.')+
 ;
 terminal FIELD_NAME:
 	('a'..'z' | 'A'..'Z')+
