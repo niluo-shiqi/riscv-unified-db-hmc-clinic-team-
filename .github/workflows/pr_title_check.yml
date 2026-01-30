@@ -15,9 +15,7 @@ on:
       - opened
       - edited
       - reopened
-  merge_group:
-    types:
-    - checks_requested
+      - synchronize
 
 jobs:
   main:
