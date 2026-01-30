@@ -134,8 +134,6 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          CONTAINER_NAME=$(printf 'riscvintl/udb@sha256:%s ' *)
-          echo "CONTAINER_NAME=$CONTAINER_NAME" >> $GITHUB_ENV
           docker buildx imagetools create \
             --tag riscvintl/udb:${{ env.TAG }} \
             $(printf 'riscvintl/udb@sha256:%s ' *)
@@ -154,6 +152,8 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
+          CONTAINER_NAME=$(printf 'ghcr.io/riscv/udb@sha256:%s ' *)
+          echo "CONTAINER_NAME=$CONTAINER_NAME" >> $GITHUB_ENV
           docker buildx imagetools create \
             --tag ghcr.io/riscv/udb:${{ env.TAG }} \
             $(printf 'ghcr.io/riscv/udb@sha256:%s ' *)
