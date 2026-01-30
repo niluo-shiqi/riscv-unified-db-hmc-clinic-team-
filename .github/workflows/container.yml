@@ -161,7 +161,3 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ghcr.io/riscv/udb:${{ env.TAG }}
-
-      - name: Remove intermediate containers
-        run: |
-          docker image rm ${{ env.CONTAINER_NAME }}
