@@ -85,6 +85,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           outputs: type=image,"name=docker.io/riscvintl/udb,ghcr.io/riscv/udb",push-by-digest=true,name-canonical=true,push=true
           tags: docker.io/riscvintl/udb,ghcr.io/riscv/udb
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Export digest
         run: |
