@@ -148,16 +148,17 @@ AliasType: alias+=(CSR_FIELD | CSR_FIELD_BITS)+;
 AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
 
 
-
 /* Conditions */
-//Condition: yamlCond=YAMLCondition | idlCond=IDLCondition;
+Condition: 
+	  yamlCond=YAMLCondition 
+	| idlCond=IDLCondition
+;
 
-//YAMLCondition:
-//	yaml = YAMLCondition (TODO: implement)
-//	  extensionCond = ExtensionCondition
-//	| paramCond = ParamCondition
-//	| xlenCond = XLenCondition
-//;
+YAMLCondition:
+	  extensionCond = ExtensionCondition
+	| paramCond = ParamCondition
+	| xlenCond = XLenCondition
+;
 
 IDLCondition:
 	"idl()" ":" idl=IDL
@@ -165,7 +166,49 @@ IDLCondition:
 ;
 
 ExtensionCondition:
-	STRING /* TODO */
+	'extension' ':' 
+	INDENT
+		extBody=(ExtRequirement | ExtArray | ExtIfThen)
+	DEDENT
+;
+
+ExtRequirement:
+	"name" ":" extName=EXT_NAME &
+	("version" ":" verReqs=VersionRequirements)?
+;
+
+ExtArray:
+	( "allOf" ":" 
+	| "anyOf" ":"
+	| "oneOf" ":"
+	| "noneOf" ":"
+	| "not" ":") &
+	INDENT
+		extArray=ExtConditionArray
+	DEDENT
+;
+
+ExtIfThen:
+	"if" ":" 
+	INDENT
+		condition=Condition &
+	DEDENT
+	"then" ":"
+	INDENT
+		extCondition=ExtensionCondition
+	DEDENT
+;
+
+YAMLConditionArray:
+	('-' YAMLConds+=YAMLCondition)+ /* TODO: implement in validator (verify only two) */
+;
+
+ExtConditionArray:
+	('-' extConds+=ExtensionCondition)+ /* TODO: implement in validator (verify only two) */
+;
+
+ConditionArray:
+	('-' cond+=Condition)+
 ;
 
 ParamCondition:
@@ -173,6 +216,10 @@ ParamCondition:
 ;
 
 XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
+
+VersionRequirements:
+	versionReq=(REQUIREMENT_STRING | ReqStringArray)
+;
 
 Reason: "reason" ":" reasonStr=STRING;
 
@@ -191,6 +238,7 @@ Boolean returns ecore::EBoolean: "true" | "false";
 
 /* Helpers*/
 StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
+ReqStringArray: '[' reqs+=REQUIREMENT_STRING (',' reqs+=REQUIREMENT_STRING)+ ']';
 
 /* Terminals */
 terminal CSR_NAME:
@@ -208,7 +256,18 @@ terminal CSR_FIELD_BITS:
 	'.'('A'..'Z' | '0'..'9')+
 	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
 ;
-
+terminal EXT_NAME:
+	('A'..'WY') | (('SXZ')('a-z'|'0'..'9')+)
+;
+terminal REQUIREMENT_STRING:
+	('>='|'>'|'~>'|'<'|'<='|'+')? (WS*)
+	('0'..'9')+
+	(('.')('0'..'9')+ 
+		(('.')('0'..'9')+ 
+			(('-')('a'..'f' | 'A'..'F' | '0'..'9')+)?
+		)?
+	)?
+;
 
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
