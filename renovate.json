@@ -29,7 +29,7 @@
     },
     {
       "matchManagers": ["git-submodules"],
-      "matchPackageNames": ["llvm/llvm-project"],
+      "matchPackageNames": ["ext/llvm-project"],
       "schedule": ["on saturday"]
     }
   ],
