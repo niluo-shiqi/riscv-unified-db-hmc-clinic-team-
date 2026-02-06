@@ -42941,7 +42941,7 @@ Included in::
 == vle8.v
 
 Synopsis::
-Vector load 8-bit elements
+Vector 8-bit unit-stride load
 
 Base::
 
@@ -58519,7 +58519,7 @@ Included in::
 == vse8.v
 
 Synopsis::
-Vector store 8-bit elements
+Vector 8-bit unit-stride store
 
 Base::
 
