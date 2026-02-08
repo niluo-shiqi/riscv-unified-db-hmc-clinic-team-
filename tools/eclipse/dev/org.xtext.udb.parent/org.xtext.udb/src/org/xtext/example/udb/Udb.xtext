@@ -17,7 +17,7 @@ InstModel: placeholder=STRING;
 ExtModel: 
 	schema = Schema // must be "ext_schema.json#"
 	kind = Kind &   // must be "extension"
-	extName = Name &
+	extName = STRING  &
 	longName = LongName &
 	description = Description &
 	rviJiraIssue = RviJiraIssue? &
@@ -48,7 +48,7 @@ CsrModel:
 	virtualAddress = VirtualAddress? &
 	length = Length &
 	requires = Requires? &
-	fields = CsrFields? &
+	csrFields = CsrFields? &
 	swRead = SwRead? &
 	source = Source? &
 	certNormativeRules = CertNormativeRules? &
@@ -74,10 +74,10 @@ VirtualAddress:'virtual_address' ':' virtualAddress=Hex ;
 RviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
 ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
 Requirements: "requirements" ":" requirements=STRING; /* TODO: this needs to be Condition */
+SwRead:'sw_read()' ':' swRead=IDL ;
 
 // implement in validator?
 Requires:'requires' ':' requires=STRING ;
-SwRead:'sw_read()' ':' swRead=STRING ;
 Source:'$source' ':' source=STRING ;
 
 
@@ -91,11 +91,11 @@ ParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 
 UdbId: 'id' ':' id=STRING;
-Url: 'url' ':' url=STRING;
+Url: 'url' ':' url=STRING; /* TODO: make sure this is in the URI format */
 Company: 
 	'company' ':' 
 	INDENT
-		'name' ':' name=STRING /* TODO: should this be required? it doesn't say so in the schema*/
+		('name' ':' name=STRING) &
 		 url=Url?
 	DEDENT 
 ;
@@ -103,7 +103,7 @@ Company:
 DocLicense:
 	'doc_license' ':'
 	INDENT
-		'name' ':' name=STRING 
+		('name' ':' name=STRING) & 
 		id=UdbId? &
 		url=Url? &
 		text_url=Url?
@@ -114,7 +114,7 @@ DocLicense:
 CertNormativeRules: 
 	'cert_normative_rules' ':' 
 	INDENT	
-		('-' rules += CNRule)+  /* TODO: look into ararys for xtext */
+		('-' rules += CNRule)+  /* TODO: look into arrays for xtext */
 	DEDENT
 ;
 
@@ -151,7 +151,7 @@ CTProcedure:
 NormativeRules:
 	"normative_rules" ":"
 	INDENT
-		('-' rules += STRING)+ /* TODO: must be a rule ID */
+		('-' rules += STRING)+ /* TODO: must be a valid normative rule ID */
 	DEDENT
 ;
 
@@ -164,12 +164,65 @@ ExtVersions:
 ;
 
 ExtensionVersion: // incomplete
-	"version" ":" version=STRING
+	"version" ":" version=VERSION_STRING &
+	versionState = VersionState &
+	repositories = Repositories? &
+	ratifificationDate = RatificationDate? &
+	versionChanges = VersionChanges? &
+	url = Url? &
+	contributors = VersionContributors?
+	requirements = Requirements?
 ;
+
+VersionState: 
+	"state" ":" 
+	state=( "development" | "frozen" | "public-review" | 
+		    "ratification-ready" | "ratified" | "nonstandard-released")
+;
+
+Repositories:
+	"repositories" ":"
+	INDENT
+		('-' repositories += Repo)+
+	DEDENT
+;
+
+Repo:
+	url=Url &
+	("branch" ":" branch=STRING)?
+;
+
+RatificationDate:
+	date = (
+	  YEAR_MONTH			// when ratification date is known
+	| "unknown"				// when ratification date is unknown
+	| "null")				// when version isn't ratified			
+;
+
+VersionChanges:
+	"changes" ":"
+	INDENT
+		('-' changes += STRING)+
+	DEDENT
+;
+
+VersionContributors:
+	"contributors" ":"
+	INDENT
+		('-'contributors=Contributor) 
+	DEDENT
+;
+
+Contributor:
+	"name" ":" name=STRING // TODO: should be in 'GIVEN_NAME LAST SURNAME' format
+	("company" ":" company=STRING)? // company contributor worked for or 'Individual'
+	("email" ":" email=STRING)? // TODO: should be in email format
+;
+
 
 /* Grammar for CSR fields */
 CsrFields:
-	{Fields} 'fields' ':'
+	{CsrFields} 'fields' ':'
 	INDENT
     	fields += CsrFieldDef+
     DEDENT
@@ -178,7 +231,7 @@ CsrFields:
 CsrFieldDef:
 	name=FIELD_NAME ':'
 	INDENT
-		('name' ':' fieldName = STRING ';')? &
+		displayName = FieldDisplayName? &
 		longName = LongName? &
 		location = LocationType &
 		resetValue = ResetValueType &
@@ -195,16 +248,13 @@ CsrFieldDef:
 	DEDENT
 ;
 
-FieldDisplayName: 'name' ':' fieldName=STRING ;
-
-
 
 /* fields for Fields */
 StaticLocation: 'location' ':' locValue=FieldLocation ;
 LocationRV32: "location_rv32" ":" locationRV32=FieldLocation ;
 LocationRV64: "location_rv64" ":" locationRV64=FieldLocation ;
 
-
+FieldDisplayName: 'name' ':' fieldName=STRING ;
 ResetValue: "reset_value" ":" resetValue=ResetValueValue ;
 ResetValueFunc: "reset_value()" ":" resetValueFunc=IDL ;
 SWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL ;
@@ -234,6 +284,7 @@ AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
 
 
 /* Conditions */
+Condition: cond=STRING; // placeholder
 //Condition: yamlCond=YAMLCondition | idlCond=IDLCondition;
 
 //YAMLCondition:
@@ -298,6 +349,16 @@ terminal EXT_NAME:
 	(('S' | 'X' | 'Z')('a'..'z' | '0'..'9')+)
 ;
 
+terminal VERSION_STRING:
+	('0'..'9')+
+	('.'('0'..'9')+
+	('.'('0'..'9')+("-pre")?)?)?
+;
+
+terminal YEAR_MONTH:
+	(('20')('0'..'9')('0'..'9')'-'    
+	  ('0'('1'..'9') | '1'('0'..'2')))
+;
 
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:

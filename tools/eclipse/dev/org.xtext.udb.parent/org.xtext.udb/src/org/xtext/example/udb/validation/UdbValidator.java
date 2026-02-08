@@ -6,7 +6,7 @@ package org.xtext.example.udb.validation;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.parser.antlr.UdbParser;
-import org.xtext.example.udb.udb.FieldDef;
+import org.xtext.example.udb.udb.CsrFieldDef;
 import org.xtext.example.udb.udb.IntType;
 import org.xtext.example.udb.udb.LengthType;
 import org.xtext.example.udb.udb.Model;

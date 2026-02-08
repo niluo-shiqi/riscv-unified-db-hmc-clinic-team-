@@ -81,8 +81,8 @@ class UdbParsingTest {
 		Assertions.assertEquals("V", def);
 
 		// test fields
-		var vxrm = csr.getFields().getFields().get(0);
-		var vxsat = csr.getFields().getFields().get(1);
+		var vxrm = csr.getCsrFields().getFields().get(0);
+		var vxsat = csr.getCsrFields().getFields().get(1);
 		Assertions.assertEquals("VXRM", vxrm.getName());
 		Assertions.assertEquals("VXSAT", vxsat.getName());
 
