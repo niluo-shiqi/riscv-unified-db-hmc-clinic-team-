@@ -63,8 +63,13 @@ class UdbParsingTest {
 		Assertions.assertEquals("csr_schema.json#", schema as String);
 		var k = csr.getKind().getKind().getType();
 		Assertions.assertEquals("csr", k as String);
+<<<<<<< Updated upstream
 		var n = csr.getCsrName().getName();
 		Assertions.assertEquals("vcsr", n as String);
+=======
+//		var n = csr
+//		Assertions.assertEquals("vcsr", n as String);
+>>>>>>> Stashed changes
 		var ln = csr.getLongName().getLongName();
 		Assertions.assertEquals("Vector Control and Status Register", ln);
 		var add = csr.getAddress().getAddress().getValue();
@@ -125,5 +130,37 @@ class UdbParsingTest {
 
 
 	}
+	
+	@Test
+	def void parsesValidExtension() {
+		val result = parseHelper.parse('''
+		$schema: "ext_schema.json#"
+		kind: extension
+		name: V
+		type: unprivileged
+		long_name: Vector Operations
+		versions:
+		  - version: "1.0.0"
+		    state: ratified
+		    ratification_date: 2021-11
+		description: |
+		  General support for data-parallel execution.
+		requirements:
+		  extension:
+		    allOf:
+		      - name: Zve64d
+		      - name: Zvl128b
+		''')
+		Assertions.assertNotNull(result)
+		val errors = result.eResource.errors
+		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
+		
+		var ext = result.getExt();
+		
+		var schema = ext.getSchema();
+		Assertions.assertEquals("ext_schema.json#", schema as String);
+	}
+	
+	
 
 }
