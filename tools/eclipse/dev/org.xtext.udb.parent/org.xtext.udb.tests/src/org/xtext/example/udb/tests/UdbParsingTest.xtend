@@ -63,7 +63,7 @@ class UdbParsingTest {
 		Assertions.assertEquals("csr_schema.json#", schema as String);
 		var k = csr.getKind().getKind().getType();
 		Assertions.assertEquals("csr", k as String);
-		var n = csr.getCsrName().getName().getType();
+		var n = csr.getCsrName().getName();
 		Assertions.assertEquals("vcsr", n as String);
 		var ln = csr.getLongName().getLongName();
 		Assertions.assertEquals("Vector Control and Status Register", ln);

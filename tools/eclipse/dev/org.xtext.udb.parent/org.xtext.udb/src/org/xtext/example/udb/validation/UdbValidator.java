@@ -5,14 +5,22 @@ package org.xtext.example.udb.validation;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.xtext.validation.Check;
+import org.xtext.example.udb.udb.UdbPackage;
 import org.xtext.example.udb.parser.antlr.UdbParser;
-import org.xtext.example.udb.udb.CsrFieldDef;
-import org.xtext.example.udb.udb.IntType;
-import org.xtext.example.udb.udb.LengthType;
+
 import org.xtext.example.udb.udb.Model;
 import org.xtext.example.udb.udb.CsrModel;
+import org.xtext.example.udb.udb.CsrFieldDef;
+
+import org.xtext.example.udb.udb.IntType;
+import org.xtext.example.udb.udb.LengthType;
 import org.xtext.example.udb.udb.ParmType;
-import org.xtext.example.udb.udb.UdbPackage;
+import org.xtext.example.udb.udb.Url;
+
+import org.xtext.example.udb.udb.ExtName;
+import org.xtext.example.udb.udb.ExtVersionArrayElement;
+import org.xtext.example.udb.udb.CsrName;
+import org.xtext.example.udb.udb.CsrAliasName;
 
 
 /**
@@ -21,7 +29,14 @@ import org.xtext.example.udb.udb.UdbPackage;
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 public class UdbValidator extends AbstractUdbValidator {
-
+	
+	// Regex's found in schema_defs.json
+	String rviVersionRegex = "^[0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?$";
+	String csrFieldRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+$";
+    String csrFieldBitsRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+\\[[0-9]+(:[0-9]+)?\\]$";
+    String csrNameRegex = "^[a-z][a-z0-9_.]+$";
+    String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
+	
 	@Check
 	public void checkAddress(CsrModel csr) {
 		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
@@ -107,6 +122,58 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 
+	}
+	
+	/*
+	 * Checks for different names to make sure they follow the right regex's
+	 */
+	@Check
+	public void checkExtName(ExtName name) {
+	    String value = name.getName();
+	    if (!value.matches(extensionNameRegex)) {
+	        error("Invalid extension name", 
+	              UdbPackage.Literals.EXT_NAME__NAME);
+	    }
+	}
+	
+	@Check
+	public void checkCsrName(CsrName name) {
+	    String value = name.getName();
+	    if (!value.matches(csrNameRegex)) {
+	        error("Invalid csr name", 
+	              UdbPackage.Literals.CSR_NAME__NAME);
+	    }
+	}
+	
+	@Check
+	public void checkCsrFieldName(CsrFieldDef field) {
+		String value = field.getName();
+		if (!value.matches("^[a-zA-Z].*$")) {
+			error("Invalid field name",
+					UdbPackage.Literals.CSR_FIELD_DEF__NAME);
+		}
+	}
+	
+	@Check
+	public void checkCsrFieldAlias(CsrAliasName alias) {
+		String value = alias.getName();
+
+	    if (!value.matches(csrFieldRegex) &&
+	        !value.matches(csrFieldBitsRegex)) {
+
+	        error(
+	            "Alias must match CSR_FIELD or CSR_FIELD_BITS format",
+	            UdbPackage.Literals.CSR_ALIAS_NAME__NAME
+	        );
+	    }
+	}
+	
+	@Check
+	public void checkExtensionVersion(ExtVersionArrayElement element) {
+		String version = element.getVersion();
+		if (!version.matches(rviVersionRegex)) {
+			error("Invalid version", UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
+		}
 	}
 
 }

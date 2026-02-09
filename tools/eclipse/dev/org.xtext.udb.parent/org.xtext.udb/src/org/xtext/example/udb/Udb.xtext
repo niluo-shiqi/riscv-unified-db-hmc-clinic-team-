@@ -17,7 +17,7 @@ InstModel: placeholder=STRING;
 ExtModel: 
 	schema = Schema // must be "ext_schema.json#"
 	kind = Kind &   // must be "extension"
-	extName = STRING  &
+	extName = ExtName  &
 	longName = LongName &
 	description = Description &
 	rviJiraIssue = RviJiraIssue? &
@@ -25,17 +25,16 @@ ExtModel:
 	docLicense = DocLicense? &
 	type = ExtType &
 	requirements = Requirements? &
-	versions = ExtVersions &
+	extVersions = ExtVersions &
 	source = Source? &
-	certNormativeRules = CertNormativeRules? &
-	certTestProcedures = CertTestProcedures?
+	certNormativeRules = CertNormativeRules?
 ;
 
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
 	kind = Kind &   // must be csr
-	csrName = Name &
+	csrName = CsrName &
 	base = Base? &
 	longName = LongName &
 	description = Description &
@@ -51,15 +50,15 @@ CsrModel:
 	csrFields = CsrFields? &
 	swRead = SwRead? &
 	source = Source? &
-	certNormativeRules = CertNormativeRules? &
-	certTestProcedures = CertTestProcedures?
+	certNormativeRules = CertNormativeRules?
 ;
 
 
 /* Fields found in the schemas */
 Schema: "$schema" ":" schema=STRING;
 Kind: 'kind' ':' kind=KindType ;
-Name: 'name' ':' name=NameType ;
+CsrName: 'name' ':' name=ID ;
+ExtName: 'name' ':' name=ID;
 LongName: 'long_name' ':' longName=STRING ;
 Address: 'address' ':' address=Hex ;
 Writable: 'writable' ':' writable=Boolean ;
@@ -83,7 +82,6 @@ Source:'$source' ':' source=STRING ;
 
 /* Field types for the fields found in schemas */
 KindType: type=('csr'|'extension');
-NameType: type=(CSR_NAME | EXT_NAME);
 PrivType: type=('M'|'S'|'U'|'VS'|'D');
 LengthType: intType = IntType | parmType = ParmType;
 IntType: intVal=INT; // must be either 32 or 64
@@ -91,7 +89,7 @@ ParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 
 UdbId: 'id' ':' id=STRING;
-Url: 'url' ':' url=STRING; /* TODO: make sure this is in the URI format */
+Url: 'url' ':' url=STRING; 
 Company: 
 	'company' ':' 
 	INDENT
@@ -114,64 +112,50 @@ DocLicense:
 CertNormativeRules: 
 	'cert_normative_rules' ':' 
 	INDENT	
-		('-' rules += CNRule)+  /* TODO: look into arrays for xtext */
+		rules += CNRuleArrayElement+
 	DEDENT
 ;
 
-CNRule:
-	id = UdbId &
-	('name' ':' name = STRING) &
-	docLinks = DocLinks &
-	description = Description
+CNRuleArrayElement:
+	'-' id = UdbId // TODO: makes id the first element (do we want this?)
+	INDENT
+		('name' ':' name = STRING) &
+		docLinks = DocLinks &
+		description = Description
+	DEDENT
 ;
 
 DocLinks:	
 	"doc_links" ":"
 	INDENT
-		('-' links += STRING)+ /* TODO: these must follow the URI format */
+		links += DocLinksArrayElement+
 	DEDENT
 ;
 
-/* cert_test_proceduers grammar */
-CertTestProcedures: 
-	'cert_test_procedures' ':' 
-	INDENT
-		('-' procedures += CTProcedure)+
-	DEDENT	
+DocLinksArrayElement:
+	'-' link = STRING	/* TODO: these must follow the URI format */
 ;
 
-CTProcedure:
-	id = UdbId &
-	"test_file_name" ":" name=STRING &
-	description = Description &
-	normRules = NormativeRules &
-	("steps" ":" steps=STRING)?
-;
-
-NormativeRules:
-	"normative_rules" ":"
-	INDENT
-		('-' rules += STRING)+ /* TODO: must be a valid normative rule ID */
-	DEDENT
-;
 
 /* Extension versions grammar */
 ExtVersions:
 	"versions" ":" 
 	INDENT
-		('-' versions += ExtensionVersion)+
+		elements += ExtVersionArrayElement+
 	DEDENT
 ;
 
-ExtensionVersion: // incomplete
-	"version" ":" version=VERSION_STRING &
-	versionState = VersionState &
-	repositories = Repositories? &
-	ratifificationDate = RatificationDate? &
-	versionChanges = VersionChanges? &
-	url = Url? &
-	contributors = VersionContributors?
-	requirements = Requirements?
+ExtVersionArrayElement:
+	'-' "version" ":" version=STRING // TODO: makes version the first element (this okay?) 
+	INDENT 
+		versionState = VersionState &
+		repositories = Repositories? &
+		ratifificationDate = RatificationDate? &
+		versionChanges = VersionChanges? &
+		url = Url? &
+		versionContributors = VersionContributors? &
+		requirements = Requirements? 
+	DEDENT
 ;
 
 VersionState: 
@@ -183,16 +167,19 @@ VersionState:
 Repositories:
 	"repositories" ":"
 	INDENT
-		('-' repositories += Repo)+
+		repositories += RepoArrayElement+
 	DEDENT
 ;
 
-Repo:
-	url=Url &
-	("branch" ":" branch=STRING)?
+RepoArrayElement: // TODO: this is ordered, that okay?
+	'-' url=Url
+	INDENT
+		("branch" ":" branch=STRING)?
+	DEDENT	
 ;
 
 RatificationDate:
+	"ratification_date" ":"
 	date = (
 	  YEAR_MONTH			// when ratification date is known
 	| "unknown"				// when ratification date is unknown
@@ -202,23 +189,34 @@ RatificationDate:
 VersionChanges:
 	"changes" ":"
 	INDENT
-		('-' changes += STRING)+
+		changes += ChangesArrayElement+
 	DEDENT
+;
+
+ChangesArrayElement:
+	'-' change=STRING
 ;
 
 VersionContributors:
 	"contributors" ":"
 	INDENT
-		('-'contributors=Contributor) 
+		contributors += ContributorsArrayElement+ 
 	DEDENT
 ;
 
-Contributor:
-	"name" ":" name=STRING // TODO: should be in 'GIVEN_NAME LAST SURNAME' format
-	("company" ":" company=STRING)? // company contributor worked for or 'Individual'
-	("email" ":" email=STRING)? // TODO: should be in email format
+// TODO: is it okay that name must be the first element?
+ContributorsArrayElement:
+	'-' name=ContributorName
+	INDENT
+		("company" ":" company=STRING)? &	// company contributor worked for or 'Individual'
+		("email" ":" email=STRING)?
+	DEDENT
 ;
 
+ContributorName:
+	firstName = ID
+	lastName = ID
+;
 
 /* Grammar for CSR fields */
 CsrFields:
@@ -229,7 +227,7 @@ CsrFields:
 ;
 
 CsrFieldDef:
-	name=FIELD_NAME ':'
+	name=ID ':'
 	INDENT
 		displayName = FieldDisplayName? &
 		longName = LongName? &
@@ -240,11 +238,10 @@ CsrFieldDef:
 		base = Base? &
 		description = Description &
 		type = CsrTypeType &
-		alias = Alias? &
+		alias = CsrFieldAlias? &
 		definedBy = DefinedBy? &
 		affectedBy = AffectedBy? &
 		certNormativeRules = CertNormativeRules? &
-		certTestProcedures = CertTestProcedures?
 	DEDENT
 ;
 
@@ -261,7 +258,7 @@ SWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL ;
 LegalFunc: "legal?(csr_value)" ":" legalFunc=IDL ;
 CsrType: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH") ;
 CsrTypeFunc: "type()" ":" idl=IDL ;
-Alias: "alias" ":" alias=AliasType ;
+CsrFieldAlias: "alias" ":" (aliasName=CsrAliasName | aliasArray=CsrAliasArray);
 AffectedBy: "affectedBy" ":" affectedBy=AffectedByType ;
 
 /* Types for Fields */
@@ -276,7 +273,18 @@ Range: upper=INT '-' lower=INT;
 ResetValueType: value=ResetValue | function=ResetValueFunc;
 ResetValueValue: value=INT | undefinedLegal=UndefinedLegal;
 CsrTypeType: typeVal=CsrType | typeFunc=CsrTypeFunc;
-AliasType: alias+=(CSR_FIELD | CSR_FIELD_BITS)+;
+
+CsrAliasName: name=ID; //+=(CSR_FIELD | CSR_FIELD_BITS)+;
+CsrAliasArray:
+	"items" ":"
+	INDENT
+		aliases += CsrAliasArrayElement+
+	DEDENT
+;
+
+CsrAliasArrayElement:
+	"-" alias = CsrAliasName 
+;
 
 // TODO: we probably will want a cross ref thing for this
 AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
@@ -324,41 +332,20 @@ IDL: idl=STRING;
 UndefinedLegal: "UNDEFINED_LEGAL";
 Boolean returns ecore::EBoolean: "true" | "false";
 
-/* Helpers*/
+/* Helpers */
 StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
 
-/* Names */
-terminal CSR_NAME:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-;
-terminal FIELD_NAME:
-	('a'..'z' | 'A'..'Z')+
-;
-terminal CSR_FIELD:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-	('.')('A'..'Z' | '0'..'9')+
-;
-terminal CSR_FIELD_BITS:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-	'.'('A'..'Z' | '0'..'9')+
-	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
-;
 
-terminal EXT_NAME:
-	('A'..'W' | 'Y') | 
-	(('S' | 'X' | 'Z')('a'..'z' | '0'..'9')+)
-;
-
-terminal VERSION_STRING:
-	('0'..'9')+
-	('.'('0'..'9')+
-	('.'('0'..'9')+("-pre")?)?)?
-;
-
+/* Terminals */
 terminal YEAR_MONTH:
 	(('20')('0'..'9')('0'..'9')'-'    
 	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
+
+//terminal URL_STRING:
+//    ('http://' | 'https://') ('a'..'z' | 'A'..'Z' | '0'..'9' | '.' | '-' | '_' | '/' | '?' | '#' | '&' | '=')+;
+    
+//terminal EMAIL: ID '@' ID '.' ID;
 
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
