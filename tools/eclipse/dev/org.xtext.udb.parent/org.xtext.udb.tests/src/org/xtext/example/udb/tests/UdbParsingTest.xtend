@@ -57,19 +57,14 @@ class UdbParsingTest {
 
 
 		// check basic inputs
-		var csr = result.getCsr()
+		var csr = result.getCsr();
 		
 		var schema = csr.getSchema().getSchema();
 		Assertions.assertEquals("csr_schema.json#", schema as String);
 		var k = csr.getKind().getKind().getType();
 		Assertions.assertEquals("csr", k as String);
-<<<<<<< Updated upstream
-		var n = csr.getCsrName().getName();
+//		var n = csr.getCsrName().getName();
 		Assertions.assertEquals("vcsr", n as String);
-=======
-//		var n = csr
-//		Assertions.assertEquals("vcsr", n as String);
->>>>>>> Stashed changes
 		var ln = csr.getLongName().getLongName();
 		Assertions.assertEquals("Vector Control and Status Register", ln);
 		var add = csr.getAddress().getAddress().getValue();
@@ -86,7 +81,7 @@ class UdbParsingTest {
 		Assertions.assertEquals("V", def);
 
 		// test fields
-		var vxrm = csr.getCsrFields().getFields().get(0);
+		var vxrm = csr.getFields().get(1);
 		var vxsat = csr.getCsrFields().getFields().get(1);
 		Assertions.assertEquals("VXRM", vxrm.getName());
 		Assertions.assertEquals("VXSAT", vxsat.getName());
@@ -157,8 +152,31 @@ class UdbParsingTest {
 		
 		var ext = result.getExt();
 		
-		var schema = ext.getSchema();
+		var schema = ext.getSchema().getSchema();
 		Assertions.assertEquals("ext_schema.json#", schema as String);
+		var kind = ext.getKind().getKind().getType();
+		Assertions.assertEquals("kind", kind);
+		var name = ext.getExtName().getName();
+		Assertions.assertEquals("V", name);
+		var type = ext.getType().getPerms();
+		Assertions.assertEquals("unprivileged", type);
+		var longname = ext.getLongName().getLongName();
+		Assertions.assertEquals("Vector Operations", longname);
+		var description = ext.getDescription().getDescription();
+		Assertions.assertEquals("|\n  General support for data-parallel execution.", description);
+		
+		//version testing
+		var version = ext.getExtVersions().getElements().get(0);
+		Assertions.assertEquals("\"1.0.0\"", version.getVersion());
+		Assertions.assertEquals("ratified", version.getVersionState().getState());
+		Assertions.assertEquals("2021-11", version.getRatifificationDate().getDate());
+		
+		//requirements testing
+		var reqs = ext.getRequirements();
+		System.out.println(reqs.getRequirements());
+		
+		
+		
 	}
 	
 	

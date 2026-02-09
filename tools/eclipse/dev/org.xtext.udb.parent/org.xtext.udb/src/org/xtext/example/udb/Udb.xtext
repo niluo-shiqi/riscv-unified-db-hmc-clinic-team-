@@ -150,7 +150,7 @@ ExtVersionArrayElement:
 	INDENT 
 		versionState = VersionState &
 		repositories = Repositories? &
-		ratifificationDate = RatificationDate? &
+		ratificationDate = RatificationDate? &
 		versionChanges = VersionChanges? &
 		url = Url? &
 		versionContributors = VersionContributors? &
