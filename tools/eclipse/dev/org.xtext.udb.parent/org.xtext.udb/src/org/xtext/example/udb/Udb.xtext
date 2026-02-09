@@ -162,7 +162,7 @@ YAMLCondition:
 
 IDLCondition:
 	"idl()" ":" idl=IDL
-	reason?=Reason
+	reason?=STRING
 ;
 
 ExtensionCondition:
@@ -211,8 +211,29 @@ ConditionArray:
 	('-' cond+=Condition)+
 ;
 
-ParamCondition:
-	STRING /* TODO */
+ParamCondition: /* TODO: mandate 2-3 properties, depending if reason is given */
+	"param" ":" 
+	INDENT
+		param=(Param|ParamCondition) /* TODO: add allOf, noneOf, etc. support */
+	DEDENT
+;
+
+Param:
+	"name" ":" paramName=STRING & /* TODO: Validate regex  ^[A-Z][A-Z_0-9]*$ */
+	("index" ":" index=INT)? &
+	("size" ":" size=Boolean)? &
+	("equal" ":" equal=(INT | STRING | Boolean))? &
+	("oneOf" ":" 
+	INDENT
+		('-' items+=(INT | STRING))+ /* TODO: add array support? */
+	DEDENT)? &
+	("notEqual" ":" notEqual=(INT | STRING | Boolean))? &
+	("greaterThan" ":" greaterThan=INT)? &
+	("lessThan" ":" lessThan=INT)? &
+	("greaterThanOrEqual" ":" greatOrEqual=INT)? &
+	("lessThanOrEqual" ":" lessOrEqual=INT)? &
+	("includes" ":" includes=(INT | STRING))? &
+	("reason" ":" reason=STRING)?
 ;
 
 XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
@@ -221,13 +242,10 @@ VersionRequirements:
 	versionReq=(REQUIREMENT_STRING | ReqStringArray)
 ;
 
-Reason: "reason" ":" reasonStr=STRING;
-
 
 
 /* IDL Grammar */
 IDL: idl=STRING;
-
 
 
 
