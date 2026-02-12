@@ -43,8 +43,12 @@ public class UdbValidator extends AbstractUdbValidator {
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
 	
+    /*
+     * CSR Validation -- rules found in csr_schema.json
+     */
 	@Check
 	public void checkAddress(CsrModel csr) {
+		// Address must be between 0 and 12 bits
 		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
 
 		if(address < 0 || address > 4096) {
