@@ -16,7 +16,7 @@ InstModel: placeholder=STRING;
 
 ExtModel: 
 	schema = Schema // must be "ext_schema.json#"
-	kind = Kind &   // must be "extension"
+	extKind = ExtKind & 
 	extName = ExtName  &
 	longName = LongName &
 	description = Description &
@@ -33,7 +33,7 @@ ExtModel:
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
-	kind = Kind &   // must be csr
+	kind = CsrKind &
 	csrName = CsrName &
 	base = Base? &
 	longName = LongName &
@@ -56,8 +56,9 @@ CsrModel:
 
 /* Fields found in the schemas */
 Schema: "$schema" ":" schema=STRING;
-Kind: 'kind' ':' kind=KindType ;
+CsrKind: 'kind' ':' kind="csr";
 CsrName: 'name' ':' name=ID ;
+ExtKind: 'kind' ':' kind="extension";
 ExtName: 'name' ':' name=ID;
 LongName: 'long_name' ':' longName=STRING ;
 Address: 'address' ':' address=Hex ;
@@ -81,7 +82,6 @@ Source:'$source' ':' source=STRING ;
 
 
 /* Field types for the fields found in schemas */
-KindType: type=('csr'|'extension');
 PrivType: type=('M'|'S'|'U'|'VS'|'D');
 LengthType: intType = IntType | parmType = ParmType;
 IntType: intVal=INT; // must be either 32 or 64
@@ -89,7 +89,8 @@ ParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 
 UdbId: 'id' ':' id=STRING;
-Url: 'url' ':' url=STRING; 
+Url: 'url' ':' url=STRING;
+Email: 'email' ':' email=STRING;
 Company: 
 	'company' ':' 
 	INDENT
@@ -206,10 +207,10 @@ VersionContributors:
 
 // TODO: is it okay that name must be the first element?
 ContributorsArrayElement:
-	'-' name=ContributorName
+	'-' "name" ":" name=ContributorName
 	INDENT
 		("company" ":" company=STRING)? &	// company contributor worked for or 'Individual'
-		("email" ":" email=STRING)?
+		email=Email?
 	DEDENT
 ;
 
@@ -342,10 +343,6 @@ terminal YEAR_MONTH:
 	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
 
-//terminal URL_STRING:
-//    ('http://' | 'https://') ('a'..'z' | 'A'..'Z' | '0'..'9' | '.' | '-' | '_' | '/' | '?' | '#' | '&' | '=')+;
-    
-//terminal EMAIL: ID '@' ID '.' ID;
 
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:

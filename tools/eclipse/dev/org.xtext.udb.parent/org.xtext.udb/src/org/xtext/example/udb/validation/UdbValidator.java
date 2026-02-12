@@ -16,6 +16,7 @@ import org.xtext.example.udb.udb.IntType;
 import org.xtext.example.udb.udb.LengthType;
 import org.xtext.example.udb.udb.ParmType;
 import org.xtext.example.udb.udb.Url;
+import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
@@ -36,6 +37,11 @@ public class UdbValidator extends AbstractUdbValidator {
     String csrFieldBitsRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+\\[[0-9]+(:[0-9]+)?\\]$";
     String csrNameRegex = "^[a-z][a-z0-9_.]+$";
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
+    
+    // Extra regex's for validation
+    String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
+    String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+
 	
 	@Check
 	public void checkAddress(CsrModel csr) {
@@ -184,6 +190,24 @@ public class UdbValidator extends AbstractUdbValidator {
 		String version = element.getVersion();
 		if (!version.matches(rviVersionRegex)) {
 			error("Invalid version", UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
+		}
+	}
+	
+	@Check
+	public void checkUrlFormat(Url url) {
+		// Check that URLs follow the URI format
+		String urlString = url.getUrl();
+		if (!urlString.matches(urlRegex)) {
+			error("URL not in URI format", UdbPackage.Literals.URL__URL);
+		}
+	}
+	
+	@Check
+	public void checkEmailFormat(Email email) {
+		// Check that emails follow email format
+		String emailString = email.getEmail();
+		if (!emailString.matches(emailRegex)) {
+			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
 		}
 	}
 
