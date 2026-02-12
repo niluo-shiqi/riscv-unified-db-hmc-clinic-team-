@@ -54,13 +54,22 @@ CsrModel:
 ;
 
 
+/* Common stuff */
+
+
+/* CSR stuff */
+
+
+/* Ext stuff */
+
+
 /* Fields found in the schemas */
 Schema: "$schema" ":" schema=STRING;
 CsrKind: 'kind' ':' kind="csr";
 CsrName: 'name' ':' name=ID ;
 ExtKind: 'kind' ':' kind="extension";
 ExtName: 'name' ':' name=ID;
-LongName: 'long_name' ':' longName=STRING ;
+LongName: 'long_name' ":" longName=STRING ;
 Address: 'address' ':' address=Hex ;
 Writable: 'writable' ':' writable=Boolean ;
 PrivMode:'priv_mode' ':' privMode=PrivType ;
@@ -207,17 +216,17 @@ VersionContributors:
 
 // TODO: is it okay that name must be the first element?
 ContributorsArrayElement:
-	'-' "name" ":" name=ContributorName
+	'-' "name" ":" name=STRING
 	INDENT
 		("company" ":" company=STRING)? &	// company contributor worked for or 'Individual'
 		email=Email?
 	DEDENT
 ;
 
-ContributorName:
-	firstName = ID
-	lastName = ID
-;
+//ContributorName:
+//	firstName = ID
+//	lastName = ID
+//;
 
 /* Grammar for CSR fields */
 CsrFields:
@@ -359,3 +368,7 @@ terminal SL_COMMENT: '#' !('\n'|'\r')*;
 
 @Override
 terminal WS: ('\r'|'\n'|'\t'|' ')+;
+
+//terminal UNQUOTED_STRING:
+//	":" !('\n'|'\r')*
+//;
