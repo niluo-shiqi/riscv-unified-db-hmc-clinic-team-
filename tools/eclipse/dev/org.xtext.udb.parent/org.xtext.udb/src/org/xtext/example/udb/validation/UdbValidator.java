@@ -137,6 +137,17 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 	
 	@Check
+	public void checkExtRatification(ExtVersionArrayElement element) {
+		String versionState = element.getVersionState().getState();
+		if (versionState == "ratified") {
+			if (element.getRatificationDate() == null) {
+				error("Ratified states require a ratification date",
+						UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__RATIFICATION_DATE);
+			}
+		}
+	}
+	
+	@Check
 	public void checkCsrName(CsrName name) {
 	    String value = name.getName();
 	    if (!value.matches(csrNameRegex)) {
