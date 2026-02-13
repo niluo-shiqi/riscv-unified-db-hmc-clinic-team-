@@ -9,7 +9,6 @@ path = [
     "bin/**",
     "cert_flow.txt",
     "cfgs/**",
-    "container.def",
     "do",
     "doc/data-templates.adoc",
     "doc/riscv-opcodes-migration.adoc",
