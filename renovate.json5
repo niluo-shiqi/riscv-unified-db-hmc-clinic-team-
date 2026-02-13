@@ -4,18 +4,27 @@
     "config:best-practices",
     ":automergeAll",
     "helpers:pinGitHubActionDigestsToSemver",
-    "schedule:nonOfficeHours"
+    "schedule:nonOfficeHours",
+    ":noUnscheduledUpdates" // Only rebase existing PRs during scheduled runs
   ],
+  "timezone": "America/Los_Angeles",
+  // Don't update generated files
   "ignorePaths": [".github/workflows/regress.yml"],
   "labels": ["dependencies"],
+  // Refresh lockfiles to keep transitive dependencies up to date
   "lockFileMaintenance": {
     "enabled": true
   },
   "packageRules": [
+    // Bump container version when updating packages that are installed in the container
     {
       "matchFileNames": [
-        "package.json",
+        ".mise.toml",
+        "Dockerfile",
+        "Gemfile.lock",
+        "Gemfile",
         "package-lock.json",
+        "package.json",
         "pyproject.toml",
         "uv.lock"
       ],
@@ -28,39 +37,30 @@
         }
       ]
     },
+    // Update ruff and pre-commit ruff hook together
     {
       "matchPackageNames": ["ruff", "astral-sh/ruff-pre-commit"],
       "groupName": "ruff"
     },
+    // Only update LLVM weekly
     {
       "matchManagers": ["git-submodules"],
-      "matchPackageNames": ["ext/llvm-project"],
+      "matchDepNames": ["ext/llvm-project"],
       "schedule": ["on saturday"]
     }
   ],
-  "customManagers": [
-    {
-      "customType": "regex",
+  // Extend default github-actions updates to include CI template files
+  "github-actions": {
       "managerFilePatterns": [
         "tools/test/*-tests.yaml",
         "tools/test/regress-gh-template.yaml"
-      ],
-      "matchStrings": [
-        "(?:^|\\r\\n|\\r|\\n|$)\\s+uses:\\s+(?<packageName>.+/.+)@(?<currentDigest>[0-9a-fA-F]+?)\\s*(# (?<currentValue>.*?))?(?:^|\\r\\n|\\r|\\n|$)"
-      ],
-      "datasourceTemplate": "github-tags",
-      "registryUrlTemplate": "https://github.com"
-    }
-  ],
+      ]
+  },
+  // Enable relevant experimental managers
   "git-submodules": {
     "enabled": true
   },
   "pre-commit": {
     "enabled": true
-  },
-  "dockerfile": {
-    "enabled": false
-  },
-
-  "timezone": "America/Los_Angeles"
+  }
 }

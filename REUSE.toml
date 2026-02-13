@@ -87,7 +87,7 @@ SPDX-License-Identifier = "BSD-3-Clause-Clear"
 
 [[annotations]]
 path = [
-    "renovate.json",
+    "renovate.json5",
     "uv.lock",
 ]
 SPDX-FileCopyrightText = "Copyright (c) Jordan Carlin"
