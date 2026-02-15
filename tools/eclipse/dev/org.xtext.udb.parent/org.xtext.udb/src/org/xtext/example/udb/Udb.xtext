@@ -232,14 +232,16 @@ ExtVersions:
 ;
 
 ExtVersionArrayElement:
-	'-' "version" ":" version=STRING & 
-	versionState = ExtVersionState &
-	repositories = ExtVersionRepositories? &
-	ratificationDate = ExtVersionRatificationDate? &
-	versionChanges = ExtVersionVersionChanges? &
-	url = Url? &
-	versionContributors = ExtVersionContributors? &
-	requirements = Requirements? 
+	'-' "version" ":" version=STRING // TODO: this has to be first, is that okay?
+	INDENT
+		versionState = ExtVersionState &
+		repositories = ExtVersionRepositories? &
+		ratificationDate = ExtVersionRatificationDate? &
+		versionChanges = ExtVersionVersionChanges? &
+		url = Url? &
+		versionContributors = ExtVersionContributors? &
+		requirements = Requirements? 
+	DEDENT 
 ;
 
 ExtVersionState: 
@@ -285,14 +287,16 @@ ExtVersionContributors:
 		contributors += ExtVersionContributorsArrayElement+ 
 	DEDENT
 ;
-
-
 ExtVersionContributorsArrayElement:
-	'-' "name" ":" firstName=ID lastName=ID & // TODO: is it okay that name must be the first element?
-	"company" ":" company=STRING? & // company contributor worked for or 'Individual'
-	contributorEmail=Email?
+	'-' name=ExtVersionContributorName // TODO: is it okay that name must be the first element?
+	INDENT
+		("company" ":" company=STRING)? & // company contributor worked for or 'Individual'
+		email=Email?
+	DEDENT
 ;
-
+ExtVersionContributorName:
+	"name" ":" firstName = ID lastName = ID
+;
 
 
 
@@ -368,6 +372,8 @@ terminal YEAR_MONTH:
 	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
 
+terminal NL: ('\r'? '\n')+;
+
 terminal INDENT: 'synthetic:INDENT';
 terminal DEDENT: 'synthetic:DEDENT';
 
@@ -375,4 +381,4 @@ terminal DEDENT: 'synthetic:DEDENT';
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
 
 @Override
-terminal WS: ('\r'|'\n'|'\t'|' ')+;
+terminal WS: (' ' | '\t')+;
