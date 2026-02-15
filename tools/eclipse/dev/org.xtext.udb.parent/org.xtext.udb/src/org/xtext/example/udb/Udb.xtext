@@ -11,6 +11,29 @@ Model:
 ;
 
 
+CsrModel:
+	schema = Schema // must be "csr_schema.json#"
+	kind = CsrKind &
+	csrName = CsrName &
+	base = CsrBase? &
+	longName = LongName &
+	description = Description &
+	definedBy = CsrDefinedBy &
+	address = CsrAddress &
+	indirectAddress = CsrIndirectAddress? &
+	indirectSlot = CsrIndirectSlot? &
+	writable = CsrWritable &
+	privmode = CsrPrivMode &
+	virtualAddress = CsrVirtualAddress? &
+	length = CsrLength &
+	requires = CsrRequires? &
+	csrFields = CsrFields? &
+	swRead = CsrSwRead? &
+	source = Source? &
+	certNormativeRules = CertNormativeRules?
+;
+
+
 InstModel: placeholder=STRING;
 
 
@@ -20,8 +43,8 @@ ExtModel:
 	extName = ExtName  &
 	longName = LongName &
 	description = Description &
-	rviJiraIssue = RviJiraIssue? &
-	company = Company? &
+	rviJiraIssue = ExtRviJiraIssue? &
+	company = ExtCompany? &
 	docLicense = DocLicense? &
 	type = ExtType &
 	requirements = Requirements? &
@@ -31,83 +54,47 @@ ExtModel:
 ;
 
 
-CsrModel:
-	schema = Schema // must be "csr_schema.json#"
-	kind = CsrKind &
-	csrName = CsrName &
-	base = Base? &
-	longName = LongName &
-	description = Description &
-	definedBy = DefinedBy &
-	address = Address &
-	indirectAddress = IndirectAddress? &
-	indirectSlot = IndirectSlot? &
-	writable = Writable &
-	privmode = PrivMode &
-	virtualAddress = VirtualAddress? &
-	length = Length &
-	requires = Requires? &
-	csrFields = CsrFields? &
-	swRead = SwRead? &
-	source = Source? &
-	certNormativeRules = CertNormativeRules?
-;
 
-
-/* Common stuff */
-
-
-/* CSR stuff */
-
-
-/* Ext stuff */
-
-
-/* Fields found in the schemas */
+/* 
+ * Common stuff
+ */
 Schema: "$schema" ":" schema=STRING;
-CsrKind: 'kind' ':' kind="csr";
-CsrName: 'name' ':' name=ID ;
-ExtKind: 'kind' ':' kind="extension";
-ExtName: 'name' ':' name=ID;
-LongName: 'long_name' ":" longName=STRING ;
-Address: 'address' ':' address=Hex ;
-Writable: 'writable' ':' writable=Boolean ;
-PrivMode:'priv_mode' ':' privMode=PrivType ;
-Length: 'length' ':' length=LengthType ;
-Description: 'description' ':' description=STRING ; /* TODO: change this to follow spec_text? (in schema defs) */
-DefinedBy:'definedBy' ':'extensionName=STRING ;
-Base: 'base' ':' base=INT ;
-IndirectAddress:'indirect_address' ':' indirectAddress=Hex;
-IndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
-VirtualAddress:'virtual_address' ':' virtualAddress=Hex ;
-RviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
-ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
-Requirements: "requirements" ":" requirements=STRING; /* TODO: this needs to be Condition */
-SwRead:'sw_read()' ':' swRead=IDL ;
-
-// implement in validator?
-Requires:'requires' ':' requires=STRING ;
-Source:'$source' ':' source=STRING ;
-
-
-/* Field types for the fields found in schemas */
-PrivType: type=('M'|'S'|'U'|'VS'|'D');
-LengthType: intType = IntType | parmType = ParmType;
-IntType: intVal=INT; // must be either 32 or 64
-ParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
-
+LongName: 'long_name' ":" longName=STRING;
+Description: 'description' ':' description=STRING; 
+Requirements: "requirements" ":" requirements=Condition;
+Source:'$source' ':' source=STRING;
 
 UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
 Email: 'email' ':' email=STRING;
-Company: 
-	'company' ':' 
+
+// see "cert_normative_rules" in schema_defs.json
+// TODO: not tested, probably doesn't work
+CertNormativeRules: 
+	'cert_normative_rules' ':' 
+	INDENT	
+		rules += CNRuleArrayElement+
+	DEDENT
+;
+CNRuleArrayElement:
+	'-' id = UdbId // TODO: makes id the first element (do we want this?)
 	INDENT
-		('name' ':' name=STRING) &
-		 url=Url?
-	DEDENT 
+		('name' ':' name = STRING) &
+		docLinks = DocLinks &
+		description = Description
+	DEDENT
+;
+DocLinks:	
+	"doc_links" ":"
+	INDENT
+		links += DocLinksArrayElement+
+	DEDENT
+;
+DocLinksArrayElement:
+	'-' link = STRING	// TODO: this must follow the URI format
 ;
 
+// see "license" in schema_defs.json 
 DocLicense:
 	'doc_license' ':'
 	INDENT
@@ -118,117 +105,34 @@ DocLicense:
 	DEDENT
 ;
 
-/* cert_normative_rules grammar */
-CertNormativeRules: 
-	'cert_normative_rules' ':' 
-	INDENT	
-		rules += CNRuleArrayElement+
-	DEDENT
-;
-
-CNRuleArrayElement:
-	'-' id = UdbId // TODO: makes id the first element (do we want this?)
-	INDENT
-		('name' ':' name = STRING) &
-		docLinks = DocLinks &
-		description = Description
-	DEDENT
-;
-
-DocLinks:	
-	"doc_links" ":"
-	INDENT
-		links += DocLinksArrayElement+
-	DEDENT
-;
-
-DocLinksArrayElement:
-	'-' link = STRING	/* TODO: these must follow the URI format */
-;
 
 
-/* Extension versions grammar */
-ExtVersions:
-	"versions" ":" 
-	INDENT
-		elements += ExtVersionArrayElement+
-	DEDENT
-;
+/*
+ * CSR stuff (see csr_schema.json)
+ */
+CsrKind: 'kind' ':' kind="csr";
+CsrName: 'name' ':' name=ID;
+CsrAddress: 'address' ':' address=Hex;
+CsrWritable: 'writable' ':' writable=Boolean;
+CsrDefinedBy: 'definedBy' ':'extensionName=STRING ;
+CsrBase: 'base' ':' base=INT ;
+CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
+CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
+CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex ;
+CsrSwRead:'sw_read()' ':' swRead=IDL ;
 
-ExtVersionArrayElement:
-	'-' "version" ":" version=STRING // TODO: makes version the first element (this okay?) 
-	INDENT 
-		versionState = VersionState &
-		repositories = Repositories? &
-		ratificationDate = RatificationDate? &
-		versionChanges = VersionChanges? &
-		url = Url? &
-		versionContributors = VersionContributors? &
-		requirements = Requirements? 
-	DEDENT
-;
+CsrPrivMode:'priv_mode' ':' privMode=CsrPrivType;
+CsrPrivType: type=('M'|'S'|'U'|'VS'|'D');
 
-VersionState: 
-	"state" ":" 
-	state=( "development" | "frozen" | "public-review" | 
-		    "ratification-ready" | "ratified" | "nonstandard-released")
-;
+CsrLength: 'length' ':' length=CsrLengthType;
+CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
+CsrIntType: intVal=INT; 
+CsrParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
-Repositories:
-	"repositories" ":"
-	INDENT
-		repositories += RepoArrayElement+
-	DEDENT
-;
+// extension that must be implemented for this CSR to exist
+CsrRequires:'requires' ':' requires=STRING; 
 
-RepoArrayElement: // TODO: this is ordered, that okay?
-	'-' url=Url
-	INDENT
-		("branch" ":" branch=STRING)?
-	DEDENT	
-;
-
-RatificationDate:
-	"ratification_date" ":"
-	date = (
-	  YEAR_MONTH			// when ratification date is known
-	| "unknown"				// when ratification date is unknown
-	| "null")				// when version isn't ratified			
-;
-
-VersionChanges:
-	"changes" ":"
-	INDENT
-		changes += ChangesArrayElement+
-	DEDENT
-;
-
-ChangesArrayElement:
-	'-' change=STRING
-;
-
-VersionContributors:
-	"contributors" ":"
-	INDENT
-		contributors += ContributorsArrayElement+ 
-	DEDENT
-;
-
-// TODO: is it okay that name must be the first element?
-ContributorsArrayElement:
-	'-' "name" ":" name=STRING
-	INDENT
-		("company" ":" company=STRING)? &	// company contributor worked for or 'Individual'
-		email=Email?
-	DEDENT
-;
-
-//ContributorName:
-//	firstName = ID
-//	lastName = ID
-//;
-
-/* Grammar for CSR fields */
+// grammar for csr_field
 CsrFields:
 	{CsrFields} 'fields' ':'
 	INDENT
@@ -239,65 +143,156 @@ CsrFields:
 CsrFieldDef:
 	name=ID ':'
 	INDENT
-		displayName = FieldDisplayName? &
+		displayName = CsrFieldDisplayName? &
 		longName = LongName? &
-		location = LocationType &
-		resetValue = ResetValueType &
-		swWriteFunc = SWWriteFunc? &
-		legalFunc = LegalFunc? &
-		base = Base? &
+		location = CsrFieldLocationType &
+		resetValue = CsrFieldResetValueType &
+		swWriteFunc = CsrFieldSWWriteFunc? &
+		legalFunc = CsrFieldLegalFunc? &
+		base = CsrBase? &
 		description = Description &
-		type = CsrTypeType &
+		type = CsrFieldTypeType &
 		alias = CsrFieldAlias? &
-		definedBy = DefinedBy? &
+		definedBy = CsrDefinedBy? &
 		affectedBy = AffectedBy? &
 		certNormativeRules = CertNormativeRules? &
 	DEDENT
 ;
 
+CsrFieldDisplayName: 'name' ':' fieldName=STRING ;
 
-/* fields for Fields */
-StaticLocation: 'location' ':' locValue=FieldLocation ;
-LocationRV32: "location_rv32" ":" locationRV32=FieldLocation ;
-LocationRV64: "location_rv64" ":" locationRV64=FieldLocation ;
-
-FieldDisplayName: 'name' ':' fieldName=STRING ;
-ResetValue: "reset_value" ":" resetValue=ResetValueValue ;
-ResetValueFunc: "reset_value()" ":" resetValueFunc=IDL ;
-SWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL ;
-LegalFunc: "legal?(csr_value)" ":" legalFunc=IDL ;
-CsrType: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH") ;
-CsrTypeFunc: "type()" ":" idl=IDL ;
-CsrFieldAlias: "alias" ":" (aliasName=CsrAliasName | aliasArray=CsrAliasArray);
-AffectedBy: "affectedBy" ":" affectedBy=AffectedByType ;
-
-/* Types for Fields */
-
-LocationType: staticLoc = StaticLocation | funcLoc = VarLocation;
-VarLocation:
+CsrFieldLocationType: staticLoc = CsrStaticLocation | funcLoc = CsrVarLocation;
+CsrStaticLocation: 'location' ':' locValue=CsrFieldLocation;
+CsrVarLocation:
 	locationRV32=LocationRV32
 	locationRV64=LocationRV64
 ;
-FieldLocation: value=INT | range=Range;
-Range: upper=INT '-' lower=INT;
-ResetValueType: value=ResetValue | function=ResetValueFunc;
-ResetValueValue: value=INT | undefinedLegal=UndefinedLegal;
-CsrTypeType: typeVal=CsrType | typeFunc=CsrTypeFunc;
+LocationRV32: "location_rv32" ":" locationRV32=CsrFieldLocation;
+LocationRV64: "location_rv64" ":" locationRV64=CsrFieldLocation;
+CsrFieldLocation: value=INT | range=CsrFieldLocationRange;
+CsrFieldLocationRange: upper=INT '-' lower=INT;
 
-CsrAliasName: name=ID; //+=(CSR_FIELD | CSR_FIELD_BITS)+;
-CsrAliasArray:
+CsrFieldResetValueType: value=CsrFieldResetValue | function=CsrFieldResetValueFunc;
+CsrFieldResetValue: "reset_value" ":" resetValue=CsrFieldResetValueValue;
+CsrFieldResetValueValue: value=INT | undefinedLegal=UndefinedLegal;
+CsrFieldResetValueFunc: "reset_value()" ":" resetValueFunc=IDL;
+
+CsrFieldSWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL;
+CsrFieldLegalFunc: "legal?(csr_value)" ":" legalFunc=IDL;
+
+CsrFieldTypeType: typeVal=CsrFieldType | typeFunc=CsrFieldTypeFunc;
+CsrFieldType: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH");
+CsrFieldTypeFunc: "type()" ":" idl=IDL;
+
+CsrFieldAlias: "alias" ":" (aliasName=CsrFieldAliasName | aliasArray=CsrFieldAliasArray);
+CsrFieldAliasName: name=ID;
+CsrFieldAliasArray:
 	"items" ":"
 	INDENT
 		aliases += CsrAliasArrayElement+
 	DEDENT
 ;
-
 CsrAliasArrayElement:
-	"-" alias = CsrAliasName 
+	"-" alias = CsrFieldAliasName 
 ;
 
-// TODO: we probably will want a cross ref thing for this
-AffectedByType: affectedByName=STRING | affectedByArray=StringArray;
+AffectedBy: "affectedBy" ":" affectedBy=AffectedByType;
+AffectedByType: affectedByName=STRING | affectedByArray=StringArray; // TODO: cross-referencing
+
+
+
+/*
+ * Instruction stuff (see inst_schema.json)
+ * NOTE: implementation started in PRIDE1099-INST branch
+ */
+
+
+
+/* 
+ * Extension stuff (see ext_schema.json) 
+ */
+ExtKind: 'kind' ':' kind="extension";
+ExtName: 'name' ':' name=ID;
+ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
+ExtRviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
+ExtCompany: 
+	'company' ':' 
+	INDENT
+		('name' ':' name=STRING) &
+		 url=Url?
+	DEDENT 
+;
+
+// versions grammar (see ext_schema.json)
+ExtVersions:
+	"versions" ":" 
+	INDENT
+		elements += ExtVersionArrayElement+
+	DEDENT
+;
+
+ExtVersionArrayElement:
+	'-' "version" ":" version=STRING & 
+	versionState = ExtVersionState &
+	repositories = ExtVersionRepositories? &
+	ratificationDate = ExtVersionRatificationDate? &
+	versionChanges = ExtVersionVersionChanges? &
+	url = Url? &
+	versionContributors = ExtVersionContributors? &
+	requirements = Requirements? 
+;
+
+ExtVersionState: 
+	"state" ":" 
+	state=("development" | "frozen" | "public-review" | 
+		   "ratification-ready" | "ratified" | "nonstandard-released")
+;
+
+ExtVersionRepositories:
+	"repositories" ":"
+	INDENT
+		repositories += ExtVersionRepoArrayElement+
+	DEDENT
+;
+ExtVersionRepoArrayElement: // TODO: this is ordered, that okay?
+	'-' url=Url
+	INDENT
+		("branch" ":" branch=STRING)?
+	DEDENT	
+;
+
+ExtVersionRatificationDate:
+	"ratification_date" ":"
+	date = (
+	  YEAR_MONTH			// when ratification date is known
+	| "unknown"				// when ratification date is unknown
+	| "null")				// when version isn't ratified			
+;
+
+ExtVersionVersionChanges:
+	"changes" ":"
+	INDENT
+		changes += ExtVersionChangesArrayElement+
+	DEDENT
+;
+ExtVersionChangesArrayElement:
+	'-' change=STRING
+;
+
+ExtVersionContributors:
+	"contributors" ":"
+	INDENT
+		contributors += ExtVersionContributorsArrayElement+ 
+	DEDENT
+;
+
+
+ExtVersionContributorsArrayElement:
+	'-' "name" ":" firstName=ID lastName=ID & // TODO: is it okay that name must be the first element?
+	"company" ":" company=STRING? & // company contributor worked for or 'Individual'
+	contributorEmail=Email?
+;
+
 
 
 
@@ -312,22 +307,22 @@ Condition: cond=STRING; // placeholder
 //	| xlenCond = XLenCondition
 //;
 
-IDLCondition:
-	"idl()" ":" idl=IDL
-	reason?=Reason
-;
+//IDLCondition:
+//	"idl()" ":" idl=IDL
+//	reason?=Reason
+//;
+//
+//ExtensionCondition:
+//	STRING /* TODO */
+//;
+//
+//ParamCondition:
+//	STRING /* TODO */
+//;
 
-ExtensionCondition:
-	STRING /* TODO */
-;
+//XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
 
-ParamCondition:
-	STRING /* TODO */
-;
-
-XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
-
-Reason: "reason" ":" reasonStr=STRING;
+//Reason: "reason" ":" reasonStr=STRING;
 
 
 
@@ -338,26 +333,39 @@ IDL: idl=STRING;
 
 
 
-/* Keywords */
+/*
+ * Keywords
+ */
 UndefinedLegal: "UNDEFINED_LEGAL";
 Boolean returns ecore::EBoolean: "true" | "false";
 
-/* Helpers */
+
+
+/*
+ * Helpers
+ */
 StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
 
 
-/* Terminals */
-terminal YEAR_MONTH:
-	(('20')('0'..'9')('0'..'9')'-'    
-	  ('0'('1'..'9') | '1'('0'..'2')))
-;
 
-
+/*
+ * Hex
+ */
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
 	('0x' | '0X')
 	('0'..'9' | 'A'..'F' | 'a'..'f')
 	(('0'..'9' | 'A'..'F' | 'a'..'f' | '_')*('0'..'9' | 'A'..'F' | 'a'..'f'))?
+;
+
+
+
+/*
+ * Terminals
+ */
+terminal YEAR_MONTH:
+	(('20')('0'..'9')('0'..'9')'-'    
+	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
 
 terminal INDENT: 'synthetic:INDENT';
@@ -368,7 +376,3 @@ terminal SL_COMMENT: '#' !('\n'|'\r')*;
 
 @Override
 terminal WS: ('\r'|'\n'|'\t'|' ')+;
-
-//terminal UNQUOTED_STRING:
-//	":" !('\n'|'\r')*
-//;

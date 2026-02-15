@@ -12,16 +12,16 @@ import org.xtext.example.udb.udb.Model;
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrFieldDef;
 
-import org.xtext.example.udb.udb.IntType;
-import org.xtext.example.udb.udb.LengthType;
-import org.xtext.example.udb.udb.ParmType;
+import org.xtext.example.udb.udb.CsrIntType;
+import org.xtext.example.udb.udb.CsrLengthType;
+import org.xtext.example.udb.udb.CsrParmType;
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 import org.xtext.example.udb.udb.CsrName;
-import org.xtext.example.udb.udb.CsrAliasName;
+import org.xtext.example.udb.udb.CsrFieldAliasName;
 
 
 /**
@@ -91,14 +91,14 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkLengthValue(CsrModel csr) {
 		// Containment reference is always instantiated
-		LengthType length_t = csr.getLength().getLength();
+		CsrLengthType length_t = csr.getLength().getLength();
 		if (length_t == null) {
 			error("length should not be null",
 					UdbPackage.Literals.CSR_MODEL__LENGTH);
 		}
 		// If length is an integer, value is either 32 or 64
-		if (length_t instanceof IntType) {
-			Integer length = ((IntType) csr.getLength().getLength()).getIntVal();
+		if (length_t instanceof CsrIntType) {
+			Integer length = ((CsrIntType) csr.getLength().getLength()).getIntVal();
 			if (length != 32 && length != 64) {
 				error("length if specified as integer, should be 32 or 64",
 						UdbPackage.Literals.CSR_MODEL__LENGTH);
@@ -177,7 +177,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 	
 	@Check
-	public void checkCsrFieldAlias(CsrAliasName alias) {
+	public void checkCsrFieldAlias(CsrFieldAliasName alias) {
 		String value = alias.getName();
 
 	    if (!value.matches(csrFieldRegex) &&
@@ -185,7 +185,7 @@ public class UdbValidator extends AbstractUdbValidator {
 
 	        error(
 	            "Alias must match CSR_FIELD or CSR_FIELD_BITS format",
-	            UdbPackage.Literals.CSR_ALIAS_NAME__NAME
+	            UdbPackage.Literals.CSR_FIELD_ALIAS_NAME__NAME
 	        );
 	    }
 	}
@@ -198,22 +198,22 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 	
-	@Check
-	public void checkUrlFormat(Url url) {
-		// Check that URLs follow the URI format
-		String urlString = url.getUrl();
-		if (!urlString.matches(urlRegex)) {
-			error("URL not in URI format", UdbPackage.Literals.URL__URL);
-		}
-	}
-	
-	@Check
-	public void checkEmailFormat(Email email) {
-		// Check that emails follow email format
-		String emailString = email.getEmail();
-		if (!emailString.matches(emailRegex)) {
-			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
-		}
-	}
+//	@Check
+//	public void checkUrlFormat(Url url) {
+//		// Check that URLs follow the URI format
+//		String urlString = url.getUrl();
+//		if (!urlString.matches(urlRegex)) {
+//			error("URL not in URI format", UdbPackage.Literals.URL__URL);
+//		}
+//	}
+//	
+//	@Check
+//	public void checkEmailFormat(Email email) {
+//		// Check that emails follow email format
+//		String emailString = email.getEmail();
+//		if (!emailString.matches(emailRegex)) {
+//			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
+//		}
+//	}
 
 }
