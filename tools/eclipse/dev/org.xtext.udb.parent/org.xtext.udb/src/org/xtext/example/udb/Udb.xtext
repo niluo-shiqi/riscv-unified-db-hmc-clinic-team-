@@ -372,8 +372,6 @@ terminal YEAR_MONTH:
 	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
 
-terminal NL: ('\r'? '\n')+;
-
 terminal INDENT: 'synthetic:INDENT';
 terminal DEDENT: 'synthetic:DEDENT';
 
@@ -381,4 +379,4 @@ terminal DEDENT: 'synthetic:DEDENT';
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
 
 @Override
-terminal WS: (' ' | '\t')+;
+terminal WS: ('\r'|'\n'|'\t'|' ')+;
