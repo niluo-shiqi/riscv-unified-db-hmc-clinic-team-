@@ -173,7 +173,7 @@ ExtensionCondition:
 ;
 
 ExtRequirement:
-	"name" ":" extName=EXT_NAME &
+	"name" ":" extName=ID & /* TODO: implement regex in validator */
 	("version" ":" verReqs=VersionRequirements)?
 ;
 
@@ -239,7 +239,7 @@ Param:
 XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
 
 VersionRequirements:
-	versionReq=(REQUIREMENT_STRING | ReqStringArray)
+	versionReq=(ID | ReqStringArray) /* TODO: implement regex in validator */
 ;
 
 
@@ -256,7 +256,7 @@ Boolean returns ecore::EBoolean: "true" | "false";
 
 /* Helpers*/
 StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
-ReqStringArray: '[' reqs+=REQUIREMENT_STRING (',' reqs+=REQUIREMENT_STRING)+ ']';
+ReqStringArray: '[' reqs+=ID (',' reqs+=ID)+ ']'; /* TODO: implement regex in validator */
 
 /* Terminals */
 terminal CSR_NAME:
@@ -274,18 +274,19 @@ terminal CSR_FIELD_BITS:
 	'.'('A'..'Z' | '0'..'9')+
 	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
 ;
-terminal EXT_NAME:
-	('A'..'WY') | (('SXZ')('a-z'|'0'..'9')+)
-;
-terminal REQUIREMENT_STRING:
-	('>='|'>'|'~>'|'<'|'<='|'+')? (WS*)
-	('0'..'9')+
-	(('.')('0'..'9')+ 
-		(('.')('0'..'9')+ 
-			(('-')('a'..'f' | 'A'..'F' | '0'..'9')+)?
-		)?
-	)?
-;
+
+//terminal EXT_NAME:
+//	('A'..'WY') | (('SXZ')('a-z'|'0'..'9')+)
+//;
+//terminal REQUIREMENT_STRING:
+//	('>='|'>'|'~>'|'<'|'<='|'+')? (WS*)
+//	('0'..'9')+
+//	(('.')('0'..'9')+ 
+//		(('.')('0'..'9')+ 
+//			(('-')('a'..'f' | 'A'..'F' | '0'..'9')+)?
+//		)?
+//	)?
+//;
 
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
