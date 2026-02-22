@@ -6,17 +6,14 @@ package org.xtext.example.udb.validation;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
-import org.xtext.example.udb.parser.antlr.UdbParser;
 
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
 
-import org.xtext.example.udb.udb.Model;
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrFieldDef;
 import org.xtext.example.udb.udb.CsrIntType;
 import org.xtext.example.udb.udb.CsrLengthType;
-import org.xtext.example.udb.udb.CsrParmType;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrFieldAliasName;
 import org.xtext.example.udb.udb.CsrAffectedByType;
@@ -26,6 +23,8 @@ import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
+
+import org.xtext.example.udb.udb.InstModel;
 
 
 
@@ -49,6 +48,7 @@ public class UdbValidator extends AbstractUdbValidator {
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
 	
+    
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
@@ -197,6 +197,18 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 	
+	
+	
+	/*
+	 * Instruction Validation -- rules found in inst_schema.json
+	 */
+	@Check
+	public void checkInstructionModel(InstModel inst) {
+		// TODO: implement
+	}
+	
+	
+	
 	/*
 	 * Extension Validation -- rules found in ext_schema.json
 	 */
@@ -276,6 +288,7 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}	
 	}
+	
 	
 	
 	/*
