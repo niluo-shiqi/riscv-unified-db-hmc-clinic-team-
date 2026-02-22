@@ -13,9 +13,8 @@ Model:
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
-	kind = CsrKind &
+	csrKind = CsrKind
 	csrName = CsrName &
-	base = CsrBase? &
 	longName = LongName &
 	description = Description &
 	definedBy = CsrDefinedBy &
@@ -39,8 +38,8 @@ InstModel: placeholder=STRING;
 
 ExtModel: 
 	schema = Schema // must be "ext_schema.json#"
-	extKind = ExtKind & 
-	extName = ExtName  &
+	extKind = ExtKind
+	extName = ExtName &
 	longName = LongName &
 	description = Description &
 	rviJiraIssue = ExtRviJiraIssue? &
@@ -69,7 +68,7 @@ Url: 'url' ':' url=STRING;
 Email: 'email' ':' email=STRING;
 
 // see "cert_normative_rules" in schema_defs.json
-// TODO: not tested, probably doesn't work
+// TODO: not tested
 CertNormativeRules: 
 	'cert_normative_rules' ':' 
 	INDENT	
@@ -78,11 +77,11 @@ CertNormativeRules:
 ;
 CNRuleArrayElement:
 	'-' id = UdbId // TODO: makes id the first element (do we want this?)
-	INDENT
+	INDENT (
 		('name' ':' name = STRING) &
 		docLinks = DocLinks &
 		description = Description
-	DEDENT
+	) DEDENT
 ;
 DocLinks:	
 	"doc_links" ":"
@@ -97,12 +96,12 @@ DocLinksArrayElement:
 // see "license" in schema_defs.json 
 DocLicense:
 	'doc_license' ':'
-	INDENT
+	INDENT (
 		('name' ':' name=STRING) & 
 		id=UdbId? &
 		url=Url? &
-		text_url=Url?
-	DEDENT
+		textUrl=Url?
+	) DEDENT
 ;
 
 
@@ -114,16 +113,12 @@ CsrKind: 'kind' ':' kind="csr";
 CsrName: 'name' ':' name=ID;
 CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
-CsrDefinedBy: 'definedBy' ':'extensionName=STRING ;
-CsrBase: 'base' ':' base=INT ;
+CsrDefinedBy: 'definedBy' ':' extensionName=STRING;
 CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
-CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex ;
-CsrSwRead:'sw_read()' ':' swRead=IDL ;
-
-CsrPrivMode:'priv_mode' ':' privMode=CsrPrivType;
-CsrPrivType: type=('M'|'S'|'U'|'VS'|'D');
-
+CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
+CsrSwRead:'sw_read()' ':' swRead=IDL;
+CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
 CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
 CsrIntType: intVal=INT; 
@@ -142,21 +137,20 @@ CsrFields:
 
 CsrFieldDef:
 	name=ID ':'
-	INDENT
+	INDENT (
 		displayName = CsrFieldDisplayName? &
 		longName = LongName? &
 		location = CsrFieldLocationType &
 		resetValue = CsrFieldResetValueType &
 		swWriteFunc = CsrFieldSWWriteFunc? &
 		legalFunc = CsrFieldLegalFunc? &
-		base = CsrBase? &
 		description = Description &
 		type = CsrFieldTypeType &
 		alias = CsrFieldAlias? &
 		definedBy = CsrDefinedBy? &
-		affectedBy = AffectedBy? &
-		certNormativeRules = CertNormativeRules? &
-	DEDENT
+		affectedBy = CsrFieldAffectedBy? &
+		certNormativeRules = CertNormativeRules?
+	) DEDENT
 ;
 
 CsrFieldDisplayName: 'name' ':' fieldName=STRING ;
@@ -164,7 +158,7 @@ CsrFieldDisplayName: 'name' ':' fieldName=STRING ;
 CsrFieldLocationType: staticLoc = CsrStaticLocation | funcLoc = CsrVarLocation;
 CsrStaticLocation: 'location' ':' locValue=CsrFieldLocation;
 CsrVarLocation:
-	locationRV32=LocationRV32
+	locationRV32=LocationRV32 &
 	locationRV64=LocationRV64
 ;
 LocationRV32: "location_rv32" ":" locationRV32=CsrFieldLocation;
@@ -185,7 +179,7 @@ CsrFieldType: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH");
 CsrFieldTypeFunc: "type()" ":" idl=IDL;
 
 CsrFieldAlias: "alias" ":" (aliasName=CsrFieldAliasName | aliasArray=CsrFieldAliasArray);
-CsrFieldAliasName: name=ID;
+CsrFieldAliasName: name=STRING;
 CsrFieldAliasArray:
 	"items" ":"
 	INDENT
@@ -196,8 +190,10 @@ CsrAliasArrayElement:
 	"-" alias = CsrFieldAliasName 
 ;
 
-AffectedBy: "affectedBy" ":" affectedBy=AffectedByType;
-AffectedByType: affectedByName=STRING | affectedByArray=StringArray; // TODO: cross-referencing
+// TODO: cross-referencing
+CsrFieldAffectedBy: "affectedBy" ":" affectedBy=CsrAffectedByType; 
+CsrAffectedByType: affectedByName=ID | affectedByArray=Array;
+
 
 
 
@@ -217,10 +213,10 @@ ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
 ExtRviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
 ExtCompany: 
 	'company' ':' 
-	INDENT
+	INDENT (
 		('name' ':' name=STRING) &
 		 url=Url?
-	DEDENT 
+	) DEDENT 
 ;
 
 // versions grammar (see ext_schema.json)
@@ -233,15 +229,15 @@ ExtVersions:
 
 ExtVersionArrayElement:
 	'-' "version" ":" version=STRING // TODO: this has to be first, is that okay?
-	INDENT
+	INDENT (
 		versionState = ExtVersionState &
 		repositories = ExtVersionRepositories? &
 		ratificationDate = ExtVersionRatificationDate? &
 		versionChanges = ExtVersionVersionChanges? &
 		url = Url? &
 		versionContributors = ExtVersionContributors? &
-		requirements = Requirements? 
-	DEDENT 
+		requirements = Requirements?
+	) DEDENT
 ;
 
 ExtVersionState: 
@@ -258,9 +254,9 @@ ExtVersionRepositories:
 ;
 ExtVersionRepoArrayElement: // TODO: this is ordered, that okay?
 	'-' url=Url
-	INDENT
-		("branch" ":" branch=STRING)?
-	DEDENT	
+	(INDENT
+		"branch" ":" branch=STRING
+	DEDENT)?
 ;
 
 ExtVersionRatificationDate:
@@ -289,13 +285,13 @@ ExtVersionContributors:
 ;
 ExtVersionContributorsArrayElement:
 	'-' name=ExtVersionContributorName // TODO: is it okay that name must be the first element?
-	INDENT
+	(INDENT (
 		("company" ":" company=STRING)? & // company contributor worked for or 'Individual'
 		email=Email?
-	DEDENT
+	) DEDENT)?
 ;
 ExtVersionContributorName:
-	"name" ":" firstName = ID lastName = ID
+	"name" ":" firstName = ID lastName = ID?
 ;
 
 
@@ -348,7 +344,7 @@ Boolean returns ecore::EBoolean: "true" | "false";
 /*
  * Helpers
  */
-StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
+Array: '[' names+=ID (',' names+=ID)+ ']';
 
 
 
@@ -372,6 +368,7 @@ terminal YEAR_MONTH:
 	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
 
+// For whitespace awareness
 terminal INDENT: 'synthetic:INDENT';
 terminal DEDENT: 'synthetic:DEDENT';
 

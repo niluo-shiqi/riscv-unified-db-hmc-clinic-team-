@@ -36,7 +36,7 @@ class UdbParsingTest {
 					location: 2-1
 					description: "See vxrm."
 					type: RW-RH
-					alias: vxrm.VALUE[1:0]
+					alias: "vxrm.VALUE[1:0]"
 					sw_write(csr_value): "|
 					  CSR[vxrm].VALUE = csr_value.VXRM;
 					  return csr_value.VXRM;"
@@ -45,7 +45,7 @@ class UdbParsingTest {
 					location: 0
 					description: "See vxsat."
 					type: RW-RH
-					alias: vxsat.VALUE[0]
+					alias: "vxsat.VALUE[0]"
 					sw_write(csr_value): "|
 					  CSR[vxsat].VALUE = csr_value.VXSAT;
 					  return csr_value.VXSAT;"
@@ -61,9 +61,9 @@ class UdbParsingTest {
 		
 		var schema = csr.getSchema().getSchema();
 		Assertions.assertEquals("csr_schema.json#", schema as String);
-		var k = csr.getKind().getKind().getType();
+		var k = csr.getCsrKind().getKind();
 		Assertions.assertEquals("csr", k as String);
-//		var n = csr.getCsrName().getName();
+		var n = csr.getCsrName().getName();
 		Assertions.assertEquals("vcsr", n as String);
 		var ln = csr.getLongName().getLongName();
 		Assertions.assertEquals("Vector Control and Status Register", ln);
@@ -71,7 +71,7 @@ class UdbParsingTest {
 		Assertions.assertEquals(0x00F, add);
 		var writ = csr.getWritable().isWritable();
 		Assertions.assertTrue(writ);
-		var priv = csr.getPrivmode().getPrivMode().getType();
+		var priv = csr.getPrivmode().getPrivMode();
 		Assertions.assertEquals("U", priv);
 		var len = csr.getLength().getLength().getParmType().getParmName();
 		Assertions.assertEquals("MXLEN", len as String);
@@ -81,7 +81,7 @@ class UdbParsingTest {
 		Assertions.assertEquals("V", def);
 
 		// test fields
-		var vxrm = csr.getFields().get(1);
+		var vxrm = csr.getCsrFields().getFields.get(0);
 		var vxsat = csr.getCsrFields().getFields().get(1);
 		Assertions.assertEquals("VXRM", vxrm.getName());
 		Assertions.assertEquals("VXSAT", vxsat.getName());
@@ -118,8 +118,8 @@ class UdbParsingTest {
 		Assertions.assertEquals("RW-RH", sattype);
 
 		// testing alias
-		var vxalias = vxrm.getAlias().getAlias().getAlias().get(0);
-		var satalias = vxsat.getAlias().getAlias().getAlias().get(0);
+		var vxalias = vxrm.getAlias().getAliasName().getName();
+		var satalias = vxsat.getAlias().getAliasName().getName();
 		Assertions.assertEquals("vxrm.VALUE[1:0]", vxalias);
 		Assertions.assertEquals("vxsat.VALUE[0]", satalias);
 
@@ -133,18 +133,18 @@ class UdbParsingTest {
 		kind: extension
 		name: V
 		type: unprivileged
-		long_name: Vector Operations
+		long_name: "Vector Operations"
 		versions:
 		  - version: "1.0.0"
 		    state: ratified
 		    ratification_date: 2021-11
-		description: |
-		  General support for data-parallel execution.
-		requirements:
+		description: "|
+		  General support for data-parallel execution."
+		requirements: '
 		  extension:
 		    allOf:
 		      - name: Zve64d
-		      - name: Zvl128b
+		      - name: Zvl128b'
 		''')
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
@@ -154,8 +154,8 @@ class UdbParsingTest {
 		
 		var schema = ext.getSchema().getSchema();
 		Assertions.assertEquals("ext_schema.json#", schema as String);
-		var kind = ext.getKind().getKind().getType();
-		Assertions.assertEquals("kind", kind);
+		var kind = ext.getExtKind().getKind();
+		Assertions.assertEquals("extension", kind);
 		var name = ext.getExtName().getName();
 		Assertions.assertEquals("V", name);
 		var type = ext.getType().getPerms();
@@ -165,13 +165,13 @@ class UdbParsingTest {
 		var description = ext.getDescription().getDescription();
 		Assertions.assertEquals("|\n  General support for data-parallel execution.", description);
 		
-		//version testing
+		// version testing
 		var version = ext.getExtVersions().getElements().get(0);
-		Assertions.assertEquals("\"1.0.0\"", version.getVersion());
+		Assertions.assertEquals("1.0.0", version.getVersion());
 		Assertions.assertEquals("ratified", version.getVersionState().getState());
-		Assertions.assertEquals("2021-11", version.getRatifificationDate().getDate());
+		Assertions.assertEquals("2021-11", version.getRatificationDate().getDate());
 		
-		//requirements testing
+		// requirements testing
 		var reqs = ext.getRequirements();
 		System.out.println(reqs.getRequirements());
 		

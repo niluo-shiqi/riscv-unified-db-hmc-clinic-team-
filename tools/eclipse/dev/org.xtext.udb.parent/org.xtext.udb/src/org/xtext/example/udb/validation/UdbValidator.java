@@ -8,20 +8,25 @@ import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
 import org.xtext.example.udb.parser.antlr.UdbParser;
 
-import org.xtext.example.udb.udb.Model;
-import org.xtext.example.udb.udb.CsrModel;
-import org.xtext.example.udb.udb.CsrFieldDef;
-
-import org.xtext.example.udb.udb.CsrIntType;
-import org.xtext.example.udb.udb.CsrLengthType;
-import org.xtext.example.udb.udb.CsrParmType;
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
 
-import org.xtext.example.udb.udb.ExtName;
-import org.xtext.example.udb.udb.ExtVersionArrayElement;
+import org.xtext.example.udb.udb.Model;
+import org.xtext.example.udb.udb.CsrModel;
+import org.xtext.example.udb.udb.CsrFieldDef;
+import org.xtext.example.udb.udb.CsrIntType;
+import org.xtext.example.udb.udb.CsrLengthType;
+import org.xtext.example.udb.udb.CsrParmType;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrFieldAliasName;
+import org.xtext.example.udb.udb.CsrAffectedByType;
+import org.xtext.example.udb.udb.CsrFieldAffectedBy;
+
+import org.xtext.example.udb.udb.ExtModel;
+import org.xtext.example.udb.udb.ExtVersionArrayElement;
+import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
+import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
+
 
 
 /**
@@ -36,6 +41,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	String csrFieldRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+$";
     String csrFieldBitsRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+\\[[0-9]+(:[0-9]+)?\\]$";
     String csrNameRegex = "^[a-z][a-z0-9_.]+$";
+    String csrAffectedByRegex = "^(RV64)|([A-WY]|(Z[a-z]+)|(S[a-z]+))$";
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
     
     // Extra regex's for validation
@@ -79,16 +85,6 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 
 	@Check
-	public void checkBaseValue(CsrModel csr) {
-		/* Ensure base value is either 32 or 64 */
-		int base = csr.getBase() != null ?csr.getBase().getBase() : null;
-
-		if (base != 32 && base != 64) {
-			error("Base must have value of 32 or 64.", UdbPackage.Literals.CSR_MODEL__BASE);
-		}
-	}
-
-	@Check
 	public void checkLengthValue(CsrModel csr) {
 		// Containment reference is always instantiated
 		CsrLengthType length_t = csr.getLength().getLength();
@@ -121,10 +117,23 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("Indirect slot value must be between 1 and 6.", UdbPackage.Literals.CSR_MODEL__INDIRECT_SLOT);
 		}
 	}
+	
+	@Check
+	public void checkCsrPrivMode(CsrModel csr) {
+		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
+		java.util.Set<String> ALLOWED_TYPES = java.util.Set.of("M","S","U","VS","D");
+		
+		if (mode != null && !ALLOWED_TYPES.contains(mode)) {
+		    error(
+		        "Invalid privilege mode: " + mode,
+		        UdbPackage.Literals.CSR_MODEL__PRIVMODE
+		    );
+		}
+	}
 
 	@Check
 	public void checkVirtualAddress(CsrModel csr) {
-		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode().getType() : null;
+		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
 
 		if (mode.equals("VS")) {
 			if (csr.getVirtualAddress() == null) {
@@ -132,30 +141,6 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 
-	}
-	
-	/*
-	 * Checks for different names to make sure they follow the right regex's
-	 */
-	@Check
-	public void checkExtName(ExtName name) {
-	    String value = name.getName();
-	    if (!value.matches(extensionNameRegex)) {
-	        error("Invalid extension name", 
-	              UdbPackage.Literals.EXT_NAME__NAME);
-	    }
-	}
-	
-	@Check
-	public void checkExtRatification(ExtVersionArrayElement element) {		
-		String versionState = element.getVersionState() != null ? element.getVersionState().getState() : null;
-		
-		if (versionState.equals("ratified")) {
-			if (element.getRatificationDate() == null) {
-				error("Ratified states require a ratification date.",
-						UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION_STATE);
-			}
-		}
 	}
 	
 	@Check
@@ -191,29 +176,130 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 	
 	@Check
-	public void checkExtensionVersion(ExtVersionArrayElement element) {
-		String version = element.getVersion();
-		if (!version.matches(rviVersionRegex)) {
-			error("Invalid version", UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
+	public void checkCsrFieldAffectedBy(CsrFieldAffectedBy affectedBy) {
+		CsrAffectedByType type = affectedBy.getAffectedBy(); 
+		String name = type.getAffectedByName();
+		
+		if (name != null) {
+			if (!name.matches(csrAffectedByRegex)) {
+				error("Invalid extension name", // TODO: is this an okay error message?
+						UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
+			}
+		} else {
+			EList<String> exts = type.getAffectedByArray().getNames();
+			for (int i = 0; i < exts.size(); i++) {
+				String ext = exts.get(i);
+				if (!ext.matches(csrAffectedByRegex)) {
+					error("Invalid extension name",
+							UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
+				}
+			}
 		}
 	}
 	
-//	@Check
-//	public void checkUrlFormat(Url url) {
-//		// Check that URLs follow the URI format
-//		String urlString = url.getUrl();
-//		if (!urlString.matches(urlRegex)) {
-//			error("URL not in URI format", UdbPackage.Literals.URL__URL);
-//		}
-//	}
-//	
-//	@Check
-//	public void checkEmailFormat(Email email) {
-//		// Check that emails follow email format
-//		String emailString = email.getEmail();
-//		if (!emailString.matches(emailRegex)) {
-//			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
-//		}
-//	}
+	/*
+	 * Extension Validation -- rules found in ext_schema.json
+	 */
+	@Check
+	public void checkExtensionModel(ExtModel ext) {
+		String schema = ext.getSchema().getSchema();
+		if (!schema.equals("ext_schema.json#")) {
+			error("Schema incompatible with kind", ext.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+		
+		// check that the extension name is valid
+	    String name = ext.getExtName().getName();
+	    if (!name.matches(extensionNameRegex)) {
+	        error("Invalid extension name", ext.getExtName(),
+	              UdbPackage.Literals.EXT_NAME__NAME);
+	    }
+	    
+	    EList<ExtVersionArrayElement> versions = ext.getExtVersions().getElements();
+	    
+	    for (int i=0; i < versions.size(); i++) {
+	    	ExtVersionArrayElement elem = versions.get(i);
+	    	checkExtVersionArrayElement(elem);
+	    }
+	    
+	    // Check that url's follow uri format
+	    Url companyUrl = ext.getCompany() != null ? ext.getCompany().getUrl() : null;
+	    checkUrlFormat(companyUrl);
+	    Url docLicenseUrl = ext.getDocLicense() != null ? ext.getDocLicense().getUrl() : null;
+	    checkUrlFormat(docLicenseUrl);
+	    Url docLicenseTextUrl = ext.getDocLicense() != null ? ext.getDocLicense().getTextUrl() : null;
+	    checkUrlFormat(docLicenseTextUrl);
+	}
+	
+	public void checkExtVersionArrayElement(ExtVersionArrayElement elem) {
+		// Validate elements in the versions array
+		
+		// check that the string representation of the version is valid
+    	String versionString = elem.getVersion();
+    	if (!versionString.matches(rviVersionRegex)) {
+			error("Invalid version", elem, UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
+		}
+    	
+    	// if state is ratified, a ratification date must be given
+    	String versionState = elem.getVersionState().getState();
+		if (versionState.equals("ratified")) {
+			if (elem.getRatificationDate() == null) {
+				error("Ratified states require a ratification date.", elem,
+						UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION_STATE);
+			}
+		}
+		
+		// check that url follows uri format
+		Url versionUrl = elem.getUrl();
+		checkUrlFormat(versionUrl);
+		
+		// check that url's in repositories follow uri format
+		EList<ExtVersionRepoArrayElement> repos = 
+				elem.getRepositories() != null ? elem.getRepositories().getRepositories() : null;
+		if (!(repos == null)) {
+			for (int j = 0; j < repos.size(); j++) {
+				ExtVersionRepoArrayElement r = repos.get(j);
+				
+				Url repoUrl = r.getUrl();
+				checkUrlFormat(repoUrl);
+			}
+		}
+		
+		// check that contributor emails follow email format
+		EList<ExtVersionContributorsArrayElement> contributors = 
+				elem.getVersionContributors() != null ? elem.getVersionContributors().getContributors() : null;
+		if (!(contributors == null)) {
+			for (int j = 0; j < contributors.size(); j++) {
+				ExtVersionContributorsArrayElement c = contributors.get(j);
+				
+				Email contributorEmail = c.getEmail();
+				checkEmailFormat(contributorEmail);
+			}
+		}	
+	}
+	
+	
+	/*
+	 *  Helper functions to validate more general fields (e.g. url, email, etc.)
+	 */
+	public void checkUrlFormat(Url url) {
+		// Check that URLs follow the URI format
+		if (!(url == null)) {
+			String urlString = url.getUrl();
+			if (!urlString.matches(urlRegex)) {
+				error("URL not in URI format", url, UdbPackage.Literals.URL__URL);
+			}
+		}
+
+	}
+	
+	public void checkEmailFormat(Email email) {
+		// Check that emails follow email format
+		if (!(email == null)) {
+			String emailString = email.getEmail();
+			if (!emailString.matches(emailRegex)) {
+				error("Email not in formatted correctly", email, UdbPackage.Literals.EMAIL__EMAIL);
+			}
+		}
+	}
 
 }
