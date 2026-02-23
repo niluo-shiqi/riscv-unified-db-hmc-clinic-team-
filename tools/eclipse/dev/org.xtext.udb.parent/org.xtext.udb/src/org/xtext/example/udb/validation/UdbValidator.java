@@ -44,7 +44,9 @@ public class UdbValidator extends AbstractUdbValidator {
     String csrAffectedByRegex = "^(RV64)|([A-WY]|(Z[a-z]+)|(S[a-z]+))$";
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
     String instructionNameRegex= "[a-z0-9.]+";
-    String instructionHintsRegex="^\\\\$ref:\\\\s*inst/.+\\\\.yaml#.*$";
+    String instructionHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
+    String instructionInheritTypeRegex="^.+\\.yaml#(/.*)?$";
+    String instructionOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
@@ -255,22 +257,52 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 	
-
+	@Check
 	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
-	public void checkHints(InstModel inst) {
+	public void checkInstHints(InstModel inst) {
 		EList<org.xtext.example.udb.udb.HintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
 		
-		error("not entering loop", UdbPackage.Literals.INST_MODEL__HINTS);
+	
 		for (org.xtext.example.udb.udb.HintElement hint : hints) {
 			String hintString = hint.getHint();
-			error("hint: " + hintString, UdbPackage.Literals.INST_MODEL__HINTS);
+			
 			if (!(hintString.matches(instructionHintsRegex))) {
-				error("hints must be of format ^\\$ref:\\s*inst/.+\\.yaml#.*$", UdbPackage.Literals.INST_MODEL__HINTS);
+				error("hints must be of format $ref: inst/<path>.yaml# or $ref: inst/<path>.yaml#/...", UdbPackage.Literals.INST_MODEL__HINTS);
 			}
 		}
 	}
 	
-	
+	@Check
+	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
+	public void checkInstInherits(InstModel inst) {
+		
+		// validate top level inherits attribute within format
+		EList<String> inheritsList = inst.getFormat().getInherits() != null ? inst.getFormat().getInherits().getReference() : null;
+		
+		for (String address : inheritsList) {
+			if (!(address.matches(instructionInheritTypeRegex))) {
+				error("$inherits field must follow expected format: <path>.yaml# or <path>.yaml#/<fragment>.", UdbPackage.Literals.INST_MODEL__FORMAT);
+			}
+		}
+		
+		
+		// validate inherit attribute within opcodes within format
+		if (inst.getFormat() == null || inst.getFormat().getOpcodes() == null) {
+	        return;
+	    }
+		for (org.xtext.example.udb.udb.OpcodeEntry entry: inst.getFormat().getOpcodes().getOpcode()) {
+			if(entry instanceof org.xtext.example.udb.udb.OpcodeInherits) {
+				org.xtext.example.udb.udb.OpcodeInherits opcodeInherits = (org.xtext.example.udb.udb.OpcodeInherits) entry;
+				String address = opcodeInherits.getInheritsAddress();
+				
+				if (!(address.matches(instructionOpcodeInheritTypeRegex))) {
+					error("$inherits field within opcodes must follow string address format inst_opcode/<file>.yaml#/data", UdbPackage.Literals.INST_MODEL__FORMAT);
+				}
+				
+			}
+		}
+		
+	}
 	
 	
 	
