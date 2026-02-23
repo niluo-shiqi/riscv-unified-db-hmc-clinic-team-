@@ -58,14 +58,14 @@ ExtModel:
  * Common stuff
  */
 Schema: "$schema" ":" schema=STRING;
-LongName: 'long_name' ":" longName=STRING;
+LongName: 'long_name' ":" longName=UnquotedString;
 Description: 'description' ':' description=STRING; 
 Requirements: "requirements" ":" requirements=Condition;
 Source:'$source' ':' source=STRING;
 
 UdbId: 'id' ':' id=STRING;
-Url: 'url' ':' url=STRING;
-Email: 'email' ':' email=STRING;
+Url: 'url' ':' url=UnquotedString;
+Email: 'email' ':' email=UnquotedString;
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
@@ -97,7 +97,7 @@ DocLinksArrayElement:
 DocLicense:
 	'doc_license' ':'
 	INDENT (
-		('name' ':' name=STRING) & 
+		('name' ':' name=UnquotedString) & 
 		id=UdbId? &
 		url=Url? &
 		textUrl=Url?
@@ -179,7 +179,7 @@ CsrFieldType: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH");
 CsrFieldTypeFunc: "type()" ":" idl=IDL;
 
 CsrFieldAlias: "alias" ":" (aliasName=CsrFieldAliasName | aliasArray=CsrFieldAliasArray);
-CsrFieldAliasName: name=ID;
+CsrFieldAliasName: name=UnquotedString;
 CsrFieldAliasArray:
 	"items" ":"
 	INDENT
@@ -214,7 +214,7 @@ ExtRviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
 ExtCompany: 
 	'company' ':' 
 	INDENT (
-		('name' ':' name=STRING) &
+		('name' ':' name=UnquotedString) &
 		 url=Url?
 	) DEDENT 
 ;
@@ -274,7 +274,7 @@ ExtVersionVersionChanges:
 	DEDENT
 ;
 ExtVersionChangesArrayElement:
-	'-' change=STRING
+	'-' change=UnquotedString
 ;
 
 ExtVersionContributors:
@@ -286,7 +286,7 @@ ExtVersionContributors:
 ExtVersionContributorsArrayElement:
 	'-' name=ExtVersionContributorName // TODO: is it okay that name must be the first element?
 	(INDENT (
-		("company" ":" company=STRING)? & // company contributor worked for or 'Individual'
+		("company" ":" company=UnquotedString)? & // company contributor worked for or 'Individual'
 		email=Email?
 	) DEDENT)?
 ;
@@ -346,6 +346,13 @@ Boolean returns ecore::EBoolean: "true" | "false";
  */
 Array: '[' names+=ID (',' names+=ID)+ ']';
 
+UnquotedString: 
+	words+=UnquotedWord+
+;
+
+UnquotedWord: 
+	ID | INT | '-' | '.' | ',' | '/' | '@' | ':' | '(' | ')' | '[' | ']' | '|'
+;
 
 
 /*
@@ -367,12 +374,6 @@ terminal YEAR_MONTH:
 	(('20')('0'..'9')('0'..'9')'-'    
 	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
-
-// Use this instead of STRING to avoid having to use quotes
-@Override
-terminal ID: 
-	'^'?('a'..'z'|'A'..'Z'|'_') 
-	('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'.')*;
 
 // For whitespace awareness
 terminal INDENT: 'synthetic:INDENT';

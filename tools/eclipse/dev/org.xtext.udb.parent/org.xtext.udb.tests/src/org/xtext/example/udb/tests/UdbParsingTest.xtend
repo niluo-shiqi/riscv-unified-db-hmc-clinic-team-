@@ -24,7 +24,7 @@ class UdbParsingTest {
 			$schema: "csr_schema.json#"
 			kind: csr
 			name: vcsr
-			long_name: "Vector Control and Status Register"
+			long_name: Vector Control and Status Register
 			address: 0x00F
 			writable: true
 			priv_mode: U
@@ -36,7 +36,7 @@ class UdbParsingTest {
 					location: 2-1
 					description: "See vxrm."
 					type: RW-RH
-					alias: "vxrm.VALUE[1:0]"
+					alias: vxrm.VALUE[1:0]
 					sw_write(csr_value): "|
 					  CSR[vxrm].VALUE = csr_value.VXRM;
 					  return csr_value.VXRM;"
@@ -45,7 +45,7 @@ class UdbParsingTest {
 					location: 0
 					description: "See vxsat."
 					type: RW-RH
-					alias: "vxsat.VALUE[0]"
+					alias: vxsat.VALUE[0]
 					sw_write(csr_value): "|
 					  CSR[vxsat].VALUE = csr_value.VXSAT;
 					  return csr_value.VXSAT;"
@@ -65,7 +65,7 @@ class UdbParsingTest {
 		Assertions.assertEquals("csr", k as String);
 		var n = csr.getCsrName().getName();
 		Assertions.assertEquals("vcsr", n as String);
-		var ln = csr.getLongName().getLongName();
+		var ln = String.join(" ", csr.getLongName().getLongName().getWords());
 		Assertions.assertEquals("Vector Control and Status Register", ln);
 		var add = csr.getAddress().getAddress().getValue();
 		Assertions.assertEquals(0x00F, add);
@@ -118,8 +118,8 @@ class UdbParsingTest {
 		Assertions.assertEquals("RW-RH", sattype);
 
 		// testing alias
-		var vxalias = vxrm.getAlias().getAliasName().getName();
-		var satalias = vxsat.getAlias().getAliasName().getName();
+		var vxalias = String.join("", vxrm.getAlias().getAliasName().getName().getWords());
+		var satalias = String.join("", vxsat.getAlias().getAliasName().getName().getWords());
 		Assertions.assertEquals("vxrm.VALUE[1:0]", vxalias);
 		Assertions.assertEquals("vxsat.VALUE[0]", satalias);
 
@@ -133,7 +133,7 @@ class UdbParsingTest {
 		kind: extension
 		name: V
 		type: unprivileged
-		long_name: "Vector Operations"
+		long_name: Vector Operations
 		versions:
 		  - version: "1.0.0"
 		    state: ratified
@@ -160,7 +160,7 @@ class UdbParsingTest {
 		Assertions.assertEquals("V", name);
 		var type = ext.getType().getPerms();
 		Assertions.assertEquals("unprivileged", type);
-		var longname = ext.getLongName().getLongName();
+		var longname = String.join(" ", ext.getLongName().getLongName().getWords());
 		Assertions.assertEquals("Vector Operations", longname);
 		var description = ext.getDescription().getDescription();
 		Assertions.assertEquals("|\n  General support for data-parallel execution.", description);

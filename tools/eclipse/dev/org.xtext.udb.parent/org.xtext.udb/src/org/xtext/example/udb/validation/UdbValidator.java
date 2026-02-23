@@ -44,7 +44,7 @@ public class UdbValidator extends AbstractUdbValidator {
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
     
     // Extra regex's for validation
-    String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
+    String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$"; // NOTE: not perfect
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
 	
@@ -163,13 +163,13 @@ public class UdbValidator extends AbstractUdbValidator {
 	
 	@Check
 	public void checkCsrFieldAlias(CsrFieldAliasName alias) {
-		String value = alias.getName();
+		String value = String.join("", alias.getName().getWords());
 
 	    if (!value.matches(csrFieldRegex) &&
 	        !value.matches(csrFieldBitsRegex)) {
 
 	        error(
-	            "Alias must match CSR_FIELD or CSR_FIELD_BITS format",
+	            "Alias must match CSR_FIELD or CSR_FIELD_BITS naming format",
 	            UdbPackage.Literals.CSR_FIELD_ALIAS_NAME__NAME
 	        );
 	    }
@@ -297,7 +297,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkUrlFormat(Url url) {
 		// Check that URLs follow the URI format
 		if (!(url == null)) {
-			String urlString = url.getUrl();
+			String urlString = String.join("", url.getUrl().getWords());
 			if (!urlString.matches(urlRegex)) {
 				error("URL not in URI format", url, UdbPackage.Literals.URL__URL);
 			}
@@ -308,7 +308,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkEmailFormat(Email email) {
 		// Check that emails follow email format
 		if (!(email == null)) {
-			String emailString = email.getEmail();
+			String emailString = String.join("", email.getEmail().getWords());
 			if (!emailString.matches(emailRegex)) {
 				error("Email not in formatted correctly", email, UdbPackage.Literals.EMAIL__EMAIL);
 			}
