@@ -59,7 +59,7 @@ ExtModel:
  */
 Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=UnquotedString;
-Description: 'description' ':' description=STRING; 
+Description: 'description' ':' description=(UnquotedString | MultilineString); 
 Requirements: "requirements" ":" requirements=Condition;
 Source:'$source' ':' source=STRING;
 
@@ -346,14 +346,18 @@ Boolean returns ecore::EBoolean: "true" | "false";
  */
 Array: '[' names+=ID (',' names+=ID)+ ']';
 
-UnquotedString: 
-	words+=UnquotedWord+
-;
-
+UnquotedString: words+=UnquotedWord+;
 UnquotedWord: 
-	ID | INT | '-' | '.' | ',' | '/' | '@' | ':' | '(' | ')' | '[' | ']' | '|'
+	ID | INT | '-' | '.' | ',' | '/' | '@' | ':' 
+	| '(' | ')' | '[' | ']' | '|' | '`' | '=' | '*'
 ;
 
+MultilineString: "|" 
+	INDENT
+		lines+=MultilineLine+
+	DEDENT
+;
+MultilineLine: line=UnquotedString;
 
 /*
  * Hex
