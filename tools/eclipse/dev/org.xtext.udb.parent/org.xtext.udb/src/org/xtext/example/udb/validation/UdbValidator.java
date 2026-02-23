@@ -28,6 +28,7 @@ import org.xtext.example.udb.udb.InstModel;
 
 
 
+
 /**
  * This class contains custom validation rules.
  *
@@ -42,7 +43,8 @@ public class UdbValidator extends AbstractUdbValidator {
     String csrNameRegex = "^[a-z][a-z0-9_.]+$";
     String csrAffectedByRegex = "^(RV64)|([A-WY]|(Z[a-z]+)|(S[a-z]+))$";
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
-    
+    String instructionNameRegex= "[a-z0-9.]+";
+    String instructionHintsRegex="^\\\\$ref:\\\\s*inst/.+\\\\.yaml#.*$";
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
@@ -55,7 +57,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkAddress(CsrModel csr) {
 		// Address must be between 0 and 12 bits
-		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
+		int address = csr.getAddress() != null ? csr.getAddress().getAddress() : null;
 
 		if(address < 0 || address > 4096) {
 			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__ADDRESS);
@@ -66,7 +68,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkVirtualAddressValue(CsrModel csr) {
 		/* Ensure virtual address is in required range 0-4095 */
 		int vaddress = csr.getVirtualAddress() != null ?
-					   csr.getVirtualAddress().getVirtualAddress().getValue() : null;
+					   csr.getVirtualAddress().getVirtualAddress() : null;
 
 		if (vaddress < 0 || vaddress > 4095) {
 			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__VIRTUAL_ADDRESS);
@@ -77,7 +79,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkIndirectAddressValue(CsrModel csr) {
 		/* Ensure indirect address is in required range */
 		int iaddress = csr.getIndirectAddress() != null ?
-					   csr.getIndirectAddress().getIndirectAddress().getValue() : null;
+					   csr.getIndirectAddress().getIndirectAddress() : null;
 
 		if(iaddress < 0 || iaddress > (2^64)) {
 			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
@@ -203,9 +205,72 @@ public class UdbValidator extends AbstractUdbValidator {
 	 * Instruction Validation -- rules found in inst_schema.json
 	 */
 	@Check
-	public void checkInstructionModel(InstModel inst) {
-		// TODO: implement
+	public void checkBaseValue(InstModel inst) {
+		/* Ensure base value is either 32 or 64 */
+		int base = inst.getBase() != null ?inst.getBase().getBase() : null;
+
+		if (base != 32 && base != 64) {
+			error("Base must have value of 32 or 64.", UdbPackage.Literals.INST_MODEL__BASE);
+		}
 	}
+
+
+	@Check
+	public void checkInstructionModel(InstModel inst) {
+		String schema = inst.getSchema().getSchema();
+		if (!schema.equals("inst_schema.json#")) {
+			error("Schema incompatible with kind", inst.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+		
+		// check that the extension name is valid
+	    String name = inst.getInstName().getName();
+	    if (!name.matches(instructionNameRegex)) {
+	        error("Invalid instruction name", inst.getInstName(),
+	              UdbPackage.Literals.INST_NAME__NAME);
+	    }
+	}
+	
+	/*
+	 *  Check access detail field is present when at least one mode 
+	 *  within access field is sometimes
+	 */
+	@Check
+	public void checkInstAccessDetail(InstModel inst) {
+		String accessdetail = inst.getAccessDetail() != null ? inst.getAccessDetail().getAccessDetail(): null;
+
+		String m = inst.getAccess().getM() != null ? inst.getAccess().getM().getAccessLevel(): null;
+		String s = inst.getAccess().getS() != null ? inst.getAccess().getS().getAccessLevel(): null;
+		String u = inst.getAccess().getU() != null ? inst.getAccess().getU().getAccessLevel(): null;
+		String vs = inst.getAccess().getVs() != null ? inst.getAccess().getVs().getAccessLevel(): null;
+		String vu = inst.getAccess().getVu() != null ? inst.getAccess().getVu().getAccessLevel(): null;
+
+		boolean sometimes =
+			    "sometimes".equals(m) ||
+			    "sometimes".equals(s) ||
+			    "sometimes".equals(u) ||
+			    "sometimes".equals(vs) ||
+			    "sometimes".equals(vu);
+		if (sometimes == true && (accessdetail == null || accessdetail == "")) {
+			error("Must provide access_detail field when at least one access type is sometimes", UdbPackage.Literals.INST_MODEL__ACCESS);
+		}
+	}
+	
+
+	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
+	public void checkHints(InstModel inst) {
+		EList<org.xtext.example.udb.udb.HintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
+		
+		error("not entering loop", UdbPackage.Literals.INST_MODEL__HINTS);
+		for (org.xtext.example.udb.udb.HintElement hint : hints) {
+			String hintString = hint.getHint();
+			error("hint: " + hintString, UdbPackage.Literals.INST_MODEL__HINTS);
+			if (!(hintString.matches(instructionHintsRegex))) {
+				error("hints must be of format ^\\$ref:\\s*inst/.+\\.yaml#.*$", UdbPackage.Literals.INST_MODEL__HINTS);
+			}
+		}
+	}
+	
+	
 	
 	
 	

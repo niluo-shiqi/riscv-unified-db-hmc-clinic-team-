@@ -33,7 +33,29 @@ CsrModel:
 ;
 
 
-InstModel: placeholder=STRING;
+InstModel: 
+	schema = Schema // must be "inst_schema.json#"
+	kind = InstKind
+	instName = InstName &
+	longName = LongName &
+	description = Description &
+	definedBy = InstDefinedBy &
+	hints = Hints? &
+	base = Base? &
+	access = Access &
+	accessDetail = AccessDetail? &
+	operation = Operation? &
+	operationAst = OperationAst? &
+	sail = Sail? &
+	certNormativeRules = CertNormativeRules? &
+	assembly = Assembly &
+	dataIndependentTiming = DataIndependentTiming? &
+	pseudoInstructions = PseudoInstructions? &
+	source = Source? &
+	format = Format? &
+	encoding = Encoding?
+;
+
 
 
 ExtModel: 
@@ -111,12 +133,12 @@ DocLicense:
  */
 CsrKind: 'kind' ':' kind="csr";
 CsrName: 'name' ':' name=ID;
-CsrAddress: 'address' ':' address=Hex;
+CsrAddress: 'address' ':' address=HEX;
 CsrWritable: 'writable' ':' writable=Boolean;
 CsrDefinedBy: 'definedBy' ':' extensionName=STRING;
-CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
+CsrIndirectAddress:'indirect_address' ':' indirectAddress=HEX;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
-CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
+CsrVirtualAddress:'virtual_address' ':' virtualAddress=HEX;
 CsrSwRead:'sw_read()' ':' swRead=IDL;
 CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
@@ -201,7 +223,128 @@ CsrAffectedByType: affectedByName=ID | affectedByArray=Array;
  * Instruction stuff (see inst_schema.json)
  * NOTE: implementation started in PRIDE1099-INST branch
  */
+InstKind: 'kind' ':' kind="instruction";
+InstName: 'name' ':' name=ID;
+InstDefinedBy: 'definedBy' ':' dbname=STRING;
+Base: 'base' ':' base=INT; // 32 or 64
+Access:
+	'access' ':'
+	INDENT
+	('m' ':' m=AccessType)? &
+	's' ':' s=AccessType &
+	'u' ':' u=AccessType &
+	'vs' ':' vs=AccessType &
+	'vu' ':' vu=AccessType
+	DEDENT
+	;
+AccessType:
+	accessLevel=('always'|'sometimes'|'never')
+;
+Assembly: 'assembly' ':' assembly=STRING;
+/* Optional fields for the INST schema */
+OperationAst: 'operation_ast' ':' operationAst=STRING;
+Hints:
+	'hints' ':'
+	INDENT
+		hints += HintElement+
+	DEDENT
+;
+HintElement: '-' '{' hint = STRING '}'; // must match "^inst/.+\\.yaml#.*$"
 
+AccessDetail: 'access_detail' ':' accessDetail=STRING;
+Operation: 'operation()' ':' operation=STRING; // string for now, IDL later TODO
+Sail: 'sail()' ':' sail=STRING; // string for now, IDL later TODO
+DataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
+PseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array; // type TODO
+Format: 'format' ':' 
+	INDENT
+		'$inherits' ':' inherits=InheritType
+		'opcodes' ':' opcodes=OpcodeType 
+	DEDENT
+;
+InheritType:
+	INDENT
+		('-' reference += STRING)+ //regex must fit yaml path
+	DEDENT
+;
+
+OpcodeType:
+	INDENT
+		opcode += OpcodeEntry+
+	DEDENT
+;
+OpcodeEntry:
+	OpcodeField
+	| OpcodeInherits
+;
+
+OpcodeField: // ex) funct7 
+	name=ID ':' // must fit regex ('a'..'z') ('a'..'z'|'0'..'9')*, example of opcode name: "function7"
+	INDENT
+		(opcodeProperties += OpcodeProps)+
+	DEDENT
+	
+;
+
+OpcodeProps: 
+	'display_name' ':' displayName=ID 
+	| 'value' ':' value=JsonIntLike
+;
+JsonIntLike:
+	intVal=INT
+	| dec=DEC
+	| bin=BIN
+	| hex=HEX
+;
+OpcodeInherits: 
+	'opcode' ':' '{' '$inherits' ':' inheritsAddress=STRING '}'// must fit regex 'inst_opcode/' INST_OPCODE_FILE '.yaml#/data'
+;
+
+
+Encoding: 
+	'encoding' ':'
+	(
+		RvPairEncoding
+		| OldEncoding
+	)
+;
+
+OldEncoding:
+	{OldEncoding} 
+	INDENT
+	    match=EncodingMatch
+	    variables=EncodingVariables?
+  	DEDENT
+;
+EncodingMatch:
+	'match' ':' pattern=STRING
+;
+
+EncodingVariables:
+	'variables' ':'
+	  INDENT
+	    vars += EncodingVar+
+	  DEDENT
+;
+
+EncodingVar: // TODO Check if its ok name must always be first
+    '-' 'name' ':' name=ID
+    (INDENT 
+    	'location' ':' location=BitRange
+    DEDENT)
+
+;
+
+BitRange:
+  hi=INT '-' lo=INT
+;
+RvPairEncoding:
+	{RvPairEncoding}
+	INDENT
+	'RV32' ':' rv32=OldEncoding
+	'RV64' ':' rv64=OldEncoding
+	DEDENT
+; 
 
 
 /* 
@@ -351,15 +494,20 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 /*
  * Hex
  */
-Hex: value=HEX_VALUE;
-terminal HEX_VALUE returns ecore::EInt:
+
+terminal HEX returns ecore::EInt:
 	('0x' | '0X')
 	('0'..'9' | 'A'..'F' | 'a'..'f')
 	(('0'..'9' | 'A'..'F' | 'a'..'f' | '_')*('0'..'9' | 'A'..'F' | 'a'..'f'))?
 ;
 
+terminal BIN: 
+	'0b' ('0'|'1')+
+;
 
 
+
+terminal DEC: '0' ('0'..'9')+;  // "0111", "00010", etc.
 /*
  * Terminals
  */
@@ -377,3 +525,8 @@ terminal SL_COMMENT: '#' !('\n'|'\r')*;
 
 @Override
 terminal WS: ('\r'|'\n'|'\t'|' ')+;
+
+@Override
+terminal ID: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'.')*;
+
+
