@@ -133,12 +133,12 @@ DocLicense:
  */
 CsrKind: 'kind' ':' kind="csr";
 CsrName: 'name' ':' name=ID;
-CsrAddress: 'address' ':' address=HEX;
+CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
 CsrDefinedBy: 'definedBy' ':' extensionName=STRING;
-CsrIndirectAddress:'indirect_address' ':' indirectAddress=HEX;
+CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
-CsrVirtualAddress:'virtual_address' ':' virtualAddress=HEX;
+CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=IDL;
 CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
@@ -292,9 +292,8 @@ OpcodeProps:
 ;
 JsonIntLike:
 	intVal=INT
-	| dec=DEC
 	| bin=BIN
-	| hex=HEX
+	| hex=Hex
 ;
 OpcodeInherits: 
 	'opcode' ':' '{' '$inherits' ':' inheritsAddress=STRING '}'// must fit regex 'inst_opcode/' INST_OPCODE_FILE '.yaml#/data'
@@ -495,19 +494,20 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
  * Hex
  */
 
-terminal HEX returns ecore::EInt:
+Hex: value=HEX_VALUE;
+terminal HEX_VALUE returns ecore::EInt:
 	('0x' | '0X')
 	('0'..'9' | 'A'..'F' | 'a'..'f')
 	(('0'..'9' | 'A'..'F' | 'a'..'f' | '_')*('0'..'9' | 'A'..'F' | 'a'..'f'))?
 ;
 
 terminal BIN: 
-	'0b' ('0'|'1')+
+	'0b' ('0'|'1')+ // "0111", "00010", etc.
 ;
 
 
 
-terminal DEC: '0' ('0'..'9')+;  // "0111", "00010", etc.
+
 /*
  * Terminals
  */

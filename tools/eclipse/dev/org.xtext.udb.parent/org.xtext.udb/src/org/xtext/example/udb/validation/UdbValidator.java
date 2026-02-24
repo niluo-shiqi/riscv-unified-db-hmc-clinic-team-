@@ -63,7 +63,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkAddress(CsrModel csr) {
 		// Address must be between 0 and 12 bits
-		int address = csr.getAddress() != null ? csr.getAddress().getAddress() : null;
+		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
 
 		if(address < 0 || address > 4096) {
 			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__ADDRESS);
@@ -74,7 +74,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkVirtualAddressValue(CsrModel csr) {
 		/* Ensure virtual address is in required range 0-4095 */
 		int vaddress = csr.getVirtualAddress() != null ?
-					   csr.getVirtualAddress().getVirtualAddress() : null;
+					   csr.getVirtualAddress().getVirtualAddress().getValue() : null;
 
 		if (vaddress < 0 || vaddress > 4095) {
 			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__VIRTUAL_ADDRESS);
@@ -85,7 +85,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkIndirectAddressValue(CsrModel csr) {
 		/* Ensure indirect address is in required range */
 		int iaddress = csr.getIndirectAddress() != null ?
-					   csr.getIndirectAddress().getIndirectAddress() : null;
+					   csr.getIndirectAddress().getIndirectAddress().getValue() : null;
 
 		if(iaddress < 0 || iaddress > (2^64)) {
 			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
