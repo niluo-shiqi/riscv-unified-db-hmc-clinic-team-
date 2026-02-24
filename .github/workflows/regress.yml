@@ -7,6 +7,7 @@ name: CI/CD
 permissions:
   contents: read
   pull-requests: write
+  packages: read
 'on':
   pull_request:
     branches:
@@ -21,12 +22,16 @@ permissions:
 env:
   DOCKER: 1
   DEPLOY_DIR: _site
+  GITHUB_TOKEN: "${{ github.token }}"
 concurrency:
   group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
   cancel-in-progress: true
 jobs:
   build-container:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
     - name: Clone Github Repo Action
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -34,9 +39,30 @@ jobs:
       run: |
         TAG=$(cat bin/.container-tag)
         echo "TAG=$TAG" >> $GITHUB_ENV
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+      with:
+        registry: ghcr.io
+        username: "${{ github.actor }}"
+        password: "${{ secrets.GITHUB_TOKEN }}"
+    - name: Check if container image exists in registry
+      id: check-registry
+      run: |
+        if docker manifest inspect ghcr.io/riscv/udb:${{ env.TAG }} > /dev/null 2>&1; then
+          echo "REGISTRY_HIT=true" >> $GITHUB_ENV
+        else
+          echo "REGISTRY_HIT=false" >> $GITHUB_ENV
+        fi
+    - name: Pull image from registry
+      if: env.REGISTRY_HIT == 'true'
+      run: |
+        docker pull ghcr.io/riscv/udb:${{ env.TAG }}
+        docker save ghcr.io/riscv/udb:${{ env.TAG }} -o ${{ runner.temp }}/docker_image.tar
     - name: Set up Docker Buildx
+      if: env.REGISTRY_HIT == 'false'
       uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
     - name: Build and export
+      if: env.REGISTRY_HIT == 'false'
       uses: docker/build-push-action@601a80b39c9405e50806ae38af30926f9d957c47
       with:
         push: false
@@ -252,6 +278,77 @@ jobs:
         path: |
           tools/eclipse/udb-vscode/.vscode-test/**/*
           tools/eclipse/udb-vscode/out/test/**/*
+  create-gems:
+    name: Create the gems
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        gem:
+        - idlc
+        - udb
+        - udb_helpers
+    steps:
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+    - name: Copy the gem directory to resolve symlinks
+      run: cp -L -r tools/ruby-gems/${{ matrix.gem }} gem-build-dir
+    - name: Create the ${{ matrix.gem }} gem
+      run: |
+        cd gem-build-dir && \
+        gem build -o ${{ matrix.gem }}.gem ${{ matrix.gem }}.gemspec
+    - name: Upload the ${{ matrix.gem }} gem
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      with:
+        name: "${{ matrix.gem }}.gem"
+        path: gem-build-dir/${{ matrix.gem }}.gem
+  udb-gem-z3:
+    name: Test udb gem using z3 across several distros and platforms
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+        - ubuntu-24.04
+        - ubuntu-24.04-arm
+        container:
+        - almalinux:8
+        - ruby:3-slim
+    runs-on: "${{ matrix.platform }}"
+    container: "${{ matrix.container }}"
+    needs: create-gems
+    steps:
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+    - if: matrix.container == 'almalinux:8'
+      name: Install ruby
+      run: |
+        dnf module enable -y ruby:3.3
+        dnf install -y ruby ruby-devel gcc-toolset-12
+        PRE="source scl_source enable gcc-toolset-12"
+        echo "PRE=$PRE" >> $GITHUB_ENV
+    - if: matrix.container == 'ruby:3-slim'
+      name: Install make
+      run: |
+        apt-get update -qq && \
+        apt-get install --no-install-recommends -y make
+    - name: download udb gem
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: udb.gem
+    - name: download idlc gem
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: idlc.gem
+    - name: download udb_helpers gem
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: udb_helpers.gem
+    - name: install gems
+      run: |
+        $PRE && \
+        gem install idlc.gem && \
+        gem install udb_helpers.gem && \
+        gem install udb.gem
+    - name: try z3
+      run: ruby -r 'udb' -e "Udb::Z3Loader.ensure_z3_loaded"
   regress-idlc-unit:
     runs-on: ubuntu-latest
     needs: build-container
@@ -484,6 +581,9 @@ jobs:
         - yaml_loader
         - cfg_arch
         - cfg
+        - z3
+        - mmr
+        - mmr_schema
   regress-gen-go:
     runs-on: ubuntu-latest
     needs: build-container
@@ -948,6 +1048,8 @@ jobs:
     - build-llvm
     - java-tests
     - vscode-tests
+    - create-gems
+    - udb-gem-z3
     if: "${{ always() }}"
     steps:
     - name: exit failure
