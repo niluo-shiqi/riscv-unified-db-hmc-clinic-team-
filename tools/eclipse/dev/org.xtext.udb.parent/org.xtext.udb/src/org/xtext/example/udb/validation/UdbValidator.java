@@ -47,10 +47,14 @@ public class UdbValidator extends AbstractUdbValidator {
     String instructionHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
     String instructionInheritTypeRegex="^.+\\.yaml#(/.*)?$";
     String instructionOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
+    String ENC_48 = "^[01-]{43}11111$";
+    String ENC_32 = "^[01-]{30}11$";
+    String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
+  
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-
+    
 	
     
     /*
@@ -299,6 +303,43 @@ public class UdbValidator extends AbstractUdbValidator {
 					error("$inherits field within opcodes must follow string address format inst_opcode/<file>.yaml#/data", UdbPackage.Literals.INST_MODEL__FORMAT);
 				}
 				
+			}
+		}
+		
+	}
+	
+	// Check match regex within encoding
+	@Check
+	public void checkEncodingMatches(InstModel inst) {
+		org.xtext.example.udb.udb.Encoding encoding = inst.getEncoding();
+		
+		if (encoding instanceof org.xtext.example.udb.udb.OldEncoding) {
+			org.xtext.example.udb.udb.OldEncoding oldEncoding = (org.xtext.example.udb.udb.OldEncoding) encoding;
+			
+			String match = oldEncoding.getMatch().getPattern();
+			//error(match + " this is match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			
+			// if match doesn't match any of these
+			if (!(match.matches(ENC_48)) && !(match.matches(ENC_16)) && !(match.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			}
+		}
+		
+		else if (encoding instanceof org.xtext.example.udb.udb.RvPairEncoding) {
+			org.xtext.example.udb.udb.RvPairEncoding rvEncoding = (org.xtext.example.udb.udb.RvPairEncoding) encoding;
+			
+			String Rv32match = rvEncoding.getRv32().getMatch().getPattern();
+			String Rv64match = rvEncoding.getRv64().getMatch().getPattern();
+			//error(Rv32match + " this is rv32 match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			//error(Rv64match + " this is rv64 match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			
+			// if match doesn't match any of these
+			if (!(Rv32match.matches(ENC_48)) && !(Rv32match.matches(ENC_16)) && !(Rv32match.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			}
+			
+			if (!(Rv64match.matches(ENC_48)) && !(Rv64match.matches(ENC_16)) && !(Rv64match.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
 			}
 		}
 		
