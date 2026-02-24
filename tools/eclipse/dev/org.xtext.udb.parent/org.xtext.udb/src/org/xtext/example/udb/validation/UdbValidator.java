@@ -28,6 +28,7 @@ import org.xtext.example.udb.udb.InstModel;
 
 
 
+
 /**
  * This class contains custom validation rules.
  *
@@ -42,11 +43,18 @@ public class UdbValidator extends AbstractUdbValidator {
     String csrNameRegex = "^[a-z][a-z0-9_.]+$";
     String csrAffectedByRegex = "^(RV64)|([A-WY]|(Z[a-z]+)|(S[a-z]+))$";
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
-    
+    String instructionNameRegex= "[a-z0-9.]+";
+    String instructionHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
+    String instructionInheritTypeRegex="^.+\\.yaml#(/.*)?$";
+    String instructionOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
+    String ENC_48 = "^[01-]{43}11111$";
+    String ENC_32 = "^[01-]{30}11$";
+    String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
+  
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-
+    
 	
     
     /*
@@ -55,7 +63,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkAddress(CsrModel csr) {
 		// Address must be between 0 and 12 bits
-		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
+		int address = csr.getAddress() != null ? csr.getAddress().getAddress() : null;
 
 		if(address < 0 || address > 4096) {
 			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__ADDRESS);
@@ -66,7 +74,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkVirtualAddressValue(CsrModel csr) {
 		/* Ensure virtual address is in required range 0-4095 */
 		int vaddress = csr.getVirtualAddress() != null ?
-					   csr.getVirtualAddress().getVirtualAddress().getValue() : null;
+					   csr.getVirtualAddress().getVirtualAddress() : null;
 
 		if (vaddress < 0 || vaddress > 4095) {
 			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__VIRTUAL_ADDRESS);
@@ -77,7 +85,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkIndirectAddressValue(CsrModel csr) {
 		/* Ensure indirect address is in required range */
 		int iaddress = csr.getIndirectAddress() != null ?
-					   csr.getIndirectAddress().getIndirectAddress().getValue() : null;
+					   csr.getIndirectAddress().getIndirectAddress() : null;
 
 		if(iaddress < 0 || iaddress > (2^64)) {
 			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
@@ -203,8 +211,138 @@ public class UdbValidator extends AbstractUdbValidator {
 	 * Instruction Validation -- rules found in inst_schema.json
 	 */
 	@Check
+	public void checkBaseValue(InstModel inst) {
+		/* Ensure base value is either 32 or 64 */
+		int base = inst.getBase() != null ?inst.getBase().getBase() : null;
+
+		if (base != 32 && base != 64) {
+			error("Base must have value of 32 or 64.", UdbPackage.Literals.INST_MODEL__BASE);
+		}
+	}
+
+
+	@Check
 	public void checkInstructionModel(InstModel inst) {
-		// TODO: implement
+		String schema = inst.getSchema().getSchema();
+		if (!schema.equals("inst_schema.json#")) {
+			error("Schema incompatible with kind", inst.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+		
+		// check that the extension name is valid
+	    String name = inst.getInstName().getName();
+	    if (!name.matches(instructionNameRegex)) {
+	        error("Invalid instruction name", inst.getInstName(),
+	              UdbPackage.Literals.INST_NAME__NAME);
+	    }
+	}
+	
+	/*
+	 *  Check access detail field is present when at least one mode 
+	 *  within access field is sometimes
+	 */
+	@Check
+	public void checkInstAccessDetail(InstModel inst) {
+		String accessdetail = inst.getAccessDetail() != null ? inst.getAccessDetail().getAccessDetail(): null;
+
+		String m = inst.getAccess().getM() != null ? inst.getAccess().getM().getAccessLevel(): null;
+		String s = inst.getAccess().getS() != null ? inst.getAccess().getS().getAccessLevel(): null;
+		String u = inst.getAccess().getU() != null ? inst.getAccess().getU().getAccessLevel(): null;
+		String vs = inst.getAccess().getVs() != null ? inst.getAccess().getVs().getAccessLevel(): null;
+		String vu = inst.getAccess().getVu() != null ? inst.getAccess().getVu().getAccessLevel(): null;
+
+		boolean sometimes =
+			    "sometimes".equals(m) ||
+			    "sometimes".equals(s) ||
+			    "sometimes".equals(u) ||
+			    "sometimes".equals(vs) ||
+			    "sometimes".equals(vu);
+		if (sometimes == true && (accessdetail == null || accessdetail == "")) {
+			error("Must provide access_detail field when at least one access type is sometimes", UdbPackage.Literals.INST_MODEL__ACCESS);
+		}
+	}
+	
+	@Check
+	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
+	public void checkInstHints(InstModel inst) {
+		EList<org.xtext.example.udb.udb.HintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
+		
+	
+		for (org.xtext.example.udb.udb.HintElement hint : hints) {
+			String hintString = hint.getHint();
+			
+			if (!(hintString.matches(instructionHintsRegex))) {
+				error("hints must be of format $ref: inst/<path>.yaml# or $ref: inst/<path>.yaml#/...", UdbPackage.Literals.INST_MODEL__HINTS);
+			}
+		}
+	}
+	
+	@Check
+	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
+	public void checkInstInherits(InstModel inst) {
+		
+		// validate top level inherits attribute within format
+		EList<String> inheritsList = inst.getFormat().getInherits() != null ? inst.getFormat().getInherits().getReference() : null;
+		
+		for (String address : inheritsList) {
+			if (!(address.matches(instructionInheritTypeRegex))) {
+				error("$inherits field must follow expected format: <path>.yaml# or <path>.yaml#/<fragment>.", UdbPackage.Literals.INST_MODEL__FORMAT);
+			}
+		}
+		
+		
+		// validate inherit attribute within opcodes within format
+		if (inst.getFormat() == null || inst.getFormat().getOpcodes() == null) {
+	        return;
+	    }
+		for (org.xtext.example.udb.udb.OpcodeEntry entry: inst.getFormat().getOpcodes().getOpcode()) {
+			if(entry instanceof org.xtext.example.udb.udb.OpcodeInherits) {
+				org.xtext.example.udb.udb.OpcodeInherits opcodeInherits = (org.xtext.example.udb.udb.OpcodeInherits) entry;
+				String address = opcodeInherits.getInheritsAddress();
+				
+				if (!(address.matches(instructionOpcodeInheritTypeRegex))) {
+					error("$inherits field within opcodes must follow string address format inst_opcode/<file>.yaml#/data", UdbPackage.Literals.INST_MODEL__FORMAT);
+				}
+				
+			}
+		}
+		
+	}
+	
+	// Check match regex within encoding
+	@Check
+	public void checkEncodingMatches(InstModel inst) {
+		org.xtext.example.udb.udb.Encoding encoding = inst.getEncoding();
+		
+		if (encoding instanceof org.xtext.example.udb.udb.OldEncoding) {
+			org.xtext.example.udb.udb.OldEncoding oldEncoding = (org.xtext.example.udb.udb.OldEncoding) encoding;
+			
+			String match = oldEncoding.getMatch().getPattern();
+			//error(match + " this is match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			
+			// if match doesn't match any of these
+			if (!(match.matches(ENC_48)) && !(match.matches(ENC_16)) && !(match.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			}
+		}
+		
+		else if (encoding instanceof org.xtext.example.udb.udb.RvPairEncoding) {
+			org.xtext.example.udb.udb.RvPairEncoding rvEncoding = (org.xtext.example.udb.udb.RvPairEncoding) encoding;
+			
+			String Rv32match = rvEncoding.getRv32().getMatch().getPattern();
+			String Rv64match = rvEncoding.getRv64().getMatch().getPattern();
+			//error(Rv32match + " this is rv32 match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			//error(Rv64match + " this is rv64 match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			
+			// if match doesn't match any of these
+			if (!(Rv32match.matches(ENC_48)) && !(Rv32match.matches(ENC_16)) && !(Rv32match.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			}
+			
+			if (!(Rv64match.matches(ENC_48)) && !(Rv64match.matches(ENC_16)) && !(Rv64match.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			}
+		}
+		
 	}
 	
 	
