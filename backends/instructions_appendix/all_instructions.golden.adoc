@@ -15040,7 +15040,7 @@ xref:insts:cbo_zero.adoc#udb:doc:inst:cbo_zero[cbo.zero] is ordered by `FENCE` i
 Both PMP and PMA access control must be the same for all bytes in the block; otherwise, xref:insts:cbo_zero.adoc#udb:doc:inst:cbo_zero[cbo.zero] has UNSPECIFIED behavior.
 <%- end -%>
 
-Clean operations are treated as stores for page and access permissions. If permission checks fail,
+Zero operations are treated as stores for page and access permissions. If permission checks fail,
 one of the following exceptions will occur:
 
   <%- if ext?(:H) -%>
