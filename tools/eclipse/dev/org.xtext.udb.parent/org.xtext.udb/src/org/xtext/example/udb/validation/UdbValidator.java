@@ -12,7 +12,6 @@ import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrFieldDef;
-import org.xtext.example.udb.udb.CsrIntType;
 import org.xtext.example.udb.udb.CsrLengthType;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrFieldAliasName;
@@ -25,15 +24,15 @@ import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
 
 import org.xtext.example.udb.udb.InstModel;
-import  org.xtext.example.udb.udb.OldEncoding;
-import org.xtext.example.udb.udb.Encoding;
-import org.xtext.example.udb.udb.HintElement;
-import org.xtext.example.udb.udb.OpcodeEntry;
-import org.xtext.example.udb.udb.OpcodeInherits;
-import org.xtext.example.udb.udb.RvPairEncoding;
-import org.xtext.example.udb.udb.EncodingTwoKeyVar;
-import org.xtext.example.udb.udb.EncodingSevenKeyVar;
-import org.xtext.example.udb.udb.EncodingVariables;
+import  org.xtext.example.udb.udb.InstOldEncoding;
+import org.xtext.example.udb.udb.InstEncoding;
+import org.xtext.example.udb.udb.InstHintElement;
+import org.xtext.example.udb.udb.InstOpcodeEntry;
+import org.xtext.example.udb.udb.InstOpcodeInherits;
+import org.xtext.example.udb.udb.InstRvPairEncoding;
+import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
+import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
+import org.xtext.example.udb.udb.InstEncodingVariables;
 import org.eclipse.emf.ecore.EObject;
 /**
  * This class contains custom validation rules.
@@ -101,25 +100,19 @@ public class UdbValidator extends AbstractUdbValidator {
 
 	@Check
 	public void checkLengthValue(CsrModel csr) {
-		// Containment reference is always instantiated
-		CsrLengthType length_t = csr.getLength().getLength();
+		CsrLengthType length_t = csr.getLength() != null ? csr.getLength().getLength() : null;
 		if (length_t == null) {
-			error("length should not be null",
-					UdbPackage.Literals.CSR_MODEL__LENGTH);
+			error("length should not be null", UdbPackage.Literals.CSR_MODEL__LENGTH);
+			return;
 		}
+		
 		// If length is an integer, value is either 32 or 64
-		if (length_t instanceof CsrIntType) {
-			Integer length = ((CsrIntType) csr.getLength().getLength()).getIntVal();
+		if (length_t.getParmType() == null) {
+			int length = length_t.getIntType();
 			if (length != 32 && length != 64) {
-				error("length if specified as integer, should be 32 or 64",
-						UdbPackage.Literals.CSR_MODEL__LENGTH);
+				error("length if specified as integer, should be 32 or 64", UdbPackage.Literals.CSR_MODEL__LENGTH);
 			}
-		}
-//		if (length != null && length != "MXLEN" && length != "SXLEN" && length != "VSXLEN" && length != "XLEN") {
-//			if (Integer.valueOf(length) != 32 && Integer.valueOf(length) != 64) {
-//			error("Integer length value must be 32 or 64.", UdbPackage.Literals.MODEL__LENGTH);
-//			}
-//		}
+		 }
 
 	}
 
@@ -271,10 +264,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
 	public void checkInstHints(InstModel inst) {
-		EList<HintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
+		EList<InstHintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
 		
 	
-		for (HintElement hint : hints) {
+		for (InstHintElement hint : hints) {
 			String hintString = hint.getHint();
 			
 			if (!(hintString.matches(instructionHintsRegex))) {
@@ -301,9 +294,9 @@ public class UdbValidator extends AbstractUdbValidator {
 		if (inst.getFormat() == null || inst.getFormat().getOpcodes() == null) {
 	        return;
 	    }
-		for (OpcodeEntry entry: inst.getFormat().getOpcodes().getOpcode()) {
-			if(entry instanceof OpcodeInherits) {
-				OpcodeInherits opcodeInherits = (OpcodeInherits) entry;
+		for (InstOpcodeEntry entry: inst.getFormat().getOpcodes().getOpcode()) {
+			if(entry instanceof InstOpcodeInherits) {
+				InstOpcodeInherits opcodeInherits = (InstOpcodeInherits) entry;
 				String address = opcodeInherits.getInheritsAddress();
 				
 				if (!(address.matches(instructionOpcodeInheritTypeRegex))) {
@@ -318,10 +311,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	// Check match regex within encoding
 	@Check
 	public void checkEncodingMatches(InstModel inst) {
-		Encoding encoding = inst.getEncoding();
+		InstEncoding encoding = inst.getEncoding();
 		
-		if (encoding instanceof OldEncoding) {
-			OldEncoding oldEncoding = (OldEncoding) encoding;
+		if (encoding instanceof InstOldEncoding) {
+			InstOldEncoding oldEncoding = (InstOldEncoding) encoding;
 			
 			String match = oldEncoding.getMatch().getPattern();
 			//error(match + " this is match", UdbPackage.Literals.INST_MODEL__ENCODING);
@@ -332,8 +325,8 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 		
-		else if (encoding instanceof RvPairEncoding) {
-			RvPairEncoding rvEncoding = (RvPairEncoding) encoding;
+		else if (encoding instanceof InstRvPairEncoding) {
+			InstRvPairEncoding rvEncoding = (InstRvPairEncoding) encoding;
 			
 			String Rv32match = rvEncoding.getRv32().getMatch().getPattern();
 			String Rv64match = rvEncoding.getRv64().getMatch().getPattern();
@@ -355,32 +348,32 @@ public class UdbValidator extends AbstractUdbValidator {
 	// Check $inherits and $childof regex within variables within encoding(they share the same regex)
 	@Check
 	public void checkInheritsAndChildOf(InstModel inst) {
-		Encoding encoding = inst.getEncoding();
-		if (!(encoding instanceof OldEncoding)) {
+		InstEncoding encoding = inst.getEncoding();
+		if (!(encoding instanceof InstOldEncoding)) {
 			return;
 		}
 		
-		OldEncoding old = (OldEncoding) encoding;
-		EncodingVariables varsList = old.getVariables();
+		InstOldEncoding old = (InstOldEncoding) encoding;
+		InstEncodingVariables varsList = old.getVariables();
 		
 		if (varsList == null) {
 			return;
 		}
 		
 		for (EObject var: varsList.getVars()) {
-			if (var instanceof EncodingTwoKeyVar) {
-				EncodingTwoKeyVar twoKey = (EncodingTwoKeyVar) var;
+			if (var instanceof InstEncodingTwoKeyVar) {
+				InstEncodingTwoKeyVar twoKey = (InstEncodingTwoKeyVar) var;
 				String inherits = twoKey.getInherits();
 				
 				if (inherits != null && !(inherits.matches(instructionChildOfRegex))) {
-					error("Expected $inherits to follow common/inst_variable_types\\.yaml#/SOMETHING format", twoKey, UdbPackage.Literals.ENCODING_TWO_KEY_VAR__INHERITS);
+					error("Expected $inherits to follow common/inst_variable_types\\.yaml#/SOMETHING format", twoKey, UdbPackage.Literals.INST_ENCODING_TWO_KEY_VAR__INHERITS);
 				}
-			} else if (var instanceof EncodingSevenKeyVar) {
-				EncodingSevenKeyVar sevenKey = (EncodingSevenKeyVar) var;
+			} else if (var instanceof InstEncodingSevenKeyVar) {
+				InstEncodingSevenKeyVar sevenKey = (InstEncodingSevenKeyVar) var;
 				String childOf = sevenKey.getChildOf();
 				
 				if (childOf != null && !(childOf.matches(instructionChildOfRegex))) {
-					error("Expected $child_of to follow common/inst_variable_types\\.yaml#/SOMETHING format", sevenKey, UdbPackage.Literals.ENCODING_SEVEN_KEY_VAR__CHILD_OF);
+					error("Expected $child_of to follow common/inst_variable_types\\.yaml#/SOMETHING format", sevenKey, UdbPackage.Literals.INST_ENCODING_SEVEN_KEY_VAR__CHILD_OF);
 				}
 			}
 		}

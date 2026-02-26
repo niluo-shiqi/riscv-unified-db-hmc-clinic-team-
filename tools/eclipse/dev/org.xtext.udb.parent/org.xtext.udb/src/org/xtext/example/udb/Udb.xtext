@@ -40,20 +40,20 @@ InstModel:
 	longName = LongName &
 	description = Description &
 	definedBy = InstDefinedBy &
-	hints = Hints? &
-	base = Base? &
-	access = Access &
-	accessDetail = AccessDetail? &
-	operation = Operation? &
-	operationAst = OperationAst? &
-	sail = Sail? &
+	hints = InstHints? &
+	base = InstBase? &
+	access = InstAccess &
+	accessDetail = InstAccessDetail? &
+	operation = InstOperation? &
+	operationAst = InstOperationAst? &
+	sail = InstSail? &
 	certNormativeRules = CertNormativeRules? &
-	assembly = Assembly &
-	dataIndependentTiming = DataIndependentTiming? &
-	pseudoInstructions = PseudoInstructions? &
+	assembly = InstAssembly &
+	dataIndependentTiming = InstDataIndependentTiming? &
+	pseudoInstructions = InstPseudoInstructions? &
 	source = Source? &
-	format = Format? &
-	encoding = Encoding?
+	format = InstFormat? &
+	encoding = InstEncoding?
 ;
 
 
@@ -84,7 +84,8 @@ LongName: 'long_name' ":" longName=STRING;
 Description: 'description' ':' description=STRING; 
 Requirements: "requirements" ":" requirements=Condition;
 Source:'$source' ':' source=STRING;
-
+Number: intVal=INT | bin=Bin | hex=Hex;
+Range: upper=INT '-' lower=INT;
 UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
 Email: 'email' ':' email=STRING;
@@ -142,8 +143,7 @@ CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=IDL;
 CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
-CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
-CsrIntType: intVal=INT; 
+CsrLengthType: intType = INT | parmType = CsrParmType;
 CsrParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 // extension that must be implemented for this CSR to exist
@@ -185,8 +185,7 @@ CsrVarLocation:
 ;
 LocationRV32: "location_rv32" ":" locationRV32=CsrFieldLocation;
 LocationRV64: "location_rv64" ":" locationRV64=CsrFieldLocation;
-CsrFieldLocation: value=INT | range=CsrFieldLocationRange;
-CsrFieldLocationRange: upper=INT '-' lower=INT;
+CsrFieldLocation: value=INT | range=Range;
 
 CsrFieldResetValueType: value=CsrFieldResetValue | function=CsrFieldResetValueFunc;
 CsrFieldResetValue: "reset_value" ":" resetValue=CsrFieldResetValueValue;
@@ -221,148 +220,141 @@ CsrAffectedByType: affectedByName=ID | affectedByArray=Array;
 
 /*
  * Instruction stuff (see inst_schema.json)
- * NOTE: implementation started in PRIDE1099-INST branch
  */
 InstKind: 'kind' ':' kind="instruction";
 InstName: 'name' ':' name=ID;
 InstDefinedBy: 'definedBy' ':' dbname=STRING;
-Base: 'base' ':' base=INT; // 32 or 64
-Access:
+InstBase: 'base' ':' base=INT; // 32 or 64
+InstAccess:
 	'access' ':'
-	INDENT
-	('m' ':' m=AccessType)? &
-	's' ':' s=AccessType &
-	'u' ':' u=AccessType &
-	'vs' ':' vs=AccessType &
-	'vu' ':' vu=AccessType
-	DEDENT
-	;
-AccessType:
+	INDENT(
+	('m' ':' m=InstAccessType)? &
+	's' ':' s=InstAccessType &
+	'u' ':' u=InstAccessType &
+	'vs' ':' vs=InstAccessType &
+	'vu' ':' vu=InstAccessType
+	)DEDENT
+;
+InstAccessType:
 	accessLevel=('always'|'sometimes'|'never')
 ;
-Assembly: 'assembly' ':' assembly=STRING;
+InstAssembly: 'assembly' ':' assembly=STRING;
 /* Optional fields for the INST schema */
-OperationAst: 'operation_ast' ':' operationAst=STRING;
-Hints:
+InstOperationAst: 'operation_ast' ':' operationAst=STRING;
+InstHints:
 	'hints' ':'
 	INDENT
-		hints += HintElement+
+		hints += InstHintElement+
 	DEDENT
 ;
-HintElement: '-' '{' hint = STRING '}'; // must match "^inst/.+\\.yaml#.*$"
+InstHintElement: '-' '{' hint = STRING '}'; 
 
-AccessDetail: 'access_detail' ':' accessDetail=STRING;
-Operation: 'operation()' ':' operation=STRING; // string for now, IDL later TODO
-Sail: 'sail()' ':' sail=STRING; // string for now, IDL later TODO
-DataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
-PseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array; // type TODO
-Format: 'format' ':' 
-	INDENT
-		'$inherits' ':' inherits=InheritType
-		'opcodes' ':' opcodes=OpcodeType 
-	DEDENT
+InstAccessDetail: 'access_detail' ':' accessDetail=STRING;
+InstOperation: 'operation()' ':' operation=IDL; // string for now, IDL later TODO
+InstSail: 'sail()' ':' sail=IDL; // string for now, IDL later TODO
+InstDataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
+InstPseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array; 
+InstFormat: 'format' ':' 
+	INDENT (
+		'$inherits' ':' inherits=InstInheritType &
+		'opcodes' ':' opcodes=InstOpcodeType 
+	)DEDENT
 ;
-InheritType:
+InstInheritType:
 	INDENT
 		('-' reference += STRING)+ //regex must fit yaml path
 	DEDENT
 ;
 
-OpcodeType:
+InstOpcodeType:
 	INDENT
-		opcode += OpcodeEntry+
+		opcode += InstOpcodeEntry+
 	DEDENT
 ;
-OpcodeEntry:
-	OpcodeField
-	| OpcodeInherits
+InstOpcodeEntry:
+	InstOpcodeField
+	| InstOpcodeInherits
 ;
 
-OpcodeField: // ex) funct7 
-	name=ID ':' // must fit regex ('a'..'z') ('a'..'z'|'0'..'9')*, example of opcode name: "function7"
+InstOpcodeField: // ex. funct7 
+	name=ID ':' 
 	INDENT
-		(opcodeProperties += OpcodeProps)+
+		(opcodeProperties += InstOpcodeProps)+
 	DEDENT
 	
 ;
 
-OpcodeProps: 
+InstOpcodeProps: 
 	'display_name' ':' displayName=ID 
-	| 'value' ':' value=JsonIntLike
+	| 'value' ':' value=Number
 ;
-JsonIntLike:
-	intVal=INT
-	| bin=BIN
-	| hex=Hex
-;
-OpcodeInherits: 
+
+InstOpcodeInherits: 
 	'opcode' ':' '{' '$inherits' ':' inheritsAddress=STRING '}'// must fit regex 'inst_opcode/' INST_OPCODE_FILE '.yaml#/data'
 ;
 
 
-Encoding: 
+InstEncoding: 
 	'encoding' ':'
 	(
-		RvPairEncoding
-		| OldEncoding
+		InstRvPairEncoding
+		| InstOldEncoding
 	)
 ;
 
-OldEncoding:
-	{OldEncoding} 
-	INDENT
-	    match=EncodingMatch
-	    variables=EncodingVariables?
-  	DEDENT
+InstOldEncoding:
+	{InstOldEncoding} 
+	INDENT(
+	    match=InstEncodingMatch &
+	    variables=InstEncodingVariables?
+  	)DEDENT
 ;
-EncodingMatch:
+InstEncodingMatch:
 	'match' ':' pattern=STRING
 ;
 
-EncodingVariables:
+InstEncodingVariables:
 	'variables' ':'
 	  INDENT
-	    (vars += EncodingTwoKeyVar+ | vars += EncodingSevenKeyVar+)
+	    (vars += InstEncodingTwoKeyVar+ | vars += InstEncodingSevenKeyVar+)
 	  DEDENT
 ;
 
 
-EncodingSevenKeyVar:
+InstEncodingSevenKeyVar:
   '-' 'name' ':' name=ID
   INDENT
     (
-      'location' ':' location=BitRange &
+      'location' ':' location=Range &
       ('$child_of' ':' childOf=STRING)? & //^common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+, Cookie crumb of the reference to variable metadata
       ('sign_extend' ':' signExtend=Boolean)? & //default is false
       ('left_shift' ':' leftShift=INT)? &
       ('alias' ':' alias=STRING)? &
-      ('not' ':' not=NotRule)?
+      ('not' ':' not=InstNotRule)?
     )
   DEDENT
 ;
 
-NotRule:
+InstNotRule:
 	{NotRule}
 	INT | IntArray
 ;
 
 
-EncodingTwoKeyVar:
+InstEncodingTwoKeyVar:
 	'-' 'name' ':' name=ID
 	INDENT(
 		'$inherits' ':' inherits=STRING // must match ^common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+
 	)DEDENT
 ;
 
-BitRange:
-  hi=INT '-' lo=INT
-;
-RvPairEncoding:
-	{RvPairEncoding}
-	INDENT
-	'RV32' ':' rv32=OldEncoding
-	'RV64' ':' rv64=OldEncoding
-	DEDENT
+
+InstRvPairEncoding:
+	{InstRvPairEncoding}
+	INDENT(
+	'RV32' ':' rv32=InstOldEncoding
+	'RV64' ':' rv64=InstOldEncoding
+	)DEDENT
 ; 
 
 
@@ -512,7 +504,7 @@ IntArray: '[' element+=INT (',' element+=INT) + ']';
 
 
 /*
- * Hex
+ * Hex & Binary
  */
 
 Hex: value=HEX_VALUE;
@@ -522,8 +514,11 @@ terminal HEX_VALUE returns ecore::EInt:
 	(('0'..'9' | 'A'..'F' | 'a'..'f' | '_')*('0'..'9' | 'A'..'F' | 'a'..'f'))?
 ;
 
-terminal BIN: 
-	'0b' ('0'|'1')+ // "0111", "00010", etc.
+Bin: value=BIN_VALUE;
+terminal BIN_VALUE returns ecore::EInt: 
+	('0b' | '0B') 
+	('0'|'1')
+	(('0' | '1' | '_')*('0' | '1'))?
 ;
 
 /*
