@@ -25,10 +25,16 @@ import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
 
 import org.xtext.example.udb.udb.InstModel;
-
-
-
-
+import  org.xtext.example.udb.udb.OldEncoding;
+import org.xtext.example.udb.udb.Encoding;
+import org.xtext.example.udb.udb.HintElement;
+import org.xtext.example.udb.udb.OpcodeEntry;
+import org.xtext.example.udb.udb.OpcodeInherits;
+import org.xtext.example.udb.udb.RvPairEncoding;
+import org.xtext.example.udb.udb.EncodingTwoKeyVar;
+import org.xtext.example.udb.udb.EncodingSevenKeyVar;
+import org.xtext.example.udb.udb.EncodingVariables;
+import org.eclipse.emf.ecore.EObject;
 /**
  * This class contains custom validation rules.
  *
@@ -47,10 +53,11 @@ public class UdbValidator extends AbstractUdbValidator {
     String instructionHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
     String instructionInheritTypeRegex="^.+\\.yaml#(/.*)?$";
     String instructionOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
+    String instructionChildOfRegex="common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+";
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
-  
+    
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
@@ -257,17 +264,17 @@ public class UdbValidator extends AbstractUdbValidator {
 			    "sometimes".equals(vs) ||
 			    "sometimes".equals(vu);
 		if (sometimes == true && (accessdetail == null || accessdetail == "")) {
-			error("Must provide access_detail field when at least one access type is sometimes", UdbPackage.Literals.INST_MODEL__ACCESS);
+			error("Must provide access_detail field when at least one access type is sometimes", UdbPackage.Literals.INST_MODEL__ACCESS_DETAIL);
 		}
 	}
 	
 	@Check
 	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
 	public void checkInstHints(InstModel inst) {
-		EList<org.xtext.example.udb.udb.HintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
+		EList<HintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
 		
 	
-		for (org.xtext.example.udb.udb.HintElement hint : hints) {
+		for (HintElement hint : hints) {
 			String hintString = hint.getHint();
 			
 			if (!(hintString.matches(instructionHintsRegex))) {
@@ -294,9 +301,9 @@ public class UdbValidator extends AbstractUdbValidator {
 		if (inst.getFormat() == null || inst.getFormat().getOpcodes() == null) {
 	        return;
 	    }
-		for (org.xtext.example.udb.udb.OpcodeEntry entry: inst.getFormat().getOpcodes().getOpcode()) {
-			if(entry instanceof org.xtext.example.udb.udb.OpcodeInherits) {
-				org.xtext.example.udb.udb.OpcodeInherits opcodeInherits = (org.xtext.example.udb.udb.OpcodeInherits) entry;
+		for (OpcodeEntry entry: inst.getFormat().getOpcodes().getOpcode()) {
+			if(entry instanceof OpcodeInherits) {
+				OpcodeInherits opcodeInherits = (OpcodeInherits) entry;
 				String address = opcodeInherits.getInheritsAddress();
 				
 				if (!(address.matches(instructionOpcodeInheritTypeRegex))) {
@@ -311,10 +318,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	// Check match regex within encoding
 	@Check
 	public void checkEncodingMatches(InstModel inst) {
-		org.xtext.example.udb.udb.Encoding encoding = inst.getEncoding();
+		Encoding encoding = inst.getEncoding();
 		
-		if (encoding instanceof org.xtext.example.udb.udb.OldEncoding) {
-			org.xtext.example.udb.udb.OldEncoding oldEncoding = (org.xtext.example.udb.udb.OldEncoding) encoding;
+		if (encoding instanceof OldEncoding) {
+			OldEncoding oldEncoding = (OldEncoding) encoding;
 			
 			String match = oldEncoding.getMatch().getPattern();
 			//error(match + " this is match", UdbPackage.Literals.INST_MODEL__ENCODING);
@@ -325,8 +332,8 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 		
-		else if (encoding instanceof org.xtext.example.udb.udb.RvPairEncoding) {
-			org.xtext.example.udb.udb.RvPairEncoding rvEncoding = (org.xtext.example.udb.udb.RvPairEncoding) encoding;
+		else if (encoding instanceof RvPairEncoding) {
+			RvPairEncoding rvEncoding = (RvPairEncoding) encoding;
 			
 			String Rv32match = rvEncoding.getRv32().getMatch().getPattern();
 			String Rv64match = rvEncoding.getRv64().getMatch().getPattern();
@@ -345,6 +352,39 @@ public class UdbValidator extends AbstractUdbValidator {
 		
 	}
 	
+	// Check $inherits and $childof regex within variables within encoding(they share the same regex)
+	@Check
+	public void checkInheritsAndChildOf(InstModel inst) {
+		Encoding encoding = inst.getEncoding();
+		if (!(encoding instanceof OldEncoding)) {
+			return;
+		}
+		
+		OldEncoding old = (OldEncoding) encoding;
+		EncodingVariables varsList = old.getVariables();
+		
+		if (varsList == null) {
+			return;
+		}
+		
+		for (EObject var: varsList.getVars()) {
+			if (var instanceof EncodingTwoKeyVar) {
+				EncodingTwoKeyVar twoKey = (EncodingTwoKeyVar) var;
+				String inherits = twoKey.getInherits();
+				
+				if (inherits != null && !(inherits.matches(instructionChildOfRegex))) {
+					error("Expected $inherits to follow common/inst_variable_types\\.yaml#/SOMETHING format", twoKey, UdbPackage.Literals.ENCODING_TWO_KEY_VAR__INHERITS);
+				}
+			} else if (var instanceof EncodingSevenKeyVar) {
+				EncodingSevenKeyVar sevenKey = (EncodingSevenKeyVar) var;
+				String childOf = sevenKey.getChildOf();
+				
+				if (childOf != null && !(childOf.matches(instructionChildOfRegex))) {
+					error("Expected $child_of to follow common/inst_variable_types\\.yaml#/SOMETHING format", sevenKey, UdbPackage.Literals.ENCODING_SEVEN_KEY_VAR__CHILD_OF);
+				}
+			}
+		}
+	}
 	
 	
 	/*
