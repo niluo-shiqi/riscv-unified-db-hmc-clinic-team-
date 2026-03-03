@@ -11,9 +11,14 @@ import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.CsrModel;
-import org.xtext.example.udb.udb.CsrFieldDef;
-import org.xtext.example.udb.udb.CsrLengthType;
 import org.xtext.example.udb.udb.CsrName;
+import org.xtext.example.udb.udb.CsrAddress;
+import org.xtext.example.udb.udb.CsrVirtualAddress;
+import org.xtext.example.udb.udb.CsrIndirectAddress;
+import org.xtext.example.udb.udb.CsrIndirectSlot;
+import org.xtext.example.udb.udb.CsrLength;
+import org.xtext.example.udb.udb.CsrIntType;
+import org.xtext.example.udb.udb.CsrFieldDef;
 import org.xtext.example.udb.udb.CsrFieldAliasName;
 import org.xtext.example.udb.udb.CsrAffectedByType;
 import org.xtext.example.udb.udb.CsrFieldAffectedBy;
@@ -66,64 +71,78 @@ public class UdbValidator extends AbstractUdbValidator {
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
+    @Check
+    public void checkCsrSchema(CsrModel csr) {
+		String schema = csr.getSchema().getSchema();
+		if (!schema.equals("csr_schema.json#")) {
+			error("Schema incompatible with kind", csr.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
+    
 	@Check
-	public void checkAddress(CsrModel csr) {
+	public void checkCsrName(CsrName name) {
+	    String value = name.getName();
+	    if (!value.matches(csrNameRegex)) {
+	        error("Invalid csr name", 
+	              UdbPackage.Literals.CSR_NAME__NAME);
+	    }
+	}
+    
+	@Check
+	public void checkCsrAddressVal(CsrAddress address) {		
 		// Address must be between 0 and 12 bits
-		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
-
-		if(address < 0 || address > 4096) {
-			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__ADDRESS);
+		int val = address.getAddress().getValue();
+		if (val < 0 || val > 4096) {
+			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_ADDRESS__ADDRESS);
 		}
 	}
 
 	@Check
-	public void checkVirtualAddressValue(CsrModel csr) {
-		/* Ensure virtual address is in required range 0-4095 */
-		int vaddress = csr.getVirtualAddress() != null ?
-					   csr.getVirtualAddress().getVirtualAddress().getValue() : null;
+	public void checkCsrVirtualAddressVal(CsrVirtualAddress vaddress) {
+		// Virtual address must be between 0 and 12 bits
+		// TODO: it doesn't say that in the schema?
+		int val = vaddress.getVirtualAddress().getValue();
 
-		if (vaddress < 0 || vaddress > 4095) {
-			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__VIRTUAL_ADDRESS);
+		if (val < 0 || val > 4096) {
+			error("Virtual address must be between 0 and 12 bits.", 
+					UdbPackage.Literals.CSR_VIRTUAL_ADDRESS__VIRTUAL_ADDRESS);
 		}
 	}
 
 	@Check
-	public void checkIndirectAddressValue(CsrModel csr) {
-		/* Ensure indirect address is in required range */
-		int iaddress = csr.getIndirectAddress() != null ?
-					   csr.getIndirectAddress().getIndirectAddress().getValue() : null;
+	public void checkCsrIndirectAddressVal(CsrIndirectAddress iaddress) {
+		// Indirect address must be between 0 and 64 bits
+		int val = iaddress.getIndirectAddress().getValue();
 
-		if(iaddress < 0 || iaddress > (2^64)) {
-			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
+		if(val < 0 || val > (2^64)) {
+			error("Indirect address must be between 0 and 64 bits.", 
+					UdbPackage.Literals.CSR_INDIRECT_ADDRESS__INDIRECT_ADDRESS);
 		}
 	}
-
+	
 	@Check
-	public void checkLengthValue(CsrModel csr) {
-		CsrLengthType length_t = csr.getLength() != null ? csr.getLength().getLength() : null;
-		if (length_t == null) {
-			error("length should not be null", UdbPackage.Literals.CSR_MODEL__LENGTH);
-			return;
-		}
-		
-		// If length is an integer, value is either 32 or 64
-		if (length_t.getParmType() == null) {
-			int length = length_t.getIntType();
-			if (length != 32 && length != 64) {
-				error("length if specified as integer, should be 32 or 64", UdbPackage.Literals.CSR_MODEL__LENGTH);
-			}
-		 }
-
-	}
-
-	@Check
-	public void checkIndirectSlotValue(CsrModel csr) {
-		/* Ensure indirect_slot is between 1 and 6 */
-		int slot = csr.getIndirectSlot() != null ? csr.getIndirectSlot().getIndirectSlot() : null;
+	public void checkCsrIndirectSlotVal(CsrIndirectSlot indirectSlot) {
+		// indirect_slot must be between 1 and 6
+		int slot = indirectSlot.getIndirectSlot();
 
 		if (slot < 1 || slot > 6) {
-			error("Indirect slot value must be between 1 and 6.", UdbPackage.Literals.CSR_MODEL__INDIRECT_SLOT);
+			error("Indirect slot value must be between 1 and 6.", 
+					UdbPackage.Literals.CSR_INDIRECT_SLOT__INDIRECT_SLOT);
 		}
+	}
+
+	@Check
+	public void checkCsrIndirectSlot(CsrModel csr) {
+		CsrIndirectAddress iaddress = csr.getIndirectAddress();
+
+		if (iaddress != null) {
+			if (csr.getIndirectSlot() == null) {
+				error("Indirect address requires an indirect slot.", 
+						UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
+			}
+		}
+
 	}
 	
 	@Check
@@ -138,27 +157,40 @@ public class UdbValidator extends AbstractUdbValidator {
 		    );
 		}
 	}
-
+	
 	@Check
-	public void checkVirtualAddress(CsrModel csr) {
+	public void checkCsrVirtualAddress(CsrModel csr) {
 		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
 
 		if (mode.equals("VS")) {
 			if (csr.getVirtualAddress() == null) {
-				error("VS mode requires a virtual address.", UdbPackage.Literals.CSR_MODEL__PRIVMODE);
+				error("VS mode requires a virtual address.", 
+						UdbPackage.Literals.CSR_MODEL__PRIVMODE);
 			}
 		}
 
 	}
 	
 	@Check
-	public void checkCsrName(CsrName name) {
-	    String value = name.getName();
-	    if (!value.matches(csrNameRegex)) {
-	        error("Invalid csr name", 
-	              UdbPackage.Literals.CSR_NAME__NAME);
-	    }
+	public void checkLengthValue(CsrLength length) {
+		CsrIntType lengthInt = length.getLength().getIntType();
+		
+		// Containment reference is always instantiated
+		if (length.getLength() == null) {
+			error("length should not be null",
+					UdbPackage.Literals.CSR_LENGTH__LENGTH);
+		}
+		
+		// If length is an integer, value is either 32 or 64
+		if (lengthInt != null) {
+			int lengthVal = lengthInt.getIntVal();
+			if (lengthVal != 32 && lengthVal != 64) {
+				error("length if specified as integer, should be 32 or 64",
+						UdbPackage.Literals.CSR_LENGTH__LENGTH);
+			}
+		}
 	}
+	
 	
 	@Check
 	public void checkCsrFieldName(CsrFieldDef field) {
@@ -204,6 +236,7 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 	}
+
 	
 	
 	

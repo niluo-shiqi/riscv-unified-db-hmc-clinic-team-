@@ -143,7 +143,8 @@ CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=IDL;
 CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
-CsrLengthType: intType = INT | parmType = CsrParmType;
+CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
+CsrIntType: intVal=INT; 
 CsrParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 // extension that must be implemented for this CSR to exist
