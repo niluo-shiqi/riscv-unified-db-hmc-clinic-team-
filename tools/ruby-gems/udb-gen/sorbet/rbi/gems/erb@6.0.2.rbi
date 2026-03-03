@@ -10,54 +10,54 @@ class ERB
   # source://erb//lib/erb.rb#832
   def initialize(str, trim_mode: T.unsafe(nil), eoutvar: T.unsafe(nil)); end
 
-  # source://erb//lib/erb.rb#1170
+  # source://erb//lib/erb.rb#1171
   def def_class(superklass = T.unsafe(nil), methodname = T.unsafe(nil)); end
 
-  # source://erb//lib/erb.rb#1088
+  # source://erb//lib/erb.rb#1089
   def def_method(mod, methodname, fname = T.unsafe(nil)); end
 
-  # source://erb//lib/erb.rb#1113
+  # source://erb//lib/erb.rb#1114
   def def_module(methodname = T.unsafe(nil)); end
 
-  # source://erb//lib/erb.rb#909
+  # source://erb//lib/erb.rb#910
   def encoding; end
 
-  # source://erb//lib/erb.rb#917
+  # source://erb//lib/erb.rb#918
   def filename; end
 
-  # source://erb//lib/erb.rb#917
+  # source://erb//lib/erb.rb#918
   def filename=(_arg0); end
 
-  # source://erb//lib/erb.rb#925
+  # source://erb//lib/erb.rb#926
   def lineno; end
 
-  # source://erb//lib/erb.rb#925
+  # source://erb//lib/erb.rb#926
   def lineno=(_arg0); end
 
-  # source://erb//lib/erb.rb#937
+  # source://erb//lib/erb.rb#938
   def location=(_arg0); end
 
-  # source://erb//lib/erb.rb#854
+  # source://erb//lib/erb.rb#855
   def make_compiler(trim_mode); end
 
-  # source://erb//lib/erb.rb#1008
+  # source://erb//lib/erb.rb#1009
   def result(b = T.unsafe(nil)); end
 
-  # source://erb//lib/erb.rb#1027
+  # source://erb//lib/erb.rb#1028
   def result_with_hash(hash); end
 
-  # source://erb//lib/erb.rb#986
+  # source://erb//lib/erb.rb#987
   def run(b = T.unsafe(nil)); end
 
-  # source://erb//lib/erb.rb#972
+  # source://erb//lib/erb.rb#973
   def set_eoutvar(compiler, eoutvar = T.unsafe(nil)); end
 
-  # source://erb//lib/erb.rb#900
+  # source://erb//lib/erb.rb#901
   def src; end
 
   private
 
-  # source://erb//lib/erb.rb#1051
+  # source://erb//lib/erb.rb#1052
   def new_toplevel(vars = T.unsafe(nil)); end
 
   class << self
