@@ -67,19 +67,28 @@ do_update_espresso() {
   local espresso_version="espresso-1.0"
   echo "==> Building espresso version: ${espresso_version}"
 
-  # Check if the GitHub Release exists before building (unless force is enabled)
-  if [ "${force}" != "yes" ]; then
-    echo "==> Checking for existing GitHub Release ${espresso_version} on riscv/riscv-unified-db..."
-    if gh release view "${espresso_version}" --repo riscv/riscv-unified-db &>/dev/null; then
-      echo "==> GitHub Release ${espresso_version} already exists. Nothing to do."
-      return 0
-    fi
-  else
+  # Check if the GitHub Release exists
+  local release_exists=no
+  if gh release view "${espresso_version}" --repo riscv/riscv-unified-db &>/dev/null; then
+    release_exists=yes
+  fi
+
+  # Handle based on force flag and release existence
+  if [ "${force}" != "yes" ] && [ "${release_exists}" = "yes" ]; then
+    echo "==> GitHub Release ${espresso_version} already exists. Nothing to do."
+    echo "    Use -f flag to force rebuild."
+    return 0
+  fi
+
+  if [ "${force}" = "yes" ] && [ "${release_exists}" = "yes" ]; then
     echo "==> Force rebuild enabled..."
-    # Delete existing release if it exists
-    if gh release view "${espresso_version}" --repo riscv/riscv-unified-db &>/dev/null; then
+    # Only delete the release if we're building both architectures (not native_only)
+    # For native_only builds, we'll use --clobber to replace individual assets
+    if [ "${native_only}" != "yes" ]; then
       echo "==> Deleting existing GitHub Release ${espresso_version}..."
       gh release delete "${espresso_version}" --repo riscv/riscv-unified-db --yes
+    else
+      echo "==> Will replace existing assets with --clobber"
     fi
   fi
 
@@ -193,19 +202,28 @@ do_update_must() {
   local must_version="must-${must_commit:0:7}"
   echo "==> Building must version: ${must_version} (commit: ${must_commit})"
 
-  # Check if the GitHub Release exists before building (unless force is enabled)
-  if [ "${force}" != "yes" ]; then
-    echo "==> Checking for existing GitHub Release ${must_version} on riscv/riscv-unified-db..."
-    if gh release view "${must_version}" --repo riscv/riscv-unified-db &>/dev/null; then
-      echo "==> GitHub Release ${must_version} already exists. Nothing to do."
-      return 0
-    fi
-  else
+  # Check if the GitHub Release exists
+  local release_exists=no
+  if gh release view "${must_version}" --repo riscv/riscv-unified-db &>/dev/null; then
+    release_exists=yes
+  fi
+
+  # Handle based on force flag and release existence
+  if [ "${force}" != "yes" ] && [ "${release_exists}" = "yes" ]; then
+    echo "==> GitHub Release ${must_version} already exists. Nothing to do."
+    echo "    Use -f flag to force rebuild."
+    return 0
+  fi
+
+  if [ "${force}" = "yes" ] && [ "${release_exists}" = "yes" ]; then
     echo "==> Force rebuild enabled..."
-    # Delete existing release if it exists
-    if gh release view "${must_version}" --repo riscv/riscv-unified-db &>/dev/null; then
+    # Only delete the release if we're building both architectures (not native_only)
+    # For native_only builds, we'll use --clobber to replace individual assets
+    if [ "${native_only}" != "yes" ]; then
       echo "==> Deleting existing GitHub Release ${must_version}..."
       gh release delete "${must_version}" --repo riscv/riscv-unified-db --yes
+    else
+      echo "==> Will replace existing assets with --clobber"
     fi
   fi
 
@@ -344,19 +362,28 @@ do_update_z3() {
     target_version="${latest_version}"
   fi
 
-  # Check if the GitHub Release exists before building (unless force is enabled)
-  if [ "${force}" != "yes" ]; then
-    echo "==> Checking for existing GitHub Release ${target_version} on riscv/riscv-unified-db..."
-    if gh release view "${target_version}" --repo riscv/riscv-unified-db &>/dev/null; then
-      echo "==> GitHub Release ${target_version} already exists. Nothing to do."
-      return 0
-    fi
-  else
+  # Check if the GitHub Release exists
+  local release_exists=no
+  if gh release view "${target_version}" --repo riscv/riscv-unified-db &>/dev/null; then
+    release_exists=yes
+  fi
+
+  # Handle based on force flag and release existence
+  if [ "${force}" != "yes" ] && [ "${release_exists}" = "yes" ]; then
+    echo "==> GitHub Release ${target_version} already exists. Nothing to do."
+    echo "    Use -f flag to force rebuild."
+    return 0
+  fi
+
+  if [ "${force}" = "yes" ] && [ "${release_exists}" = "yes" ]; then
     echo "==> Force rebuild enabled..."
-    # Delete existing release if it exists
-    if gh release view "${target_version}" --repo riscv/riscv-unified-db &>/dev/null; then
+    # Only delete the release if we're building both architectures (not native_only)
+    # For native_only builds, we'll use --clobber to replace individual assets
+    if [ "${native_only}" != "yes" ]; then
       echo "==> Deleting existing GitHub Release ${target_version}..."
       gh release delete "${target_version}" --repo riscv/riscv-unified-db --yes
+    else
+      echo "==> Will replace existing assets with --clobber"
     fi
   fi
 
