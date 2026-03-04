@@ -4,6 +4,7 @@
 package org.xtext.example.udb.validation;
 
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
 
@@ -23,15 +24,12 @@ import org.xtext.example.udb.udb.CsrFieldAliasName;
 import org.xtext.example.udb.udb.CsrAffectedByType;
 import org.xtext.example.udb.udb.CsrFieldAffectedBy;
 
-import org.xtext.example.udb.udb.ExtModel;
-import org.xtext.example.udb.udb.ExtVersionArrayElement;
-import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
-import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
-
 import org.xtext.example.udb.udb.InstModel;
+
 import org.xtext.example.udb.udb.InstName;
 import org.xtext.example.udb.udb.InstHints;
 import org.xtext.example.udb.udb.InstFormat;
+
 import org.xtext.example.udb.udb.InstOldEncoding;
 import org.xtext.example.udb.udb.InstEncoding;
 import org.xtext.example.udb.udb.InstEncodingMatch;
@@ -42,7 +40,14 @@ import org.xtext.example.udb.udb.InstRvPairEncoding;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
-import org.eclipse.emf.ecore.EObject;
+
+import org.xtext.example.udb.udb.ExtModel;
+import org.xtext.example.udb.udb.ExtName;
+import org.xtext.example.udb.udb.ExtVersionArrayElement;
+import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
+import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
+
+
 /**
  * This class contains custom validation rules.
  *
@@ -430,79 +435,40 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 * Extension Validation -- rules found in ext_schema.json
 	 */
-	@Check
-	public void checkExtensionModel(ExtModel ext) {
+    @Check
+    public void checkExtSchema(ExtModel ext) {
 		String schema = ext.getSchema().getSchema();
 		if (!schema.equals("ext_schema.json#")) {
-			error("Schema incompatible with kind", ext.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
+			error("Schema incompatible with kind", ext.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
-		
-		// check that the extension name is valid
-	    String name = ext.getExtName().getName();
-	    if (!name.matches(extensionNameRegex)) {
-	        error("Invalid extension name", ext.getExtName(),
+    }
+	
+	@Check
+	public void checkExtName(ExtName name) {
+	    String value = name.getName();
+	    if (!value.matches(extensionNameRegex)) {
+	        error("Invalid extension name", 
 	              UdbPackage.Literals.EXT_NAME__NAME);
 	    }
-	    
-	    EList<ExtVersionArrayElement> versions = ext.getExtVersions().getElements();
-	    
-	    for (int i=0; i < versions.size(); i++) {
-	    	ExtVersionArrayElement elem = versions.get(i);
-	    	checkExtVersionArrayElement(elem);
-	    }
-	    
-	    // Check that url's follow uri format
-	    Url companyUrl = ext.getCompany() != null ? ext.getCompany().getUrl() : null;
-	    checkUrlFormat(companyUrl);
-	    Url docLicenseUrl = ext.getDocLicense() != null ? ext.getDocLicense().getUrl() : null;
-	    checkUrlFormat(docLicenseUrl);
-	    Url docLicenseTextUrl = ext.getDocLicense() != null ? ext.getDocLicense().getTextUrl() : null;
-	    checkUrlFormat(docLicenseTextUrl);
 	}
-	
+
+	@Check
 	public void checkExtVersionArrayElement(ExtVersionArrayElement elem) {
 		// Validate elements in the versions array
 		
 		// check that the string representation of the version is valid
     	String versionString = elem.getVersion();
     	if (!versionString.matches(rviVersionRegex)) {
-			error("Invalid version", elem, UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
+			error("Invalid version", UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
 		}
     	
     	// if state is ratified, a ratification date must be given
     	String versionState = elem.getVersionState().getState();
 		if (versionState.equals("ratified")) {
 			if (elem.getRatificationDate() == null) {
-				error("Ratified states require a ratification date.", elem,
+				error("Ratified states require a ratification date.",
 						UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION_STATE);
-			}
-		}
-		
-		// check that url follows uri format
-		Url versionUrl = elem.getUrl();
-		checkUrlFormat(versionUrl);
-		
-		// check that url's in repositories follow uri format
-		EList<ExtVersionRepoArrayElement> repos = 
-				elem.getRepositories() != null ? elem.getRepositories().getRepositories() : null;
-		if (!(repos == null)) {
-			for (int j = 0; j < repos.size(); j++) {
-				ExtVersionRepoArrayElement r = repos.get(j);
-				
-				Url repoUrl = r.getUrl();
-				checkUrlFormat(repoUrl);
-			}
-		}
-		
-		// check that contributor emails follow email format
-		EList<ExtVersionContributorsArrayElement> contributors = 
-				elem.getVersionContributors() != null ? elem.getVersionContributors().getContributors() : null;
-		if (!(contributors == null)) {
-			for (int j = 0; j < contributors.size(); j++) {
-				ExtVersionContributorsArrayElement c = contributors.get(j);
-				
-				Email contributorEmail = c.getEmail();
-				checkEmailFormat(contributorEmail);
 			}
 		}	
 	}
@@ -510,26 +476,23 @@ public class UdbValidator extends AbstractUdbValidator {
 	
 	
 	/*
-	 *  Helper functions to validate more general fields (e.g. url, email, etc.)
+	 *  Validate general fields (e.g. url, email, etc.)
 	 */
+	@Check
 	public void checkUrlFormat(Url url) {
 		// Check that URLs follow the URI format
-		if (!(url == null)) {
-			String urlString = url.getUrl();
-			if (!urlString.matches(urlRegex)) {
-				error("URL not in URI format", url, UdbPackage.Literals.URL__URL);
-			}
+		String urlString = url.getUrl();
+		if (!urlString.matches(urlRegex)) {
+			error("URL not in URI format", UdbPackage.Literals.URL__URL);
 		}
 
 	}
 	
 	public void checkEmailFormat(Email email) {
 		// Check that emails follow email format
-		if (!(email == null)) {
-			String emailString = email.getEmail();
-			if (!emailString.matches(emailRegex)) {
-				error("Email not in formatted correctly", email, UdbPackage.Literals.EMAIL__EMAIL);
-			}
+		String emailString = email.getEmail();
+		if (!emailString.matches(emailRegex)) {
+			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
 		}
 	}
 
