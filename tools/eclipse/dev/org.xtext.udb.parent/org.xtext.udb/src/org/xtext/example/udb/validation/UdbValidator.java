@@ -29,8 +29,12 @@ import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
 
 import org.xtext.example.udb.udb.InstModel;
-import  org.xtext.example.udb.udb.InstOldEncoding;
+import org.xtext.example.udb.udb.InstName;
+import org.xtext.example.udb.udb.InstHints;
+import org.xtext.example.udb.udb.InstFormat;
+import org.xtext.example.udb.udb.InstOldEncoding;
 import org.xtext.example.udb.udb.InstEncoding;
+import org.xtext.example.udb.udb.InstEncodingMatch;
 import org.xtext.example.udb.udb.InstHintElement;
 import org.xtext.example.udb.udb.InstOpcodeEntry;
 import org.xtext.example.udb.udb.InstOpcodeInherits;
@@ -53,11 +57,11 @@ public class UdbValidator extends AbstractUdbValidator {
     String csrNameRegex = "^[a-z][a-z0-9_.]+$";
     String csrAffectedByRegex = "^(RV64)|([A-WY]|(Z[a-z]+)|(S[a-z]+))$";
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
-    String instructionNameRegex= "[a-z0-9.]+";
-    String instructionHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
-    String instructionInheritTypeRegex="^.+\\.yaml#(/.*)?$";
-    String instructionOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
-    String instructionChildOfRegex="common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+";
+    String instNameRegex= "[a-z0-9.]+";
+    String instHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
+    String instInheritTypeRegex="^.+\\.yaml#(/.*)?$";
+    String instOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
+    String instChildOfRegex="common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+";
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
@@ -243,31 +247,25 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 * Instruction Validation -- rules found in inst_schema.json
 	 */
+	
 	@Check
-	public void checkBaseValue(InstModel inst) {
+	public void checkInstSchema(InstModel inst) {
 		/* Ensure base value is either 32 or 64 */
-		int base = inst.getBase() != null ?inst.getBase().getBase() : null;
-
-		if (base != 32 && base != 64) {
-			error("Base must have value of 32 or 64.", UdbPackage.Literals.INST_MODEL__BASE);
-		}
-	}
-
-
-	@Check
-	public void checkInstructionModel(InstModel inst) {
 		String schema = inst.getSchema().getSchema();
 		if (!schema.equals("inst_schema.json#")) {
 			error("Schema incompatible with kind", inst.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
-		
-		// check that the extension name is valid
-	    String name = inst.getInstName().getName();
-	    if (!name.matches(instructionNameRegex)) {
-	        error("Invalid instruction name", inst.getInstName(),
-	              UdbPackage.Literals.INST_NAME__NAME);
+	}
+	
+	@Check
+	public void checkInstName(InstName name) {
+	    String value = name.getName();
+	    if (!value.matches(instNameRegex)) {
+	        error("Invalid inst name", name, UdbPackage.Literals.INST_NAME__NAME);
 	    }
 	}
+	
+
 	
 	/*
 	 *  Check access detail field is present when at least one mode 
@@ -283,96 +281,112 @@ public class UdbValidator extends AbstractUdbValidator {
 		String vs = inst.getAccess().getVs() != null ? inst.getAccess().getVs().getAccessLevel(): null;
 		String vu = inst.getAccess().getVu() != null ? inst.getAccess().getVu().getAccessLevel(): null;
 
-		boolean sometimes =
-			    "sometimes".equals(m) ||
-			    "sometimes".equals(s) ||
-			    "sometimes".equals(u) ||
-			    "sometimes".equals(vs) ||
-			    "sometimes".equals(vu);
-		if (sometimes == true && (accessdetail == null || accessdetail == "")) {
-			error("Must provide access_detail field when at least one access type is sometimes", UdbPackage.Literals.INST_MODEL__ACCESS_DETAIL);
+
+		if (accessdetail == null || accessdetail.trim().isEmpty()) {
+			if ("sometimes".equals(m)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__M);
+			}
+			if ("sometimes".equals(s)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__S);
+			}
+			if ("sometimes".equals(u)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__U);
+			}
+			if ("sometimes".equals(vs)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__VS);
+			}
+			if ("sometimes".equals(vu)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__VU);
+			}
+			
 		}
 	}
 	
 	@Check
 	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
-	public void checkInstHints(InstModel inst) {
-		EList<InstHintElement> hints = inst.getHints() != null ? inst.getHints().getHints(): null;
+	public void checkInstHints(InstHints hints) {
+		EList<InstHintElement> hintValue = hints != null ? hints.getHints(): null;
 		
-	
-		for (InstHintElement hint : hints) {
+		for (InstHintElement hint : hintValue) {
 			String hintString = hint.getHint();
 			
-			if (!(hintString.matches(instructionHintsRegex))) {
-				error("hints must be of format $ref: inst/<path>.yaml# or $ref: inst/<path>.yaml#/...", UdbPackage.Literals.INST_MODEL__HINTS);
+			if (!(hintString.matches(instHintsRegex))) {
+				error("hints must be of format $ref: inst/<path>.yaml# or $ref: inst/<path>.yaml#/...", hints, UdbPackage.Literals.INST_HINTS__HINTS);
 			}
 		}
 	}
 	
 	@Check
-	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
-	public void checkInstInherits(InstModel inst) {
-		
-		// validate top level inherits attribute within format
-		EList<String> inheritsList = inst.getFormat().getInherits() != null ? inst.getFormat().getInherits().getReference() : null;
-		
-		for (String address : inheritsList) {
-			if (!(address.matches(instructionInheritTypeRegex))) {
-				error("$inherits field must follow expected format: <path>.yaml# or <path>.yaml#/<fragment>.", UdbPackage.Literals.INST_MODEL__FORMAT);
-			}
-		}
-		
-		
-		// validate inherit attribute within opcodes within format
-		if (inst.getFormat() == null || inst.getFormat().getOpcodes() == null) {
-	        return;
+	// Check that address within format are in correct format 
+	public void checkInstInherits(InstFormat format) {
+	  if (format == null) return;
+
+	  // 1. top-level inherits list
+	  if (format.getInherits() != null && format.getInherits().getReference() != null) {
+	    for (String address : format.getInherits().getReference()) {
+	      if (address == null) continue; // or error if you want to require it
+	      if (!address.matches(instInheritTypeRegex)) {
+	        error(
+	          "$inherits field must follow expected format: <path>.yaml# or <path>.yaml#/<fragment>.",
+	          format,
+	          UdbPackage.Literals.INST_FORMAT__INHERITS
+	        );
+	      }
 	    }
-		for (InstOpcodeEntry entry: inst.getFormat().getOpcodes().getOpcode()) {
-			if(entry instanceof InstOpcodeInherits) {
-				InstOpcodeInherits opcodeInherits = (InstOpcodeInherits) entry;
-				String address = opcodeInherits.getInheritsAddress();
-				
-				if (!(address.matches(instructionOpcodeInheritTypeRegex))) {
-					error("$inherits field within opcodes must follow string address format inst_opcode/<file>.yaml#/data", UdbPackage.Literals.INST_MODEL__FORMAT);
-				}
-				
-			}
-		}
-		
+	  }
+
+	  // 2, opcode inherits
+	  if (format.getOpcodes() == null || format.getOpcodes().getOpcode() == null) return;
+
+	  for (InstOpcodeEntry entry : format.getOpcodes().getOpcode()) {
+	    if (entry instanceof InstOpcodeInherits opcodeInherits) {
+	      String address = opcodeInherits.getInheritsAddress();
+	      if (address == null) continue; 
+	      if (!address.matches(instOpcodeInheritTypeRegex)) {
+	        error(
+	          "$inherits field within opcodes must follow string address format inst_opcode/<file>.yaml#/data",
+	          opcodeInherits,
+	          UdbPackage.Literals.INST_OPCODE_INHERITS__INHERITS_ADDRESS
+	        );
+	      }
+	    }
+	  }
 	}
 	
 	// Check match regex within encoding
 	@Check
-	public void checkEncodingMatches(InstModel inst) {
-		InstEncoding encoding = inst.getEncoding();
+	public void checkInstEncoding(InstEncoding encoding) {
 		
 		if (encoding instanceof InstOldEncoding) {
 			InstOldEncoding oldEncoding = (InstOldEncoding) encoding;
 			
-			String match = oldEncoding.getMatch().getPattern();
+			InstEncodingMatch match = oldEncoding.getMatch();
+			String pattern = match.getPattern();
 			//error(match + " this is match", UdbPackage.Literals.INST_MODEL__ENCODING);
 			
 			// if match doesn't match any of these
-			if (!(match.matches(ENC_48)) && !(match.matches(ENC_16)) && !(match.matches(ENC_32))) {
-				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			if (!(pattern.matches(ENC_48)) && !(pattern.matches(ENC_16)) && !(pattern.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
 			}
 		}
 		
 		else if (encoding instanceof InstRvPairEncoding) {
 			InstRvPairEncoding rvEncoding = (InstRvPairEncoding) encoding;
 			
-			String Rv32match = rvEncoding.getRv32().getMatch().getPattern();
-			String Rv64match = rvEncoding.getRv64().getMatch().getPattern();
+			InstEncodingMatch Rv32Match = rvEncoding.getRv32().getMatch();
+			InstEncodingMatch Rv64Match = rvEncoding.getRv64().getMatch();
+			String Rv32Pattern = Rv32Match.getPattern();
+			String Rv64Pattern = Rv64Match.getPattern();
 			//error(Rv32match + " this is rv32 match", UdbPackage.Literals.INST_MODEL__ENCODING);
 			//error(Rv64match + " this is rv64 match", UdbPackage.Literals.INST_MODEL__ENCODING);
 			
 			// if match doesn't match any of these
-			if (!(Rv32match.matches(ENC_48)) && !(Rv32match.matches(ENC_16)) && !(Rv32match.matches(ENC_32))) {
-				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			if (!(Rv32Pattern.matches(ENC_48)) && !(Rv32Pattern.matches(ENC_16)) && !(Rv32Pattern.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", Rv32Match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
 			}
 			
-			if (!(Rv64match.matches(ENC_48)) && !(Rv64match.matches(ENC_16)) && !(Rv64match.matches(ENC_32))) {
-				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", UdbPackage.Literals.INST_MODEL__ENCODING);
+			if (!(Rv64Pattern.matches(ENC_48)) && !(Rv64Pattern.matches(ENC_16)) && !(Rv64Pattern.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", Rv64Match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
 			}
 		}
 		
@@ -380,8 +394,8 @@ public class UdbValidator extends AbstractUdbValidator {
 	
 	// Check $inherits and $childof regex within variables within encoding(they share the same regex)
 	@Check
-	public void checkInheritsAndChildOf(InstModel inst) {
-		InstEncoding encoding = inst.getEncoding();
+	public void checkInstInheritsAndChildOf(InstEncoding encoding) {
+		
 		if (!(encoding instanceof InstOldEncoding)) {
 			return;
 		}
@@ -398,14 +412,14 @@ public class UdbValidator extends AbstractUdbValidator {
 				InstEncodingTwoKeyVar twoKey = (InstEncodingTwoKeyVar) var;
 				String inherits = twoKey.getInherits();
 				
-				if (inherits != null && !(inherits.matches(instructionChildOfRegex))) {
+				if (inherits != null && !(inherits.matches(instChildOfRegex))) {
 					error("Expected $inherits to follow common/inst_variable_types\\.yaml#/SOMETHING format", twoKey, UdbPackage.Literals.INST_ENCODING_TWO_KEY_VAR__INHERITS);
 				}
 			} else if (var instanceof InstEncodingSevenKeyVar) {
 				InstEncodingSevenKeyVar sevenKey = (InstEncodingSevenKeyVar) var;
 				String childOf = sevenKey.getChildOf();
 				
-				if (childOf != null && !(childOf.matches(instructionChildOfRegex))) {
+				if (childOf != null && !(childOf.matches(instChildOfRegex))) {
 					error("Expected $child_of to follow common/inst_variable_types\\.yaml#/SOMETHING format", sevenKey, UdbPackage.Literals.INST_ENCODING_SEVEN_KEY_VAR__CHILD_OF);
 				}
 			}

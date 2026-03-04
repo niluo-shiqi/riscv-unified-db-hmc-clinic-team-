@@ -41,7 +41,6 @@ InstModel:
 	description = Description &
 	definedBy = InstDefinedBy &
 	hints = InstHints? &
-	base = InstBase? &
 	access = InstAccess &
 	accessDetail = InstAccessDetail? &
 	operation = InstOperation? &
@@ -225,7 +224,6 @@ CsrAffectedByType: affectedByName=ID | affectedByArray=Array;
 InstKind: 'kind' ':' kind="instruction";
 InstName: 'name' ':' name=ID;
 InstDefinedBy: 'definedBy' ':' dbname=STRING;
-InstBase: 'base' ':' base=INT; // 32 or 64
 InstAccess:
 	'access' ':'
 	INDENT(
