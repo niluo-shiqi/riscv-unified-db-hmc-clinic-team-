@@ -4,15 +4,48 @@
 package org.xtext.example.udb.validation;
 
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
-import org.xtext.example.udb.parser.antlr.UdbParser;
-import org.xtext.example.udb.udb.FieldDef;
-import org.xtext.example.udb.udb.IntType;
-import org.xtext.example.udb.udb.LengthType;
-import org.xtext.example.udb.udb.Model;
-import org.xtext.example.udb.udb.CsrModel;
-import org.xtext.example.udb.udb.ParmType;
 import org.xtext.example.udb.udb.UdbPackage;
+
+import org.xtext.example.udb.udb.Url;
+import org.xtext.example.udb.udb.Email;
+
+import org.xtext.example.udb.udb.CsrModel;
+import org.xtext.example.udb.udb.CsrName;
+import org.xtext.example.udb.udb.CsrAddress;
+import org.xtext.example.udb.udb.CsrVirtualAddress;
+import org.xtext.example.udb.udb.CsrIndirectAddress;
+import org.xtext.example.udb.udb.CsrIndirectSlot;
+import org.xtext.example.udb.udb.CsrLength;
+import org.xtext.example.udb.udb.CsrIntType;
+import org.xtext.example.udb.udb.CsrFieldDef;
+import org.xtext.example.udb.udb.CsrFieldAliasName;
+import org.xtext.example.udb.udb.CsrAffectedByType;
+import org.xtext.example.udb.udb.CsrFieldAffectedBy;
+
+import org.xtext.example.udb.udb.InstModel;
+
+import org.xtext.example.udb.udb.InstName;
+import org.xtext.example.udb.udb.InstHints;
+import org.xtext.example.udb.udb.InstFormat;
+
+import org.xtext.example.udb.udb.InstOldEncoding;
+import org.xtext.example.udb.udb.InstEncoding;
+import org.xtext.example.udb.udb.InstEncodingMatch;
+import org.xtext.example.udb.udb.InstHintElement;
+import org.xtext.example.udb.udb.InstOpcodeEntry;
+import org.xtext.example.udb.udb.InstOpcodeInherits;
+import org.xtext.example.udb.udb.InstRvPairEncoding;
+import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
+import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
+import org.xtext.example.udb.udb.InstEncodingVariables;
+
+import org.xtext.example.udb.udb.ExtModel;
+import org.xtext.example.udb.udb.ExtName;
+import org.xtext.example.udb.udb.ExtVersionArrayElement;
+import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
+import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
 
 
 /**
@@ -21,92 +54,446 @@ import org.xtext.example.udb.udb.UdbPackage;
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 public class UdbValidator extends AbstractUdbValidator {
-
+	
+	// Regex's found in schema_defs.json
+	String rviVersionRegex = "^[0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?$";
+	String csrFieldRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+$";
+    String csrFieldBitsRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+\\[[0-9]+(:[0-9]+)?\\]$";
+    String csrNameRegex = "^[a-z][a-z0-9_.]+$";
+    String csrAffectedByRegex = "^(RV64)|([A-WY]|(Z[a-z]+)|(S[a-z]+))$";
+    String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
+    String instNameRegex= "[a-z0-9.]+";
+    String instHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
+    String instInheritTypeRegex="^.+\\.yaml#(/.*)?$";
+    String instOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
+    String instChildOfRegex="common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+";
+    String ENC_48 = "^[01-]{43}11111$";
+    String ENC_32 = "^[01-]{30}11$";
+    String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
+    
+    // Extra regex's for validation
+    String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
+    String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+    
+	
+    
+    /*
+     * CSR Validation -- rules found in csr_schema.json
+     */
+    @Check
+    public void checkCsrSchema(CsrModel csr) {
+		String schema = csr.getSchema().getSchema();
+		if (!schema.equals("csr_schema.json#")) {
+			error("Schema incompatible with kind", csr.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
+    
 	@Check
-	public void checkAddress(CsrModel csr) {
-		int address = csr.getAddress() != null ? csr.getAddress().getAddress().getValue() : null;
-
-		if(address < 0 || address > 4096) {
-			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__ADDRESS);
+	public void checkCsrName(CsrName name) {
+	    String value = name.getName();
+	    if (!value.matches(csrNameRegex)) {
+	        error("Invalid csr name", 
+	              UdbPackage.Literals.CSR_NAME__NAME);
+	    }
+	}
+    
+	@Check
+	public void checkCsrAddressVal(CsrAddress address) {		
+		// Address must be between 0 and 12 bits
+		int val = address.getAddress().getValue();
+		if (val < 0 || val > 4096) {
+			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_ADDRESS__ADDRESS);
 		}
 	}
 
 	@Check
-	public void checkVirtualAddressValue(CsrModel csr) {
-		/* Ensure virtual address is in required range 0-4095 */
-		int vaddress = csr.getVirtualAddress() != null ?
-					   csr.getVirtualAddress().getVirtualAddress().getValue() : null;
+	public void checkCsrVirtualAddressVal(CsrVirtualAddress vaddress) {
+		// Virtual address must be between 0 and 12 bits
+		// TODO: it doesn't say that in the schema?
+		int val = vaddress.getVirtualAddress().getValue();
 
-		if (vaddress < 0 || vaddress > 4095) {
-			error("Virtual address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_MODEL__VIRTUAL_ADDRESS);
+		if (val < 0 || val > 4096) {
+			error("Virtual address must be between 0 and 12 bits.", 
+					UdbPackage.Literals.CSR_VIRTUAL_ADDRESS__VIRTUAL_ADDRESS);
 		}
 	}
 
 	@Check
-	public void checkIndirectAddressValue(CsrModel csr) {
-		/* Ensure indirect address is in required range */
-		int iaddress = csr.getIndirectAddress() != null ?
-					   csr.getIndirectAddress().getIndirectAddress().getValue() : null;
+	public void checkCsrIndirectAddressVal(CsrIndirectAddress iaddress) {
+		// Indirect address must be between 0 and 64 bits
+		int val = iaddress.getIndirectAddress().getValue();
 
-		if(iaddress < 0 || iaddress > (2^64)) {
-			error("Indirect address must be between 0 and 64 bits.", UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
+		if(val < 0 || val > (2^64)) {
+			error("Indirect address must be between 0 and 64 bits.", 
+					UdbPackage.Literals.CSR_INDIRECT_ADDRESS__INDIRECT_ADDRESS);
 		}
 	}
-
+	
 	@Check
-	public void checkBaseValue(CsrModel csr) {
-		/* Ensure base value is either 32 or 64 */
-		int base = csr.getBase() != null ?csr.getBase().getBase() : null;
-
-		if (base != 32 && base != 64) {
-			error("Base must have value of 32 or 64.", UdbPackage.Literals.CSR_MODEL__BASE);
-		}
-	}
-
-	@Check
-	public void checkLengthValue(CsrModel csr) {
-		// Containment reference is always instantiated
-		LengthType length_t = csr.getLength().getLength();
-		if (length_t == null) {
-			error("length should not be null",
-					UdbPackage.Literals.CSR_MODEL__LENGTH);
-		}
-		// If length is an integer, value is either 32 or 64
-		if (length_t instanceof IntType) {
-			Integer length = ((IntType) csr.getLength().getLength()).getIntVal();
-			if (length != 32 && length != 64) {
-				error("length if specified as integer, should be 32 or 64",
-						UdbPackage.Literals.CSR_MODEL__LENGTH);
-			}
-		}
-//		if (length != null && length != "MXLEN" && length != "SXLEN" && length != "VSXLEN" && length != "XLEN") {
-//			if (Integer.valueOf(length) != 32 && Integer.valueOf(length) != 64) {
-//			error("Integer length value must be 32 or 64.", UdbPackage.Literals.MODEL__LENGTH);
-//			}
-//		}
-
-	}
-
-	@Check
-	public void checkIndirectSlotValue(CsrModel csr) {
-		/* Ensure indirect_slot is between 1 and 6 */
-		int slot = csr.getIndirectSlot() != null ? csr.getIndirectSlot().getIndirectSlot() : null;
+	public void checkCsrIndirectSlotVal(CsrIndirectSlot indirectSlot) {
+		// indirect_slot must be between 1 and 6
+		int slot = indirectSlot.getIndirectSlot();
 
 		if (slot < 1 || slot > 6) {
-			error("Indirect slot value must be between 1 and 6.", UdbPackage.Literals.CSR_MODEL__INDIRECT_SLOT);
+			error("Indirect slot value must be between 1 and 6.", 
+					UdbPackage.Literals.CSR_INDIRECT_SLOT__INDIRECT_SLOT);
 		}
 	}
 
 	@Check
-	public void checkVirtualAddress(CsrModel csr) {
-		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode().getType() : null;
+	public void checkCsrIndirectSlot(CsrModel csr) {
+		CsrIndirectAddress iaddress = csr.getIndirectAddress();
+
+		if (iaddress != null) {
+			if (csr.getIndirectSlot() == null) {
+				error("Indirect address requires an indirect slot.", 
+						UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
+			}
+		}
+
+	}
+	
+	@Check
+	public void checkCsrPrivMode(CsrModel csr) {
+		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
+		java.util.Set<String> ALLOWED_TYPES = java.util.Set.of("M","S","U","VS","D");
+		
+		if (mode != null && !ALLOWED_TYPES.contains(mode)) {
+		    error(
+		        "Invalid privilege mode: " + mode,
+		        UdbPackage.Literals.CSR_MODEL__PRIVMODE
+		    );
+		}
+	}
+	
+	@Check
+	public void checkCsrVirtualAddress(CsrModel csr) {
+		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
 
 		if (mode.equals("VS")) {
 			if (csr.getVirtualAddress() == null) {
-				error("VS mode requires a virtual address.", UdbPackage.Literals.CSR_MODEL__PRIVMODE);
+				error("VS mode requires a virtual address.", 
+						UdbPackage.Literals.CSR_MODEL__PRIVMODE);
 			}
 		}
 
+	}
+	
+	@Check
+	public void checkLengthValue(CsrLength length) {
+		CsrIntType lengthInt = length.getLength().getIntType();
+		
+		// Containment reference is always instantiated
+		if (length.getLength() == null) {
+			error("length should not be null",
+					UdbPackage.Literals.CSR_LENGTH__LENGTH);
+		}
+		
+		// If length is an integer, value is either 32 or 64
+		if (lengthInt != null) {
+			int lengthVal = lengthInt.getIntVal();
+			if (lengthVal != 32 && lengthVal != 64) {
+				error("length if specified as integer, should be 32 or 64",
+						UdbPackage.Literals.CSR_LENGTH__LENGTH);
+			}
+		}
+	}
+	
+	
+	@Check
+	public void checkCsrFieldName(CsrFieldDef field) {
+		String value = field.getName();
+		if (!value.matches("^[a-zA-Z].*$")) {
+			error("Invalid field name",
+					UdbPackage.Literals.CSR_FIELD_DEF__NAME);
+		}
+	}
+	
+	@Check
+	public void checkCsrFieldAlias(CsrFieldAliasName alias) {
+		String value = alias.getName();
+
+	    if (!value.matches(csrFieldRegex) &&
+	        !value.matches(csrFieldBitsRegex)) {
+
+	        error(
+	            "Alias must match CSR_FIELD or CSR_FIELD_BITS format",
+	            UdbPackage.Literals.CSR_FIELD_ALIAS_NAME__NAME
+	        );
+	    }
+	}
+	
+	@Check
+	public void checkCsrFieldAffectedBy(CsrFieldAffectedBy affectedBy) {
+		CsrAffectedByType type = affectedBy.getAffectedBy(); 
+		String name = type.getAffectedByName();
+		
+		if (name != null) {
+			if (!name.matches(csrAffectedByRegex)) {
+				error("Invalid extension name", // TODO: is this an okay error message?
+						UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
+			}
+		} else {
+			EList<String> exts = type.getAffectedByArray().getNames();
+			for (int i = 0; i < exts.size(); i++) {
+				String ext = exts.get(i);
+				if (!ext.matches(csrAffectedByRegex)) {
+					error("Invalid extension name",
+							UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
+				}
+			}
+		}
+	}
+
+	
+	
+	
+	/*
+	 * Instruction Validation -- rules found in inst_schema.json
+	 */
+	
+	@Check
+	public void checkInstSchema(InstModel inst) {
+		/* Ensure base value is either 32 or 64 */
+		String schema = inst.getSchema().getSchema();
+		if (!schema.equals("inst_schema.json#")) {
+			error("Schema incompatible with kind", inst.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+	}
+	
+	@Check
+	public void checkInstName(InstName name) {
+	    String value = name.getName();
+	    if (!value.matches(instNameRegex)) {
+	        error("Invalid inst name", name, UdbPackage.Literals.INST_NAME__NAME);
+	    }
+	}
+	
+
+	
+	/*
+	 *  Check access detail field is present when at least one mode 
+	 *  within access field is sometimes
+	 */
+	@Check
+	public void checkInstAccessDetail(InstModel inst) {
+		String accessdetail = inst.getAccessDetail() != null ? inst.getAccessDetail().getAccessDetail(): null;
+
+		String m = inst.getAccess().getM() != null ? inst.getAccess().getM().getAccessLevel(): null;
+		String s = inst.getAccess().getS() != null ? inst.getAccess().getS().getAccessLevel(): null;
+		String u = inst.getAccess().getU() != null ? inst.getAccess().getU().getAccessLevel(): null;
+		String vs = inst.getAccess().getVs() != null ? inst.getAccess().getVs().getAccessLevel(): null;
+		String vu = inst.getAccess().getVu() != null ? inst.getAccess().getVu().getAccessLevel(): null;
+
+
+		if (accessdetail == null || accessdetail.trim().isEmpty()) {
+			if ("sometimes".equals(m)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__M);
+			}
+			if ("sometimes".equals(s)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__S);
+			}
+			if ("sometimes".equals(u)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__U);
+			}
+			if ("sometimes".equals(vs)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__VS);
+			}
+			if ("sometimes".equals(vu)) {
+				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__VU);
+			}
+			
+		}
+	}
+	
+	@Check
+	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
+	public void checkInstHints(InstHints hints) {
+		EList<InstHintElement> hintValue = hints != null ? hints.getHints(): null;
+		
+		for (InstHintElement hint : hintValue) {
+			String hintString = hint.getHint();
+			
+			if (!(hintString.matches(instHintsRegex))) {
+				error("hints must be of format $ref: inst/<path>.yaml# or $ref: inst/<path>.yaml#/...", hints, UdbPackage.Literals.INST_HINTS__HINTS);
+			}
+		}
+	}
+	
+	@Check
+	// Check that address within format are in correct format 
+	public void checkInstInherits(InstFormat format) {
+	  if (format == null) return;
+
+	  // 1. top-level inherits list
+	  if (format.getInherits() != null && format.getInherits().getReference() != null) {
+	    for (String address : format.getInherits().getReference()) {
+	      if (address == null) continue; // or error if you want to require it
+	      if (!address.matches(instInheritTypeRegex)) {
+	        error(
+	          "$inherits field must follow expected format: <path>.yaml# or <path>.yaml#/<fragment>.",
+	          format,
+	          UdbPackage.Literals.INST_FORMAT__INHERITS
+	        );
+	      }
+	    }
+	  }
+
+	  // 2, opcode inherits
+	  if (format.getOpcodes() == null || format.getOpcodes().getOpcode() == null) return;
+
+	  for (InstOpcodeEntry entry : format.getOpcodes().getOpcode()) {
+	    if (entry instanceof InstOpcodeInherits opcodeInherits) {
+	      String address = opcodeInherits.getInheritsAddress();
+	      if (address == null) continue; 
+	      if (!address.matches(instOpcodeInheritTypeRegex)) {
+	        error(
+	          "$inherits field within opcodes must follow string address format inst_opcode/<file>.yaml#/data",
+	          opcodeInherits,
+	          UdbPackage.Literals.INST_OPCODE_INHERITS__INHERITS_ADDRESS
+	        );
+	      }
+	    }
+	  }
+	}
+	
+	// Check match regex within encoding
+	@Check
+	public void checkInstEncoding(InstEncoding encoding) {
+		
+		if (encoding instanceof InstOldEncoding) {
+			InstOldEncoding oldEncoding = (InstOldEncoding) encoding;
+			
+			InstEncodingMatch match = oldEncoding.getMatch();
+			String pattern = match.getPattern();
+			//error(match + " this is match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			
+			// if match doesn't match any of these
+			if (!(pattern.matches(ENC_48)) && !(pattern.matches(ENC_16)) && !(pattern.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
+			}
+		}
+		
+		else if (encoding instanceof InstRvPairEncoding) {
+			InstRvPairEncoding rvEncoding = (InstRvPairEncoding) encoding;
+			
+			InstEncodingMatch Rv32Match = rvEncoding.getRv32().getMatch();
+			InstEncodingMatch Rv64Match = rvEncoding.getRv64().getMatch();
+			String Rv32Pattern = Rv32Match.getPattern();
+			String Rv64Pattern = Rv64Match.getPattern();
+			//error(Rv32match + " this is rv32 match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			//error(Rv64match + " this is rv64 match", UdbPackage.Literals.INST_MODEL__ENCODING);
+			
+			// if match doesn't match any of these
+			if (!(Rv32Pattern.matches(ENC_48)) && !(Rv32Pattern.matches(ENC_16)) && !(Rv32Pattern.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", Rv32Match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
+			}
+			
+			if (!(Rv64Pattern.matches(ENC_48)) && !(Rv64Pattern.matches(ENC_16)) && !(Rv64Pattern.matches(ENC_32))) {
+				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", Rv64Match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
+			}
+		}
+		
+	}
+	
+	// Check $inherits and $childof regex within variables within encoding(they share the same regex)
+	@Check
+	public void checkInstInheritsAndChildOf(InstEncoding encoding) {
+		
+		if (!(encoding instanceof InstOldEncoding)) {
+			return;
+		}
+		
+		InstOldEncoding old = (InstOldEncoding) encoding;
+		InstEncodingVariables varsList = old.getVariables();
+		
+		if (varsList == null) {
+			return;
+		}
+		
+		for (EObject var: varsList.getVars()) {
+			if (var instanceof InstEncodingTwoKeyVar) {
+				InstEncodingTwoKeyVar twoKey = (InstEncodingTwoKeyVar) var;
+				String inherits = twoKey.getInherits();
+				
+				if (inherits != null && !(inherits.matches(instChildOfRegex))) {
+					error("Expected $inherits to follow common/inst_variable_types\\.yaml#/SOMETHING format", twoKey, UdbPackage.Literals.INST_ENCODING_TWO_KEY_VAR__INHERITS);
+				}
+			} else if (var instanceof InstEncodingSevenKeyVar) {
+				InstEncodingSevenKeyVar sevenKey = (InstEncodingSevenKeyVar) var;
+				String childOf = sevenKey.getChildOf();
+				
+				if (childOf != null && !(childOf.matches(instChildOfRegex))) {
+					error("Expected $child_of to follow common/inst_variable_types\\.yaml#/SOMETHING format", sevenKey, UdbPackage.Literals.INST_ENCODING_SEVEN_KEY_VAR__CHILD_OF);
+				}
+			}
+		}
+	}
+	
+	
+	/*
+	 * Extension Validation -- rules found in ext_schema.json
+	 */
+    @Check
+    public void checkExtSchema(ExtModel ext) {
+		String schema = ext.getSchema().getSchema();
+		if (!schema.equals("ext_schema.json#")) {
+			error("Schema incompatible with kind", ext.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
+	
+	@Check
+	public void checkExtName(ExtName name) {
+	    String value = name.getName();
+	    if (!value.matches(extensionNameRegex)) {
+	        error("Invalid extension name", 
+	              UdbPackage.Literals.EXT_NAME__NAME);
+	    }
+	}
+
+	@Check
+	public void checkExtVersionArrayElement(ExtVersionArrayElement elem) {
+		// Validate elements in the versions array
+		
+		// check that the string representation of the version is valid
+    	String versionString = elem.getVersion();
+    	if (!versionString.matches(rviVersionRegex)) {
+			error("Invalid version", UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
+		}
+    	
+    	// if state is ratified, a ratification date must be given
+    	String versionState = elem.getVersionState().getState();
+		if (versionState.equals("ratified")) {
+			if (elem.getRatificationDate() == null) {
+				error("Ratified states require a ratification date.",
+						UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION_STATE);
+			}
+		}	
+	}
+	
+	
+	
+	/*
+	 *  Validate general fields (e.g. url, email, etc.)
+	 */
+	@Check
+	public void checkUrlFormat(Url url) {
+		// Check that URLs follow the URI format
+		String urlString = url.getUrl();
+		if (!urlString.matches(urlRegex)) {
+			error("URL not in URI format", UdbPackage.Literals.URL__URL);
+		}
+
+	}
+	
+	public void checkEmailFormat(Email email) {
+		// Check that emails follow email format
+		String emailString = email.getEmail();
+		if (!emailString.matches(emailRegex)) {
+			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
+		}
 	}
 
 }

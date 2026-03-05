@@ -1,7 +1,7 @@
 name: Deploy pages
 on:
   workflow_run:
-    workflows: [Deployment actions]
+    workflows: [CI/CD]
     types: [completed]
     branches: [main]
   workflow_dispatch:
@@ -17,15 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
-      SINGULARITY: 1
+      DOCKER: 1
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Clone Github Repo Action
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - name: singularity setup
-        uses: ./.github/actions/singularity-setup
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Make _site
         run: mkdir _site
@@ -234,7 +232,7 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
       - name: Create index
         env:
-          PAGES_URL: https://riscv-software-src.github.io/riscv-unified-db
+          PAGES_URL: https://riscv.github.io/riscv-unified-db
         run: >
           cp doc/udb-block.svg _site/ &&
           ruby -r erb -r date -e "File.write('_site/index.html', ERB.new(File.read('tools/scripts/pages.html.erb'), trim_mode: '-').result(binding))"
@@ -242,7 +240,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
         with:
           path: "_site"
       - name: Deploy to GitHub Pages
