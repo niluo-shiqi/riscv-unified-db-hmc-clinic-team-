@@ -43,7 +43,7 @@ InstModel:
 	hints = InstHints? &
 	access = InstAccess &
 	accessDetail = InstAccessDetail? &
-	operation = InstOperation? &
+	operation = InstOperation? & //idl
 	operationAst = InstOperationAst? &
 	sail = InstSail? &
 	certNormativeRules = CertNormativeRules? &
@@ -135,7 +135,7 @@ CsrKind: 'kind' ':' kind="csr";
 CsrName: 'name' ':' name=ID;
 CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
-CsrDefinedBy: 'definedBy' ':' extensionName=STRING;
+CsrDefinedBy: 'definedBy' ':' extensionName=Condition;
 CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
 CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
@@ -223,7 +223,7 @@ CsrAffectedByType: affectedByName=ID | affectedByArray=Array;
  */
 InstKind: 'kind' ':' kind="instruction";
 InstName: 'name' ':' name=ID;
-InstDefinedBy: 'definedBy' ':' dbname=STRING;
+InstDefinedBy: 'definedBy' ':' dbname=Condition;
 InstAccess:
 	'access' ':'
 	INDENT(
