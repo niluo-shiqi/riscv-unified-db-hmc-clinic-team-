@@ -1662,6 +1662,21 @@ class Udb::DatabaseObject::Kind < ::T::Enum
   end
 end
 
+module Udb::DepDownloader
+  class << self
+    def bin_dir(name, version); end
+    def binary(name, version); end
+    def host_cpu; end
+
+    private
+
+    def download_binary(name, version, dest_file); end
+    def download_with_redirects(url_str, limit = T.unsafe(nil)); end
+  end
+end
+
+Udb::DepDownloader::GITHUB_REPO = T.let(T.unsafe(nil), String)
+
 class Udb::DocLink
   def initialize(dst_link, db_obj); end
 
@@ -1681,6 +1696,9 @@ class Udb::DummyProgressBar
   sig { void }
   def finish; end
 end
+
+Udb::EQNTOTT_VERSION = T.let(T.unsafe(nil), String)
+Udb::ESPRESSO_VERSION = T.let(T.unsafe(nil), String)
 
 class Udb::Eqn
   sig { params(eqn: ::String).void }
@@ -1775,6 +1793,20 @@ class Udb::Eqn::EqnZero < ::Treetop::Runtime::SyntaxNode
     ).returns(::Udb::LogicNode)
   end
   def to_logic_tree(term_map); end
+end
+
+module Udb::EqntottPath
+  class << self
+    def bin_dir; end
+    def binary; end
+  end
+end
+
+module Udb::EspressoPath
+  class << self
+    def bin_dir; end
+    def binary; end
+  end
 end
 
 class Udb::ExceptionCode < ::Udb::TopLevelDatabaseObject
@@ -3091,6 +3123,8 @@ class Udb::LogicNodeType < ::T::Enum
   end
 end
 
+Udb::MUST_VERSION = T.let(T.unsafe(nil), String)
+
 class Udb::Manual < ::Udb::TopLevelDatabaseObject
   def marketing_name; end
   def repo_path=(path); end
@@ -3170,6 +3204,13 @@ class Udb::Mmr < ::Udb::TopLevelDatabaseObject
 
   sig { returns(::String) }
   def priv_mode; end
+end
+
+module Udb::MustPath
+  class << self
+    def bin_dir; end
+    def binary; end
+  end
 end
 
 class Udb::NonIsaSpecification
