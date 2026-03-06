@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.^extension.ExtendWith
 import org.xtext.example.udb.udb.Model
+import org.xtext.example.udb.udb.ExtModel
+import org.xtext.example.udb.udb.CsrModel
 
 @ExtendWith(InjectionExtension)
 @InjectWith(UdbInjectorProvider)
@@ -57,7 +59,7 @@ class UdbParsingTest {
 
 
 		// check basic inputs
-		var csr = result.getCsr();
+		var csr = result as CsrModel
 		
 		var schema = csr.getSchema().getSchema();
 		Assertions.assertEquals("csr_schema.json#", schema as String);
@@ -77,7 +79,7 @@ class UdbParsingTest {
 		Assertions.assertEquals("MXLEN", len as String);
 		var desc = csr.getDescription().getDescription();
 		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc);
-		var def = csr.getDefinedBy().getExtensionName();
+		var def = csr.getDefinedBy().getExtensionName().getCond();
 		Assertions.assertEquals("V", def);
 
 		// test fields
@@ -150,7 +152,7 @@ class UdbParsingTest {
 		val errors = result.eResource.errors
 		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
 		
-		var ext = result.getExt();
+		var ext = result as ExtModel
 		
 		var schema = ext.getSchema().getSchema();
 		Assertions.assertEquals("ext_schema.json#", schema as String);
