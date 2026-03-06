@@ -21,8 +21,8 @@ import org.xtext.example.udb.udb.CsrLength;
 import org.xtext.example.udb.udb.CsrIntType;
 import org.xtext.example.udb.udb.CsrFieldDef;
 import org.xtext.example.udb.udb.CsrFieldAliasName;
-import org.xtext.example.udb.udb.CsrAffectedByType;
-import org.xtext.example.udb.udb.CsrFieldAffectedBy;
+//import org.xtext.example.udb.udb.CsrAffectedByType;
+//import org.xtext.example.udb.udb.CsrFieldAffectedBy;
 
 import org.xtext.example.udb.udb.InstModel;
 
@@ -44,8 +44,8 @@ import org.xtext.example.udb.udb.InstEncodingVariables;
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
-import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
-import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
+//import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
+//import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
 
 
 /**
@@ -223,28 +223,28 @@ public class UdbValidator extends AbstractUdbValidator {
 	        );
 	    }
 	}
-	
-	@Check
-	public void checkCsrFieldAffectedBy(CsrFieldAffectedBy affectedBy) {
-		CsrAffectedByType type = affectedBy.getAffectedBy(); 
-		String name = type.getAffectedByName();
-		
-		if (name != null) {
-			if (!name.matches(csrAffectedByRegex)) {
-				error("Invalid extension name", // TODO: is this an okay error message?
-						UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
-			}
-		} else {
-			EList<String> exts = type.getAffectedByArray().getNames();
-			for (int i = 0; i < exts.size(); i++) {
-				String ext = exts.get(i);
-				if (!ext.matches(csrAffectedByRegex)) {
-					error("Invalid extension name",
-							UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
-				}
-			}
-		}
-	}
+// No longer need to validate regex since cross referencing already limits it to ID? Is this okay	
+//	@Check
+//	public void checkCsrFieldAffectedBy(CsrFieldAffectedBy affectedBy) {
+//		CsrAffectedByType type = affectedBy.getAffectedBy(); 
+//		String name = type.getAffectedByName();
+//		
+//		if (name != null) {
+//			if (!name.matches(csrAffectedByRegex)) {
+//				error("Invalid extension name", // TODO: is this an okay error message?
+//						UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
+//			}
+//		} else {
+//			EList<String> exts = type.getAffectedByArray().getNames();
+//			for (int i = 0; i < exts.size(); i++) {
+//				String ext = exts.get(i);
+//				if (!ext.matches(csrAffectedByRegex)) {
+//					error("Invalid extension name",
+//							UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
+//				}
+//			}
+//		}
+//	}
 
 	
 	
