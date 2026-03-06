@@ -5,9 +5,7 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	  csr  = CsrModel
-	| inst = InstModel
-	| ext  = ExtModel
+	CsrModel | InstModel | ExtModel
 ;
 
 
@@ -212,9 +210,21 @@ CsrAliasArrayElement:
 ;
 
 // TODO: cross-referencing
-CsrFieldAffectedBy: "affectedBy" ":" affectedBy=CsrAffectedByType; 
-CsrAffectedByType: affectedByName=ID | affectedByArray=Array;
+CsrFieldAffectedBy:
+    "affectedBy" ":" value=CsrAffectedByValue
+;
 
+CsrAffectedByValue:
+    CsrAffectedBySingle | CsrAffectedByList
+;
+
+CsrAffectedBySingle:
+    ref=[Model|ID]
+;
+
+CsrAffectedByList:
+    "[" refs+=[Model|ID] ("," refs+=[Model|ID])* "]"
+;
 
 
 
@@ -634,6 +644,7 @@ terminal YEAR_MONTH:
 // For whitespace awareness
 terminal INDENT: 'synthetic:INDENT';
 terminal DEDENT: 'synthetic:DEDENT';
+
 
 @Override
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
