@@ -335,7 +335,7 @@ InstEncodingSevenKeyVar:
 ;
 
 InstNotRule:
-	{NotRule}
+	{InstNotRule}
 	INT | IntArray
 ;
 
@@ -467,10 +467,16 @@ IDLCondition:
 ;
 
 ExtensionCondition:
-	'extension' ':' 
+	"extension" ":"
 	INDENT
-		extBody=(ExtRequirement | ExtArray | ExtIfThen)
+		extBody = Extension
 	DEDENT
+;
+
+Extension:
+	  ExtRequirement 
+	| ExtArray
+	| ExtIfThen
 ;
 
 ExtRequirement:
@@ -485,27 +491,27 @@ ExtArray:
 	| "noneOf" ":"
 	| "not" ":") &
 	INDENT
-		extArray=ExtConditionArray
+		extArray += ExtArrayElement+
 	DEDENT
+;
+
+ExtArrayElement:
+	"-" extConds = ExtensionCondition /* TODO: implement in validator (verify only two) */
 ;
 
 ExtIfThen:
 	"if" ":" 
 	INDENT
-		condition=Condition &
+		condition = Condition &
 	DEDENT
 	"then" ":"
 	INDENT
-		extCondition=ExtensionCondition
+		extCondition = ExtensionCondition
 	DEDENT
 ;
 
-YAMLConditionArray:
-	('-' YAMLConds+=YAMLCondition)+ /* TODO: implement in validator (verify only two) */
-;
-
-ExtConditionArray:
-	('-' extConds+=ExtensionCondition)+ /* TODO: implement in validator (verify only two) */
+YAMLConditionArrayElement:
+	"-" YAMLCond = YAMLCondition /* TODO: implement in validator (verify only two) */
 ;
 
 ConditionArray:
@@ -538,17 +544,15 @@ Param:
 ;
 
 
-//XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
+XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
 
 VersionRequirements:
 	versionReq=(ID | ReqStringArray) /* TODO: implement regex in validator */
 ;
 
 
-
 /* IDL Grammar */
 IDL: idl=STRING;
-
 
 
 
@@ -567,7 +571,6 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
-StringArray: '[' names+=STRING (',' names+=STRING)+ ']';
 ReqStringArray: '[' reqs+=ID (',' reqs+=ID)+ ']'; /* TODO: implement regex in validator */
 
 
