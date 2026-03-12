@@ -8,6 +8,7 @@ Model:
 	  csr  = CsrModel
 	| inst = InstModel
 	| ext  = ExtModel
+	| prof = ProfModel
 ;
 
 
@@ -73,6 +74,27 @@ ExtModel:
 	certNormativeRules = CertNormativeRules?
 ;
 
+ProfModel:
+	schema = Schema // must be "profile_schema.json#"
+	profKind = ProfKind
+	profName = ProfName &
+	longName = LongName &
+	description = Description? &
+	inherits = ProfInherits? &
+	parentOf = ProfParentOf? &
+	childOf = ProfChildOf? &
+	base = ProfBase & //TODO: deprecated?
+	certNormativeRules = CertNormativeRules? &
+	requirements = Requirements? &
+	marketingName = ProfMarketingName &
+	mode = ProfMode? &
+	release = ProfRelease? &
+	introduction = ProfIntroduction? &
+	recommendations = ProfRecommendations? &
+	extraNotes = ProfExtraNotes? &
+	extensions = ProfExtensions? &
+	source = ProfSource?
+;
 
 
 /* 
@@ -447,7 +469,59 @@ ExtVersionContributorName:
 	"name" ":" firstName = ID lastName = ID?
 ;
 
-
+/* 
+ * Profile stuff (see profile_schema.json) 
+ */
+ProfKind: 'kind' ':' kind='profile';
+ProfName: 'name' ':' name=ID;
+ProfInherits: '$inherits' ':' inherits=STRING; // TODO: enforce pattern in validator
+ProfParentOf: '$parent_of' ':' parent_of=STRING;
+ProfChildOf: '$child_of' ':' child_of=STRING;
+ProfBase: 'base' ':' base=INT; //TODO: deprecated?
+ProfMarketingName: 'marketing_name' ':' marketing_name=STRING;
+ProfMode: 'mode' ':' mode=('M' | 'S' | 'U' | 'Unpriv');
+ProfRelease:
+	'release' ':' '{' '$ref' ':' releaseAddress=STRING '}' // TODO: validator
+;
+ProfIntroduction: 'introduction' ':' introduction=STRING;
+ProfRecommendations:
+	'recommendations' ':'
+	INDENT
+		recommendations += ProfRecommendationsArrayElement+
+	DEDENT
+;
+ProfRecommendationsArrayElement:
+	'-' 'text' ':' text=STRING
+;
+ProfExtraNotes:
+	'extra_notes:' ':'
+	INDENT
+		extra_notes += ProfExtraNotesArrayElement+
+	DEDENT
+;
+ProfExtraNotesArrayElement:
+	'-' 'presence' ':' presence=STRING
+	INDENT
+		'text' ':' text=STRING
+	DEDENT
+;
+ProfExtensions:
+	'extensions' ':'
+	INDENT
+		'$inherits' ':' '{' '$ref' ':' extAddress=STRING '}' // TODO: validator
+		extensions += ProfExtensionsArrayElement+
+	DEDENT
+;
+ProfExtensionsArrayElement:
+	extension=STRING ':' // TODO: validator
+	INDENT
+		'presence' ':' presence=('mandatory' | 'optional')
+		// TODO: or optional field ('expansion'|'localized'|'development')
+		'version' ':' '{' '$ref' ':' versionAddress=STRING '}' //  TODO: validator
+		'note' ':' note=STRING
+	DEDENT	
+;
+ProfSource: '$source' ':' source=STRING;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
