@@ -454,39 +454,40 @@ ExtVersionContributorsArrayElement:
 	) DEDENT)?
 ;
 ExtVersionContributorName:
-	"name" ":" firstName = ID lastName = ID?
+	"name" ":" firstName=ID lastName=ID?
 ;
 
 
 
 /* Conditions */
 Condition: 
-	  yamlCond=YAMLCondition 
-	| idlCond=IDLCondition
+	( yamlCond=YAMLCondition 
+	| idlCond=IDLCondition)
 ;
 
 YAMLCondition:
-	  extensionCond = ExtensionCondition
-	| paramCond = ParamCondition
-	| xlenCond = XLenCondition
+	INDENT
+		( extensionCond = ExtensionCondition
+		//| paramCond = ParamCondition
+		| xlenCond = XLenCondition)
+	DEDENT
 ;
 
 IDLCondition:
 	"idl()" ":" idl=IDL
-	reason?=STRING
 ;
 
 ExtensionCondition:
 	"extension" ":"
 	INDENT
-		extBody = Extension
+		(extBody = ExtRequirement)
 	DEDENT
 ;
 
 Extension:
-	  ExtRequirement 
-	| ExtArray
-	| ExtIfThen
+	( requirement=ExtRequirement
+	| array=ExtArray
+	| ifThen=ExtIfThen)
 ;
 
 ExtRequirement:
@@ -499,65 +500,66 @@ ExtArray:
 	| "anyOf" ":"
 	| "oneOf" ":"
 	| "noneOf" ":"
-	| "not" ":") &
+	| "not" ":") 
 	INDENT
-		extArray += ExtArrayElement+
+		(extArray += ExtRequirement+)
 	DEDENT
 ;
 
+/* TODO: implement in validator (verify only two) */
 ExtArrayElement:
-	"-" extConds = ExtensionCondition /* TODO: implement in validator (verify only two) */
+	"-" extConds = STRING/* TODO: fix */ 
 ;
 
-ExtIfThen:
-	"if" ":" 
+ExtIfThen: // is this deprecated ?
+	("if" ":" 
 	INDENT
-		condition = Condition &
-	DEDENT
-	"then" ":"
+		(condition = (ExtArrayElement | Condition)) 
+	DEDENT) &
+	("then" ":"
 	INDENT
-		extCondition = ExtensionCondition
-	DEDENT
+		(extCondition = ExtensionCondition)
+	DEDENT)
 ;
 
-YAMLConditionArrayElement:
-	"-" YAMLCond = YAMLCondition /* TODO: implement in validator (verify only two) */
-;
+//YAMLConditionArrayElement:
+//	"-" YAMLCond = YAMLCondition /* TODO: implement in validator (verify only two) */
+//;
+//
+//ConditionArray:
+//	('-' cond+=Condition)+
+//;
 
-ConditionArray:
-	('-' cond+=Condition)+
-;
+//ParamCondition: /* TODO: mandate 2-3 properties, depending if reason is given */
+//	"param" ":" 
+//	INDENT
+//		param = (Param) /* TODO: add allOf, noneOf, etc. support */
+//	DEDENT
+//;
 
-ParamCondition: /* TODO: mandate 2-3 properties, depending if reason is given */
-	"param" ":" 
-	INDENT
-		param=(Param|ParamCondition) /* TODO: add allOf, noneOf, etc. support */
-	DEDENT
-;
-
-Param:
-	"name" ":" paramName=STRING & /* TODO: Validate regex  ^[A-Z][A-Z_0-9]*$ */
-	("index" ":" index=INT)? &
-	("size" ":" size=Boolean)? &
-	("equal" ":" equal=(INT | STRING | Boolean))? &
-	("oneOf" ":" 
-	INDENT
-		('-' items+=(INT | STRING))+ /* TODO: add array support? */
-	DEDENT)? &
-	("notEqual" ":" notEqual=(INT | STRING | Boolean))? &
-	("greaterThan" ":" greaterThan=INT)? &
-	("lessThan" ":" lessThan=INT)? &
-	("greaterThanOrEqual" ":" greatOrEqual=INT)? &
-	("lessThanOrEqual" ":" lessOrEqual=INT)? &
-	("includes" ":" includes=(INT | STRING))? &
-	("reason" ":" reason=STRING)?
-;
+//Param:
+//	"name" ":" paramName=STRING & /* TODO: Validate regex  ^[A-Z][A-Z_0-9]*$ */
+//	("index" ":" index=INT)? &
+//	("size" ":" size=Boolean)? &
+//	("equal" ":" equal=(INT | STRING | Boolean))? &
+//	("oneOf" ":" 
+//	INDENT
+//		('-' items+=(INT | STRING))+ /* TODO: add array support? */
+//	DEDENT)? &
+//	("notEqual" ":" notEqual=(INT | STRING | Boolean))? &
+//	("greaterThan" ":" greaterThan=INT)? &
+//	("lessThan" ":" lessThan=INT)? &
+//	("greaterThanOrEqual" ":" greatOrEqual=INT)? &
+//	("lessThanOrEqual" ":" lessOrEqual=INT)? &
+//	("includes" ":" includes=(INT | STRING))? &
+//	("reason" ":" reason=STRING)?
+//;
 
 
 XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
 
 VersionRequirements:
-	versionReq=(ID | ReqStringArray) /* TODO: implement regex in validator */
+	versionReq=(ID) /* TODO: implement regex in validator */
 ;
 
 
@@ -581,7 +583,7 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
-ReqStringArray: '[' reqs+=ID (',' reqs+=ID)+ ']'; /* TODO: implement regex in validator */
+// ReqStringArray: '[' reqs+=ID (',' reqs+=ID)+ ']'; /* TODO: implement regex in validator */
 
 
 /*
