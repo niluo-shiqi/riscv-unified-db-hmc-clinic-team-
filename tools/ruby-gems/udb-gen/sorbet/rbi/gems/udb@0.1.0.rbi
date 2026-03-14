@@ -1386,8 +1386,13 @@ class Udb::Csr < ::Udb::TopLevelDatabaseObject
   def priv_mode; end
   def pruned_sw_read_ast(effective_xlen); end
 
-  sig { params(effective_xlen: T.nilable(::Integer)).returns(T::Array[::Idl::FunctionDefAst]) }
-  def reachable_functions(effective_xlen = T.unsafe(nil)); end
+  sig do
+    params(
+      effective_xlen: T.nilable(::Integer),
+      cache: T::Hash[::Integer, T::Hash[T::Array[T.untyped], T::Array[::Idl::FunctionDefAst]]]
+    ).returns(T::Array[::Idl::FunctionDefAst])
+  end
+  def reachable_functions(effective_xlen = T.unsafe(nil), cache = T.unsafe(nil)); end
 
   def reset_value(*args, **_arg1, &blk); end
   def sw_read_ast(symtab); end
@@ -1400,6 +1405,11 @@ class Udb::Csr < ::Udb::TopLevelDatabaseObject
 
   def virtual_address; end
 end
+
+Udb::Csr::BITS128_TYPE = T.let(T.unsafe(nil), Idl::Type)
+Udb::Csr::BITS6_CONST_TYPE = T.let(T.unsafe(nil), Idl::Type)
+Udb::Csr::BITS6_TYPE = T.let(T.unsafe(nil), Idl::Type)
+Udb::Csr::ENCODING_SIZE_VAR = T.let(T.unsafe(nil), Idl::Var)
 
 class Udb::Csr::MemoizedState < ::T::Struct
   prop :reachable_functions, T::Hash[T.any(::Integer, ::Symbol), T::Array[::Idl::FunctionDefAst]]
@@ -1502,8 +1512,13 @@ class Udb::CsrField < ::Udb::DatabaseObject
   sig { params(effective_xlen: T.nilable(::Integer)).returns(T.nilable(::Idl::FunctionBodyAst)) }
   def pruned_type_ast(effective_xlen); end
 
-  sig { params(effective_xlen: T.nilable(::Integer)).returns(T::Array[::Idl::FunctionDefAst]) }
-  def reachable_functions(effective_xlen); end
+  sig do
+    params(
+      effective_xlen: T.nilable(::Integer),
+      cache: T::Hash[T::Array[T.untyped], T::Array[::Idl::FunctionDefAst]]
+    ).returns(T::Array[::Idl::FunctionDefAst])
+  end
+  def reachable_functions(effective_xlen, cache = T.unsafe(nil)); end
 
   sig do
     override
@@ -2557,8 +2572,13 @@ class Udb::Instruction < ::Udb::TopLevelDatabaseObject
   def reachable_exceptions(effective_xlen); end
   def reachable_exceptions_str(effective_xlen = T.unsafe(nil)); end
 
-  sig { params(effective_xlen: ::Integer).returns(T::Array[::Idl::FunctionDefAst]) }
-  def reachable_functions(effective_xlen); end
+  sig do
+    params(
+      effective_xlen: ::Integer,
+      cache: T::Hash[T.untyped, T.untyped]
+    ).returns(T::Array[::Idl::FunctionDefAst])
+  end
+  def reachable_functions(effective_xlen, cache = T.unsafe(nil)); end
 
   def rv32?; end
   def rv64?; end
@@ -4253,6 +4273,11 @@ class Udb::VersionSpec
 
   sig { returns(::String) }
   def to_s; end
+
+  class << self
+    sig { params(version_str: ::String).returns(::Udb::VersionSpec) }
+    def new(version_str); end
+  end
 end
 
 Udb::VersionSpec::VERSION_REGEX = T.let(T.unsafe(nil), Regexp)
