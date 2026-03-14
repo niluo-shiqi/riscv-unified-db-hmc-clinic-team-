@@ -127,6 +127,7 @@ tests:
           - cfg
           - mmr
           - mmr_schema
+          - schema_versioning
           - instruction
           - z3
           - z3_extensions
@@ -344,6 +345,14 @@ tests:
           PROFILE_NAME="${{ matrix.profile }}"
           UPPER_PROFILE="${PROFILE_NAME^^}"
           ./do gen:profile_release_pdf[${PROFILE_NAME}]
+
+  regress-schema-versions:
+    ci_stage: pr
+    tags:
+      - smoke
+    test:
+      - name: Check schema versions against published URLs
+        run: ./do gen:schemas && ./bin/ruby tools/scripts/check_schema_versions.rb
 
   build-idl-doc:
     ci_stage: merge_queue
