@@ -10,6 +10,7 @@ require_relative "../lib/udb/yaml/comment_parser"
 require_relative "../lib/udb/yaml/preserving_emitter"
 require "tmpdir"
 require "fileutils"
+require "json"
 require "idlc"
 
 class TestYamlResolver < Minitest::Test
@@ -96,6 +97,14 @@ class TestYamlResolver < Minitest::Test
       # Remove $source for comparison
       resolved_data_without_source = resolved_data.dup
       resolved_data_without_source.delete("$source")
+
+      # Normalize $schema: strip the version prefix the resolver adds so the
+      # comparison is against the bare name in the original source file.
+      # (e.g. 'v0.1/csr_schema.json#' -> 'csr_schema.json#')
+      if resolved_data_without_source.key?("$schema")
+        bare = File.basename(resolved_data_without_source["$schema"].split("#").first) + "#"
+        resolved_data_without_source["$schema"] = bare
+      end
 
       # For files without inheritance, data should match (minus $source)
       # However, the resolver expands $inherits references, so we skip comparison
@@ -447,6 +456,107 @@ class TestYamlResolver < Minitest::Test
           "Re-parsed AST #to_h does not match stored AST #to_h for #{rel_path} " \
           "at #{key_path.inspect} (kind=#{ast_hash["kind"].inspect})"
       end
+    end
+  end
+
+  # Test that versioned_schema_uri rewrites bare URIs when the schema has a $id
+  def test_versioned_schema_uri_rewrites_bare_ref
+    # Use the gem's schemas directory which has $id: "v0.1" fields
+    gem_schemas = Pathname.new(__dir__).parent / "schemas"
+    skip "gem schemas directory not found" unless gem_schemas.exist?
+
+    resolver = Udb::Yaml::Resolver.new(quiet: true, schemas_path: gem_schemas)
+
+    # Bare ref should get the version prefix
+    assert_equal "v0.1/ext_schema.json#", resolver.versioned_schema_uri("ext_schema.json#")
+    assert_equal "v0.1/csr_schema.json#", resolver.versioned_schema_uri("csr_schema.json#")
+  end
+
+  # Test that versioned_schema_uri leaves already-versioned URIs unchanged
+  def test_versioned_schema_uri_preserves_versioned_ref
+    gem_schemas = Pathname.new(__dir__).parent / "schemas"
+    skip "gem schemas directory not found" unless gem_schemas.exist?
+
+    resolver = Udb::Yaml::Resolver.new(quiet: true, schemas_path: gem_schemas)
+
+    already_versioned = "v0.1/ext_schema.json#"
+    assert_equal already_versioned, resolver.versioned_schema_uri(already_versioned)
+  end
+
+  # Test that versioned_schema_uri returns unchanged URI when no $id is found
+  def test_versioned_schema_uri_no_id_unchanged
+    Dir.mktmpdir do |tmpdir|
+      # Create a schema without $id
+      schemas_dir = Pathname.new(tmpdir) / "schemas"
+      schemas_dir.mkpath
+      (schemas_dir / "no_id_schema.json").write(JSON.generate({ "type" => "object" }))
+
+      resolver = Udb::Yaml::Resolver.new(quiet: true, schemas_path: schemas_dir)
+
+      uri = "no_id_schema.json#"
+      assert_equal uri, resolver.versioned_schema_uri(uri)
+    end
+  end
+
+  # Test that resolved files record the versioned $schema
+  def test_schema_versioning_in_resolved_files
+    gem_schemas = Pathname.new(__dir__).parent / "schemas"
+    skip "gem schemas directory not found" unless gem_schemas.exist?
+    skip "ext_schema.json not in gem schemas" unless (gem_schemas / "ext_schema.json").exist?
+
+    input_dir = Pathname.new(@test_dir) / "schema_version_input"
+    output_dir = Pathname.new(@test_dir) / "schema_version_output"
+    input_dir.mkpath
+
+    yaml_content = <<~YAML
+      $schema: ext_schema.json#
+      name: Xtest
+      kind: extension
+      type: unprivileged
+      long_name: Test extension
+      versions:
+        - version: "1.0.0"
+          state: ratified
+          ratification_date: "2024-01"
+      description: A test extension.
+    YAML
+    (input_dir / "Xtest.yaml").write(yaml_content)
+
+    resolver = Udb::Yaml::Resolver.new(quiet: true, schemas_path: gem_schemas)
+    resolver.resolve_files(input_dir, output_dir, no_checks: true)
+
+    resolved_content = File.read(output_dir / "Xtest.yaml")
+    # $schema should be rewritten to include the version prefix
+    assert_includes resolved_content, "$schema: v0.1/ext_schema.json#",
+      "Resolved file should contain versioned $schema"
+    refute_includes resolved_content, "$schema: ext_schema.json#",
+      "Resolved file should not contain bare (unversioned) $schema"
+  end
+
+  # Test that $schema stays unchanged when no schemas have $id
+  def test_schema_versioning_unchanged_without_id
+    Dir.mktmpdir do |tmpdir|
+      schemas_dir = Pathname.new(tmpdir) / "schemas"
+      schemas_dir.mkpath
+      # Schema with no $id field
+      (schemas_dir / "mock_schema.json").write(JSON.generate({
+        "$schema" => "http://json-schema.org/draft-07/schema#",
+        "type" => "object"
+      }))
+
+      input_dir = Pathname.new(@test_dir) / "no_id_input"
+      output_dir = Pathname.new(@test_dir) / "no_id_output"
+      input_dir.mkpath
+
+      (input_dir / "item.yaml").write("$schema: mock_schema.json#\nname: test\n")
+
+      resolver = Udb::Yaml::Resolver.new(quiet: true, schemas_path: schemas_dir)
+      resolver.resolve_files(input_dir, output_dir, no_checks: true)
+
+      resolved_content = File.read(output_dir / "item.yaml")
+      # Without $id in the schema, the URI should be unchanged
+      assert_includes resolved_content, "$schema: mock_schema.json#",
+        "Resolved file should keep bare $schema when schema has no $id"
     end
   end
 

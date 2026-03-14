@@ -8,6 +8,7 @@ require "psych"
 require "pathname"
 require "fileutils"
 require "json"
+require "json_schemer"
 require "sorbet-runtime"
 
 require "idlc"
@@ -22,8 +23,14 @@ module Udb
     class Resolver
       extend T::Sig
 
-      sig { params(quiet: T::Boolean, compile_idl: T::Boolean).void }
-      def initialize(quiet: false, compile_idl: false)
+      sig {
+        params(
+          quiet: T::Boolean,
+          compile_idl: T::Boolean,
+          schemas_path: T.nilable(T.any(String, Pathname))
+        ).void
+      }
+      def initialize(quiet: false, compile_idl: false, schemas_path: nil)
         @quiet = T.let(quiet, T::Boolean)
         @compile_idl = T.let(compile_idl, T::Boolean)
         @compiler = T.let(nil, T.nilable(Idl::Compiler))
@@ -32,6 +39,63 @@ module Udb
         end
         @resolved_objs = T.let({}, T::Hash[String, T::Hash[Symbol, T.untyped]])
         @current_comment_map = T.let(nil, T.nilable(CommentMap))
+        @schemas_path = T.let(schemas_path.nil? ? nil : Pathname.new(schemas_path), T.nilable(Pathname))
+        @schema_version_map = T.let(nil, T.nilable(T::Hash[String, String]))
+      end
+
+      # Returns the path to JSON schema files.
+      # Defaults to <repo_root>/spec/schemas but can be overridden via the constructor.
+      sig { returns(Pathname) }
+      def schemas_path
+        if @schemas_path.nil?
+          @schemas_path = Pathname.new(__dir__).parent.parent.parent.parent.parent.parent / "spec" / "schemas"
+        end
+        T.must(@schemas_path)
+      end
+
+      # Lazy map from schema filename -> version string, built by reading the $id
+      # field from each schema file (e.g. 'csr_schema.json' -> 'v0.1').
+      sig { returns(T::Hash[String, String]) }
+      def schema_version_map
+        if @schema_version_map.nil?
+          version_map = T.let({}, T::Hash[String, String])
+          if schemas_path.exist?
+            schemas_path.glob("*.json").each do |schema_file|
+              next if schema_file.basename.to_s == "json-schema-draft-07.json"
+
+              begin
+                schema_data = JSON.parse(schema_file.read)
+                version = schema_data["$id"]
+                version_map[schema_file.basename.to_s] = version if version.is_a?(String) && !version.start_with?("http")
+              rescue StandardError
+                # Silently skip files that can't be parsed
+              end
+            end
+          end
+          @schema_version_map = version_map
+        end
+        T.must(@schema_version_map)
+      end
+
+      # Rewrite a bare schema URI to include the version prefix recorded in $id.
+      # For example, 'csr_schema.json#' becomes 'v0.1/csr_schema.json#'.
+      # URIs that already contain a '/' in the base are returned unchanged.
+      sig { params(uri: String).returns(String) }
+      def versioned_schema_uri(uri)
+        fragment_sep = uri.index("#")
+        if fragment_sep
+          base = T.must(uri[0...fragment_sep])
+          fragment = T.must(uri[fragment_sep..])
+        else
+          base = uri
+          fragment = ""
+        end
+
+        # Already has a version prefix
+        return uri if base.include?("/")
+
+        version = schema_version_map[base]
+        version ? "#{version}/#{base}#{fragment}" : uri
       end
 
       sig {
@@ -232,6 +296,19 @@ module Udb
         comments = @resolved_objs.fetch(rel_path).fetch(:comments)
 
         resolved_obj["$source"] = (input_dir / rel_path).realpath.to_s
+
+        # Phase 1: Validate against bare (unversioned) $schema URI before rewriting.
+        # Source files use bare names like 'csr_schema.json#', so the schema enum
+        # only needs to list bare names.
+        if !no_checks && resolved_obj.key?("$schema")
+          validate_against_schema(resolved_obj, rel_path)
+        end
+
+        # Phase 2: Rewrite $schema to include the version prefix so the output
+        # file records the exact schema version used (e.g. 'v0.1/csr_schema.json#').
+        if resolved_obj.key?("$schema")
+          resolved_obj["$schema"] = versioned_schema_uri(resolved_obj["$schema"])
+        end
 
         FileUtils.mkdir_p(output_path.dirname)
 
@@ -443,7 +520,7 @@ module Udb
         if obj.key?("$child_of")
           child_of = obj["$child_of"]
           targets = child_of.is_a?(Array) ? child_of : [child_of]
-          child_ref = path.empty? ? rel_path : "#{rel_path}#/#{path.join("/")}"
+          child_ref = path.empty? ? "#{rel_path}#/" : "#{rel_path}#/#{path.join("/")}"
 
           targets.each do |target|
             next unless target.is_a?(String)
@@ -908,6 +985,54 @@ module Udb
         end
 
         offsets
+      end
+
+      # Validate +resolved_obj+ against its bare $schema URI.
+      # Uses the unversioned schema name so that schema enums listing bare names
+      # (e.g. 'csr_schema.json#') match even when $schema contains a version prefix.
+      sig {
+        params(
+          resolved_obj: T::Hash[String, T.untyped],
+          rel_path: String
+        ).void
+      }
+      def validate_against_schema(resolved_obj, rel_path)
+        schema_uri = resolved_obj["$schema"]
+        schema_file = schema_uri.split("#").first
+        schema_basename = File.basename(T.must(schema_file))
+        schema_path = schemas_path / schema_basename
+
+        unless schema_path.exist?
+          Udb.logger.warn "Schema file not found: #{schema_path}" unless @quiet
+          return
+        end
+
+        ref_resolver = proc do |uri|
+          local_path = schemas_path / File.basename(uri.to_s)
+          JSON.parse(local_path.read)
+        end
+
+        schema = JSONSchemer.schema(
+          JSON.parse(schema_path.read),
+          regexp_resolver: "ecma",
+          ref_resolver: ref_resolver,
+          insert_property_defaults: false
+        )
+
+        # Convert through JSON to normalize YAML-specific types (e.g. integer keys)
+        jsonified_obj = JSON.parse(JSON.generate(resolved_obj))
+
+        # Normalize $schema to bare name so the schema enum matches bare refs
+        if jsonified_obj.key?("$schema")
+          bare_schema = File.basename(T.must(jsonified_obj["$schema"].split("#").first)) + "#"
+          jsonified_obj["$schema"] = bare_schema
+        end
+
+        unless schema.valid?(jsonified_obj)
+          errors = schema.validate(jsonified_obj).to_a
+          error_msgs = errors.map { |e| "  - #{e["data_pointer"]}: #{e["type"]}" }.join("\n")
+          raise "Schema validation failed for #{rel_path}:\n#{error_msgs}"
+        end
       end
     end
   end
