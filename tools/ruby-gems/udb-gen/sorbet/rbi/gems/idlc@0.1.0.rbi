@@ -302,10 +302,10 @@ class Idl::AryElementAssignmentAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def idx; end
   def lhs; end
+  def nullify_assignments(symtab); end
   def rhs; end
 
   sig { override.returns(T::Hash[::String, T.untyped]) }
@@ -376,10 +376,10 @@ class Idl::AryRangeAssignmentAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def lsb; end
   def msb; end
+  def nullify_assignments(symtab); end
   def rhs; end
 
   sig { override.returns(T::Hash[::String, T.untyped]) }
@@ -1243,7 +1243,6 @@ class Idl::ConditionalStatementAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def prune(symtab, forced_type: T.unsafe(nil)); end
   def reachable_exceptions(symtab, cache = T.unsafe(nil)); end
@@ -1419,7 +1418,6 @@ class Idl::CsrFieldAssignmentAst < ::Idl::AstNode
 
   def csr_field; end
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def field(symtab); end
   def gen_adoc(indent, indent_spaces: T.unsafe(nil)); end
   def prune(symtab, forced_type: T.unsafe(nil)); end
@@ -1640,7 +1638,6 @@ class Idl::CsrSoftwareWriteAst < ::Idl::AstNode
   def csr_known?(symtab); end
   def csr_name; end
   def execute(_symtab); end
-  def execute_unknown(_symtab); end
   def expression; end
   def gen_adoc(indent, indent_spaces: T.unsafe(nil)); end
 
@@ -1689,7 +1686,6 @@ class Idl::CsrWriteAst < ::Idl::AstNode
 
   def csr_def(symtab); end
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def idx; end
   def name(symtab); end
 
@@ -2186,9 +2182,6 @@ module Idl::Executable
 
   sig { abstract.params(symtab: ::Idl::SymbolTable).void }
   def execute(symtab); end
-
-  sig { abstract.params(symtab: ::Idl::SymbolTable).void }
-  def execute_unknown(symtab); end
 end
 
 Idl::ExecutableAst = T.type_alias { T.all(::Idl::AstNode, ::Idl::Executable) }
@@ -2377,7 +2370,6 @@ class Idl::FieldAssignmentAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
 
   sig { returns(::String) }
   def field_name; end
@@ -2386,6 +2378,8 @@ class Idl::FieldAssignmentAst < ::Idl::AstNode
 
   sig { returns(::Idl::IdAst) }
   def id; end
+
+  def nullify_assignments(symtab); end
 
   sig { returns(T.all(::Idl::AstNode, ::Idl::Rvalue)) }
   def rhs; end
@@ -2440,10 +2434,6 @@ class Idl::ForLoopAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-
-  sig { override.params(symtab: ::Idl::SymbolTable).void }
-  def execute_unknown(symtab); end
-
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
 
   sig { returns(::Idl::VariableDeclarationWithInitializationAst) }
@@ -2547,10 +2537,6 @@ class Idl::FunctionBodyAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-
-  sig { override.params(symtab: ::Idl::SymbolTable).void }
-  def execute_unknown(symtab); end
-
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def gen_option_adoc; end
   def pass_find_return_values(symtab); end
@@ -2618,7 +2604,6 @@ class Idl::FunctionCallExpressionAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def func_type(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def gen_option_adoc; end
@@ -2870,9 +2855,6 @@ class Idl::GlobalWithInitializationAst < ::Idl::AstNode
   sig { override.params(symtab: ::Idl::SymbolTable).void }
   def execute(symtab); end
 
-  sig { override.params(symtab: ::Idl::SymbolTable).void }
-  def execute_unknown(symtab); end
-
   def id; end
   def rhs; end
 
@@ -2971,7 +2953,6 @@ class Idl::IfAst < ::Idl::AstNode
   def elseifs; end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
 
   sig { returns(::Idl::IfBodyAst) }
   def final_else_body; end
@@ -3015,7 +2996,6 @@ class Idl::IfAst < ::Idl::AstNode
   private
 
   def execute_after_if(symtab); end
-  def execute_unknown_after_if(symtab); end
   def return_values_after_if(symtab); end
 
   class << self
@@ -3046,10 +3026,9 @@ class Idl::IfBodyAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def gen_option_adoc; end
-  def prune(symtab, forced_type: T.unsafe(nil)); end
+  def prune(symtab, restore: T.unsafe(nil), forced_type: T.unsafe(nil)); end
 
   sig { override.params(symtab: ::Idl::SymbolTable).returns(::Idl::Type) }
   def return_type(symtab); end
@@ -3377,9 +3356,9 @@ class Idl::MultiVariableAssignmentAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def function_call; end
   def gen_adoc(indent, indent_spaces: T.unsafe(nil)); end
+  def nullify_assignments(symtab); end
   def rhs; end
 
   sig { override.returns(T::Hash[::String, T.untyped]) }
@@ -3462,7 +3441,6 @@ class Idl::NoopAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
 
   sig { override.returns(T::Hash[::String, T.untyped]) }
@@ -3648,9 +3626,6 @@ class Idl::PcAssignmentAst < ::Idl::AstNode
   sig { override.params(symtab: ::Idl::SymbolTable).void }
   def execute(symtab); end
 
-  sig { override.params(symtab: ::Idl::SymbolTable).void }
-  def execute_unknown(symtab); end
-
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
 
   sig { returns(T.all(::Idl::AstNode, ::Idl::Rvalue)) }
@@ -3693,8 +3668,8 @@ class Idl::PostDecrementExpressionAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent, indent_spaces: T.unsafe(nil)); end
+  def nullify_assignments(symtab); end
 
   sig { returns(T.any(::Idl::BuiltinVariableAst, ::Idl::IdAst, ::Idl::IntLiteralAst, ::Idl::StringLiteralAst)) }
   def rval; end
@@ -3736,8 +3711,8 @@ class Idl::PostIncrementExpressionAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent, indent_spaces: T.unsafe(nil)); end
+  def nullify_assignments(symtab); end
   def rval; end
 
   sig { override.returns(T::Hash[::String, T.untyped]) }
@@ -4103,7 +4078,6 @@ class Idl::StatementAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def gen_option_adoc; end
   def prune(symtab, forced_type: T.unsafe(nil)); end
@@ -4327,6 +4301,8 @@ class Idl::SymbolTable
 
   def push(ast); end
   def release; end
+  def restore_values(snapshot); end
+  def snapshot_values; end
 
   class << self
     sig do
@@ -4855,7 +4831,6 @@ class Idl::VariableAssignmentAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
 
   sig { returns(::Idl::IdAst) }
@@ -4981,7 +4956,6 @@ class Idl::VariableDeclarationWithInitializationAst < ::Idl::AstNode
   def const_eval?(symtab); end
 
   def execute(symtab); end
-  def execute_unknown(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
 
   sig { returns(::String) }
