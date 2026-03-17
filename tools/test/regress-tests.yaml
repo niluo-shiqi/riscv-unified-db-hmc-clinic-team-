@@ -357,6 +357,14 @@ tests:
       - name: Build IDL doc
         run: ./bin/bundle exec asciidoctor -r idl_highlighter -a toc=left -a source-highlighter=rouge -o idl.html doc/idl.adoc
 
+  regress-gem-version-bump:
+    ci_stage: pr
+    tags:
+      - smoke
+    test:
+      - name: Check gem versions bumped when source changes
+        run: git fetch --no-tags --prune --no-recurse-submodules origin main && ./bin/ruby tools/scripts/check_gem_version_bump.rb origin/main
+
   build-docs-site:
     ci_stage: merge_queue
     gh_save_artifact:
