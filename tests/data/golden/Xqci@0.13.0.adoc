@@ -40017,7 +40017,7 @@ h! `PrivilegeMode`
 if pass:[(]paddr > ((1 pass:[`]<< PHYS_ADDR_WIDTH) - access_size)) {
   xref:#udb-function-raise[raise]pass:[(]fault_type, from_mode, vaddr);
 }
-if pass:[(]xref:#udb-function-implemented?[implemented?]pass:[(]ExtensionName::Smpmp)) {
+if pass:[(]NUM_PMP_ENTRIES > 0) {
   if pass:[(]!xref:#udb-function-pmp_check[pmp_check]pass:[(]paddr[PHYS_ADDR_WIDTH - 1:0], access_size, type)) {
     xref:#udb-function-raise[raise]pass:[(]fault_type, from_mode, vaddr);
   }
