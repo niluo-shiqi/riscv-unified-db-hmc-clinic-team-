@@ -85,7 +85,10 @@ Number: intVal=INT | bin=Bin | hex=Hex;
 Range: upper=INT '-' lower=INT;
 UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
+TextUrl: 'text_url' ':' textUrl=STRING;
 Email: 'email' ':' email=STRING;
+ProcessorKind: 'processor_kind' ':' processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
+Introduction: 'introduction' ':' introduction=STRING;
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
@@ -120,7 +123,7 @@ DocLicense:
 		('name' ':' name=STRING) & 
 		id=UdbId? &
 		url=Url? &
-		textUrl=Url?
+		textUrl=TextUrl?
 	) DEDENT
 ;
 
