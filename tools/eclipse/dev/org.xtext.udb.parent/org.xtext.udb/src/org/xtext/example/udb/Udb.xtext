@@ -12,11 +12,11 @@ Model:
 ProfFamModel:
 	schema = Schema
 	profFamKind = PFKind
-	processorKind = PFProcessorKind? &
+	processorKind = ProcessorKind? &
 	profFamName = PFName &
 	longName = LongName &
 	marketingName = PFMarketingName? &
-	introduction = PFIntroduction? &
+	introduction = Introduction? &
 	description = Description? &
 	namingScheme = PFNamingScheme? &
 	company = PFCompany? &
@@ -102,6 +102,8 @@ UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
 TextUrl: 'text_url' ':' textUrl=STRING;
 Email: 'email' ':' email=STRING;
+ProcessorKind: 'processor_kind' ':' processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
+Introduction: 'introduction' ':' introduction=STRING;
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
@@ -481,10 +483,6 @@ PFKind:
 ;
 
 
-PFProcessorKind:
-	'processor_kind' ':' processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor')
-;
-
 PFName:
 	'name' ':' name=ID
 ;
@@ -492,9 +490,7 @@ PFName:
 PFMarketingName:
 	'marketing_name' ':' marketingName=STRING
 ;
-PFIntroduction:
-	'introduction' ':' introduction=STRING
-;
+
 PFNamingScheme:
 	'naming_scheme' ':' namingScheme=STRING
 ;
