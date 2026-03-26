@@ -12,16 +12,16 @@ Model:
 ProfFamModel:
 	schema = Schema
 	profFamKind = PFKind
-	processorKind = ProcessorKind? &
-	profFamName = PFName &
-	longName = LongName &
-	marketingName = PFMarketingName? &
-	introduction = Introduction? &
-	description = Description? &
-	namingScheme = PFNamingScheme? &
-	company = PFCompany? &
-	docLicense = DocLicense? &
-	source = Source? 
+	& processorKind = ProcessorKind? 
+	& profFamName = PFName 
+	& longName = LongName 
+	& marketingName = PFMarketingName? 
+	& introduction = Introduction? 
+	& description = Description? 
+	& namingScheme = PFNamingScheme? 
+	& company = PFCompany? 
+	& docLicense = DocLicense? 
+	& source = Source? 
 ;
 
 CsrModel:
