@@ -11,11 +11,11 @@ Model:
 ProcCertClassModel:
 	schema = Schema // must be "profile_release_schema.json#"
 	procCertClassKind = PCCKind
-	procCertClassRelName = PCCName &
-	longName = LongName &
-	processorKind = ProcessorKind &
-	introduction = Introduction &
-	source = Source? 
+	& procCertClassRelName = PCCName 
+	& longName = LongName 
+	& processorKind = ProcessorKind 
+	& introduction = Introduction 
+	& source = Source? 
 	
 ;
 
