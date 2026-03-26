@@ -5,9 +5,21 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	CsrModel | InstModel | ExtModel
+	CsrModel | InstModel | ExtModel | ParamModel
 ;
 
+ParamModel:
+	schema = Schema
+	paramKind = ParamKind
+	& paramName = ParamName?
+	& longName = LongName
+	& description = Description 
+	& definedBy = ParamDefinedBy
+	& paramSchema = ParamSchema
+	& requirements = Requirements?
+	& source = Source?
+	
+;
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
@@ -459,8 +471,14 @@ ExtVersionContributorsArrayElement:
 ExtVersionContributorName:
 	"name" ":" firstName = ID lastName = ID?
 ;
+/* 
+ * Param stuff (see param_schema.json) 
+ */
 
-
+ParamKind: 'kind' ':' kind="parameter";
+ParamName: 'name' ':' name=ID; // "^[A-Z][A-Z_0-9]*$"
+ParamDefinedBy: 'definedBy' ':' dBName=Condition;
+ParamSchema:'schema' ":" schema=STRING;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
