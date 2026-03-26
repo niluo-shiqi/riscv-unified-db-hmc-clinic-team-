@@ -5,9 +5,19 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	CsrModel | InstModel | ExtModel
+	CsrModel | InstModel | ExtModel | ProcCertClassModel
 ;
 
+ProcCertClassModel:
+	schema = Schema // must be "profile_release_schema.json#"
+	procCertClassKind = PCCKind
+	procCertClassRelName = PCCName &
+	longName = LongName &
+	processorKind = ProcessorKind &
+	introduction = Introduction &
+	source = Source? 
+	
+;
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
@@ -86,6 +96,9 @@ Range: upper=INT '-' lower=INT;
 UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
 Email: 'email' ':' email=STRING;
+ProcessorKind: 'processor_kind' ':' processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
+Introduction: 'introduction' ':' introduction=STRING;
+
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
@@ -457,7 +470,16 @@ ExtVersionContributorName:
 	"name" ":" firstName = ID lastName = ID?
 ;
 
+/* 
+ * Profile Release stuff (see profile_release_schema.json) 
+ */
+PCCKind:
+	'kind' ':' 'processor' 'certificate' 'class'
+;
 
+PCCName:
+	'name' ':' name=ID
+;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
