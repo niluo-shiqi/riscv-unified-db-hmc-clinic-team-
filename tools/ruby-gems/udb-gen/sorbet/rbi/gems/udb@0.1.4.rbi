@@ -2333,6 +2333,9 @@ class Udb::ExtensionVersion
   sig { returns(T.nilable(::String)) }
   def ratification_date; end
 
+  sig { returns(T.nilable(::String)) }
+  def release_date; end
+
   sig { returns(::Udb::AbstractCondition) }
   def requirements_condition; end
 
