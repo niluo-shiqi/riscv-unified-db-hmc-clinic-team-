@@ -36,8 +36,10 @@ Gem::Specification.new do |s|
   s.add_dependency "pp"
   s.add_dependency "sorbet-runtime"
   s.add_dependency "treetop", "1.6.12"
+  s.add_dependency "tty-progressbar"
 
   s.add_development_dependency "minitest"
+  s.add_development_dependency "rake"
   s.add_development_dependency "rdbg"
   s.add_development_dependency "rouge"
   s.add_development_dependency "rubocop-github"
