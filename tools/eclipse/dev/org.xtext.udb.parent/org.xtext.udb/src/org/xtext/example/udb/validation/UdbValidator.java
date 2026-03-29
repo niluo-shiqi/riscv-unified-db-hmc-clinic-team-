@@ -7,9 +7,12 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
+import org.xtext.example.udb.treetop.TreetopParser;
+import org.xtext.example.udb.treetop.ValidationError;
 
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
+import org.xtext.example.udb.udb.Idl;
 
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
@@ -21,11 +24,8 @@ import org.xtext.example.udb.udb.CsrLength;
 import org.xtext.example.udb.udb.CsrIntType;
 import org.xtext.example.udb.udb.CsrFieldDef;
 import org.xtext.example.udb.udb.CsrFieldAliasName;
-//import org.xtext.example.udb.udb.CsrAffectedByType;
-//import org.xtext.example.udb.udb.CsrFieldAffectedBy;
 
 import org.xtext.example.udb.udb.InstModel;
-
 import org.xtext.example.udb.udb.InstName;
 import org.xtext.example.udb.udb.InstHints;
 import org.xtext.example.udb.udb.InstFormat;
@@ -44,8 +44,6 @@ import org.xtext.example.udb.udb.InstEncodingVariables;
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
-//import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
-//import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
 
 
 /**
@@ -494,6 +492,26 @@ public class UdbValidator extends AbstractUdbValidator {
 		if (!emailString.matches(emailRegex)) {
 			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
 		}
+	}
+	
+	/*
+	 * Pass off IDL to the treetop parser
+	 */
+	private final TreetopParser treetopParser = TreetopParser.getInstance();
+	
+	@Check
+	public void checkIdl(Idl idl) {
+	    String content = idl.getIdl();
+	    
+	    // Strip surrounding quotes that Xtext adds to STRING terminals
+	    if (content != null && content.startsWith("\"") && content.endsWith("\"")) {
+	        content = content.substring(1, content.length() - 1);
+	    }
+	    
+	    ValidationError error = treetopParser.parse(content);
+	    if (error != null) {
+	        error(error.reason, UdbPackage.Literals.IDL__IDL);
+	    }
 	}
 
 }
