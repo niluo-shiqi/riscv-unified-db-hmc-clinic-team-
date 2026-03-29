@@ -151,6 +151,7 @@ GEM
       sorbet-static (= 0.6.12949)
     sorbet-runtime (0.6.12949)
     sorbet-static (0.6.12949-aarch64-linux)
+    sorbet-static (0.6.12949-universal-darwin)
     sorbet-static (0.6.12949-x86_64-linux)
     sorbet-static-and-runtime (0.6.12949)
       sorbet (= 0.6.12949)
@@ -198,6 +199,7 @@ GEM
 
 PLATFORMS
   aarch64-linux
+  arm64-darwin-24
   x86_64-linux
   x86_64-linux-gnu
 

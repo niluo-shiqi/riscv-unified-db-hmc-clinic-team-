@@ -30,6 +30,9 @@ target/
 build/
 .gradle/
 
+lib/
+gems/
+
 node_modules/
 
 udb-vscode/out/

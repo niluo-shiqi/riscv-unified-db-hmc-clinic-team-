@@ -21,6 +21,7 @@
 		<additionalTestArguments></additionalTestArguments>
 	</properties>
 	<modules>
+		<module>org.xtext.udb.jruby</module>
 		<module>org.xtext.udb</module>
 		<module>org.xtext.udb.ide</module>
 		<module>org.xtext.udb.ui</module>
@@ -166,6 +167,30 @@
 						<useUIHarness>false</useUIHarness>
 					</configuration>
 				</plugin>
+				<plugin>
+		            <groupId>org.eclipse.m2e</groupId>
+		            <artifactId>lifecycle-mapping</artifactId>
+		            <version>1.0.0</version>
+		            <configuration>
+		                <lifecycleMappingMetadata>
+		                    <pluginExecutions>
+		                        <pluginExecution>
+		                            <pluginExecutionFilter>
+		                                <groupId>org.eclipse.tycho</groupId>
+		                                <artifactId>tycho-bnd-plugin</artifactId>
+		                                <versionRange>[0,)</versionRange>
+		                                <goals>
+		                                    <goal>process</goal>
+		                                </goals>
+		                            </pluginExecutionFilter>
+		                            <action>
+		                                <ignore/>
+		                            </action>
+		                        </pluginExecution>
+		                    </pluginExecutions>
+		                </lifecycleMappingMetadata>
+		            </configuration>
+		        </plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
