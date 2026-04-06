@@ -1,10 +1,12 @@
 {
   "name": "udb-vscode",
-  "version": "0.0.1",
+  "version": "3.0.2",
+  "publisher": "HarveyMuddClinicTeam",
   "private": true,
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.109.0"
   },
+  "description": "Added support for instruction, extension, and CSR schemas with cross-referencing across schema definitions.",
   "activationEvents": [],
   "contributes": {
     "languages": [
@@ -52,10 +54,14 @@
     "@types/vscode": "1.109.0",
     "@vscode/test-electron": "2.5.2",
     "glob": "7.2.3",
-    "mocha": "10.8.2",
+    "mocha": "^7.2.0",
     "typescript": "5.9.3"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/niluo-shiqi/riscv-unified-db-hmc-clinic-team-"
   }
 }

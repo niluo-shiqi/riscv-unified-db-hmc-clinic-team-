@@ -12,7 +12,6 @@ description: "|
   bitwise inversion of `xs2`."
 definedBy: "anyOf: [Zbb, Zbkb]"
 assembly: "xd, xs1, xs2"
-base: 32
 format:
   $inherits:
     - "inst_subtype/R/R-x.yaml#/data"
