@@ -1,0 +1,7 @@
+.vscode/**
+src/**
+test-fixtures/**
+tsconfig.json
+node_modules/**
+!node_modules/your-runtime-dependency  # only if you have runtime npm deps
+out/test/**
