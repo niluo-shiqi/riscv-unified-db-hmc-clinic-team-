@@ -470,15 +470,19 @@ ExtVersionContributorName:
 InstOpcodeKind: 'kind' ':' kind="instruction_opcode";
 InstOpcodeName: 'name' ':' name=ID;
 InstOpcodeData: 'data' ':'
-	INDENT
-		('location' ':' location=StringOrInt)? &
-		('value' ':' value=Bin)? &
-		('display_name' ':' displayName=ID)? &
-		('parent_of' ':' parentOf=Url)? &
-	DEDENT
+	INDENT(
+		('display_name' ':' displayName=ID) &
+		('value' ':' value=BinOrIntOrHex) &
+		('location' ':' location=RangeOrInt)? &
+		('parent_of' ':' parentOf=UrlArrayOrUrl)?
+		)DEDENT
 ;
 
-StringOrInt:STRING | INT;
+RangeOrInt: (IntegerRule | Range);
+UrlArrayOrUrl: (StringArray | StringRule);
+BinOrIntOrHex: (Bin|IntegerRule|Hex);
+IntegerRule: int=INT;
+StringRule: string=STRING;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
@@ -532,6 +536,7 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
+StringArray: '[' item+=STRING (',' item+=STRING) + ']';
 
 /*
  * Hex & Binary

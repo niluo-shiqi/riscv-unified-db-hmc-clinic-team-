@@ -9,6 +9,7 @@ import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
 
 import org.xtext.example.udb.udb.Url;
+import org.xtext.example.udb.udb.UrlArrayOrUrl;
 import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.CsrModel;
@@ -31,12 +32,16 @@ import org.xtext.example.udb.udb.InstHints;
 import org.xtext.example.udb.udb.InstFormat;
 
 import org.xtext.example.udb.udb.InstOldEncoding;
+import org.xtext.example.udb.udb.InstOpcodeData;
 import org.xtext.example.udb.udb.InstEncoding;
 import org.xtext.example.udb.udb.InstEncodingMatch;
 import org.xtext.example.udb.udb.InstHintElement;
 import org.xtext.example.udb.udb.InstOpcodeEntry;
 import org.xtext.example.udb.udb.InstOpcodeInherits;
+import org.xtext.example.udb.udb.InstOpcodeModel;
 import org.xtext.example.udb.udb.InstRvPairEncoding;
+import org.xtext.example.udb.udb.StringArray;
+import org.xtext.example.udb.udb.StringRule;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
@@ -70,6 +75,10 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
+    String multiBitLocRange= "^[0-9]+-[0-9]+$";
+    String refUrlRegex = "^.*/.*\\.yaml#.*$";
+    String binaryRegex = "^0b[01]+$";
+    String hexRegex = "^0x[a-fA-F0-9]+$";
     
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
@@ -472,6 +481,72 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}	
 	}
+	
+	/*
+	 * Inst Opcode Validation -- rules found in inst_opcode_schema.json
+	 */
+	@Check
+    public void checkInstOpcodeSchema(InstOpcodeModel instop) {
+		String schema = instop.getSchema().getSchema();
+		if (!schema.equals("inst_opcode_schema.json#")) {
+			error("Schema incompatible with kind", instop.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
+	
+//	// If location is string, must follow ^[0-9]+-[0-9]+$ pattern signifying “location range of a multi-bit field”
+//	@Check
+//	public void checkInstOpcodeLocation(InstOpcodeData instopData) {
+//	    StringOrInt location = instopData.getLocation();
+//	    if (location instanceof StringRule) {
+//	    	String locString = location.toString();
+//	    	if (!locString.matches(multiBitLocRange)) {
+//	    		 error("Invalid location range. Expected a value like 42-100 (two groups of digits separated by a hyphen, e.g. 1-2 or 99-300)", 
+//	   	              location, UdbPackage.Literals.INST_OPCODE_DATA__LOCATION);
+//	    	}
+//	    	
+//	    }
+//	}
+	// value can be int or string. If value is string, it must be either ^0b[01]+$ or ^0x[a-fA-F0-9]+$
+	
+//	@Check
+//	public void checkInstOpcodeValue(InstOpcodeData instopData) {
+//	    StringOrInt value = instopData.getValue();
+//	    if (value instanceof StringRule) {
+//	    	String locString = value.toString();
+//	    	if (!locString.matches(binaryRegex) && !locString.matches(hexRegex)) {
+//	    		error("Invalid value. Must be a whole number (e.g. 42), a binary string (e.g. \"0b1010\"), or a hex string (e.g. \"0xff3a\")", 
+//		   	          value, UdbPackage.Literals.INST_OPCODE_DATA__VALUE);
+//	    	} 
+//	    	
+//	    }
+//	}
+	
+	// parent_of can be list of strings or singular string, must follow ^.*/.*\\.yaml#.*$
+	@Check
+	public void checkInstOpcodeParentOf(InstOpcodeData instopData) {
+	    UrlArrayOrUrl parentOf = instopData.getParentOf();
+	    if (parentOf instanceof StringRule) {
+	    	String refUrl = parentOf.toString();
+	    	if (!refUrl.matches(refUrlRegex)) {
+	    		 error("Invalid ref url. Expected a .yaml file path with an anchor, like schemas/my-file.yaml#SectionName", 
+	   	              instopData, UdbPackage.Literals.INST_OPCODE_DATA__PARENT_OF);
+	    	}
+	    	
+	    }
+	    else if (parentOf instanceof StringArray) {
+	    	StringArray parentOfArray = (StringArray) parentOf;
+	    	for (String item: parentOfArray.getItem()) {
+	    	    if (!item.matches(refUrlRegex)) {
+	    	        error("Invalid ref url. Expected a .yaml file path with an anchor, like schemas/my-file.yaml#SectionName",
+	    	           instopData, UdbPackage.Literals.INST_OPCODE_DATA__PARENT_OF);
+	    	    }
+	    	}
+	    	
+	    }
+	}
+	
+	
 	
 	
 	
