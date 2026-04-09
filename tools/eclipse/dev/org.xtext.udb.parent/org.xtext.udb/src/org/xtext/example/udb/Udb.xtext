@@ -79,7 +79,7 @@ ExtModel:
 Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
 Description: 'description' ':' description=STRING; 
-Requirements: "requirements" ":" requirements=Condition;
+Requirements: "requirements" ":" requirements=ConditionBlock;
 Source:'$source' ':' source=STRING;
 Number: intVal=INT | bin=Bin | hex=Hex;
 Range: upper=INT '-' lower=INT;
@@ -130,15 +130,15 @@ DocLicense:
  * CSR stuff (see csr_schema.json)
  */
 CsrKind: 'kind' ':' kind="csr";
-CsrName: 'name' ':' name=ID;
+CsrName: 'name' ':' name=STRING; //name=ID;
 CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
-CsrDefinedBy: 'definedBy' ':' extensionName=Condition;
+CsrDefinedBy: 'definedBy' ':' extensionName=ConditionBlock;
 CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
 CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=IDL;
-CsrPrivMode:'priv_mode' ':' privMode=ID;
+CsrPrivMode:'priv_mode' ':' privMode=STRING; //privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
 CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
 CsrIntType: intVal=INT; 
@@ -156,7 +156,7 @@ CsrFields:
 ;
 
 CsrFieldDef:
-	name=ID ':'
+	name=STRING ':' //name=ID ':'
 	INDENT (
 		displayName = CsrFieldDisplayName? &
 		longName = LongName? &
@@ -232,8 +232,8 @@ CsrAffectedByList:
  * Instruction stuff (see inst_schema.json)
  */
 InstKind: 'kind' ':' kind="instruction";
-InstName: 'name' ':' name=ID;
-InstDefinedBy: 'definedBy' ':' dbname=Condition;
+InstName: 'name' ':' name=STRING; //name=ID;
+InstDefinedBy: 'definedBy' ':' dbname=ConditionBlock;
 InstAccess:
 	'access' ':'
 	INDENT(
@@ -286,7 +286,7 @@ InstOpcodeEntry:
 ;
 
 InstOpcodeField: // ex. funct7 
-	name=ID ':' 
+	displayName=STRING//name=ID ':' 
 	INDENT
 		(opcodeProperties += InstOpcodeProps)+
 	DEDENT
@@ -294,7 +294,7 @@ InstOpcodeField: // ex. funct7
 ;
 
 InstOpcodeProps: 
-	'display_name' ':' displayName=ID 
+	'display_name' ':' displayName=STRING//displayName=ID 
 	| 'value' ':' value=Number
 ;
 
@@ -331,7 +331,7 @@ InstEncodingVariables:
 
 
 InstEncodingSevenKeyVar:
-  '-' 'name' ':' name=ID
+  '-' 'name' ':' name=STRING//name=ID
   INDENT
     (
       'location' ':' location=Range &
@@ -351,7 +351,7 @@ InstNotRule:
 
 
 InstEncodingTwoKeyVar:
-	'-' 'name' ':' name=ID
+	'-' 'name' ':' name=STRING//name=ID
 	INDENT(
 		'$inherits' ':' inherits=STRING // must match ^common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+
 	)DEDENT
@@ -371,7 +371,7 @@ InstRvPairEncoding:
  * Extension stuff (see ext_schema.json) 
  */
 ExtKind: 'kind' ':' kind="extension";
-ExtName: 'name' ':' name=ID;
+ExtName: 'name' ':' name=STRING; //name=ID;
 ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
 ExtRviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
 ExtCompany: 
@@ -454,23 +454,27 @@ ExtVersionContributorsArrayElement:
 	) DEDENT)?
 ;
 ExtVersionContributorName:
-	"name" ":" firstName=ID lastName=ID?
+	"name" ":" firstName = STRING lastName = STRING
+	//"name" ":" firstName=ID lastName=ID?
 ;
 
 
 
 /* Conditions */
+ConditionBlock:
+	INDENT
+		Condition
+	DEDENT
+;
+
 Condition: 
-	( yamlCond=YAMLCondition 
-	| idlCond=IDLCondition)
+	YAMLCondition | IDLCondition
 ;
 
 YAMLCondition:
-	INDENT
-		( extensionCond = ExtensionCondition
-		//| paramCond = ParamCondition
-		| xlenCond = XLenCondition)
-	DEDENT
+	ExtensionCondition 
+	| XLenCondition
+	| ParamCondition
 ;
 
 IDLCondition:
@@ -480,18 +484,18 @@ IDLCondition:
 ExtensionCondition:
 	"extension" ":"
 	INDENT
-		(extBody = ExtRequirement)
+		extCond=Extension
 	DEDENT
 ;
 
 Extension:
-	( requirement=ExtRequirement
+	 requirement=ExtRequirement
 	| array=ExtArray
-	| ifThen=ExtIfThen)
+	| ifThen=ExtIfThen
 ;
 
 ExtRequirement:
-	"name" ":" extName=ID & /* TODO: implement regex in validator */
+	"name" ":" name=STRING & /* TODO: implement regex in validator */
 	("version" ":" verReqs=VersionRequirements)?
 ;
 
@@ -500,63 +504,82 @@ ExtArray:
 	| "anyOf" ":"
 	| "oneOf" ":"
 	| "noneOf" ":"
-	| "not" ":") 
-	INDENT
-		(extArray += ExtRequirement+)
-	DEDENT
+	| "not" ":") &
+	(INDENT
+		extArray+=ExtArrayElement+
+	DEDENT)
 ;
 
 /* TODO: implement in validator (verify only two) */
 ExtArrayElement:
-	"-" extConds = STRING/* TODO: fix */ 
+	'-' extConds=Extension
 ;
 
 ExtIfThen: // is this deprecated ?
 	("if" ":" 
 	INDENT
-		(condition = (ExtArrayElement | Condition)) 
+		ifCond=YAMLCondition 
 	DEDENT) &
 	("then" ":"
 	INDENT
-		(extCondition = ExtensionCondition)
+		thenCond=YAMLCondition
 	DEDENT)
 ;
 
-//YAMLConditionArrayElement:
-//	"-" YAMLCond = YAMLCondition /* TODO: implement in validator (verify only two) */
-//;
-//
-//ConditionArray:
-//	('-' cond+=Condition)+
-//;
 
-//ParamCondition: /* TODO: mandate 2-3 properties, depending if reason is given */
-//	"param" ":" 
-//	INDENT
-//		param = (Param) /* TODO: add allOf, noneOf, etc. support */
-//	DEDENT
-//;
+ParamCondition: /* TODO: in validator, mandate 2-3 properties, depending if reason is given */
+	"param" ":" 
+	INDENT
+		param=Param /* TODO: add allOf, noneOf, etc. support */
+	DEDENT
+;
 
-//Param:
-//	"name" ":" paramName=STRING & /* TODO: Validate regex  ^[A-Z][A-Z_0-9]*$ */
-//	("index" ":" index=INT)? &
-//	("size" ":" size=Boolean)? &
-//	("equal" ":" equal=(INT | STRING | Boolean))? &
-//	("oneOf" ":" 
-//	INDENT
-//		('-' items+=(INT | STRING))+ /* TODO: add array support? */
-//	DEDENT)? &
-//	("notEqual" ":" notEqual=(INT | STRING | Boolean))? &
-//	("greaterThan" ":" greaterThan=INT)? &
-//	("lessThan" ":" lessThan=INT)? &
-//	("greaterThanOrEqual" ":" greatOrEqual=INT)? &
-//	("lessThanOrEqual" ":" lessOrEqual=INT)? &
-//	("includes" ":" includes=(INT | STRING))? &
-//	("reason" ":" reason=STRING)?
-//;
+Param:
+	name=ParamName & /* TODO: Validate regex  ^[A-Z][A-Z_0-9]*$ */
+	paramIndex=ParamIndex? &
+	paramSize=ParamSize? &
+	paramEqual=ParamEqual? &
+	paramArray=ParamArray? &
+	paramNotEqual=ParamNotEqual? &
+	paramGreaterThan=ParamGreaterThan? &
+	paramLessThan=ParamLessThan? &
+	paramGreaterEqual=ParamGreaterEqual? &
+	paramLessEqual=ParamLessEqual? &
+	paramIncludes=ParamIncludes? &
+	paramReason=ParamReason?
+;
+
+ParamName: "name" ":" name=STRING;
+ParamIndex: "index" ":" index=INT;
+ParamSize: "size" ":" size=Boolean;
+ParamEqual: "equal" ":" equal=ParamEqualType;
+ParamNotEqual: "notEqual" ":" notEqual=INT;//(INT|STRING|Boolean);
+ParamGreaterThan: "greaterThan" ":" greaterThan=INT;
+ParamLessThan: "lessThan" ":" lessThan=INT;
+ParamGreaterEqual: "greaterThanOrEqual" ":" greaterEqual=INT;
+ParamLessEqual: "lessThanOrEqual" ":" lessEqual=INT;
+ParamIncludes: "includes" ":" includes=INT;//(INT | STRING);
+ParamReason: "reason" ":" reason=STRING;
+
+ParamEqualType: INT|STRING|{Equal} Boolean;
+
+ParamArray:
+	"oneOf" ":"
+	INDENT
+		paramArray+=ParamArrayItem+
+	DEDENT
+;
+
+ParamArrayItem:
+	'-' item=ParamArrayType
+;
+
+ParamArrayType: INT|STRING;
 
 
-XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
+XLenCondition: 
+	'xlen' ':' xlen=INT
+; /* can be 32 or 64 (TODO: implement in validator) */
 
 VersionRequirements:
 	versionReq=(ID) /* TODO: implement regex in validator */
