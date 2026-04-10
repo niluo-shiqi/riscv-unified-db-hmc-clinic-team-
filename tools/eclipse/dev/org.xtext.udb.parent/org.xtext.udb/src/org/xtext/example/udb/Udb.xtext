@@ -472,6 +472,7 @@ ExtVersionContributorName:
 /* 
  * Profile stuff (see profile_schema.json) 
  */
+ // TODO: double check optional fields inside arrays
 ProfKind: 'kind' ':' kind='profile';
 ProfName: 'name' ':' name=ID;
 ProfInherits: '$inherits' ':' inherits=STRING; // TODO: enforce pattern in validator
@@ -515,12 +516,15 @@ ProfExtensions:
 ProfExtensionsArrayElement:
 	extension=STRING ':' // TODO: validator
 	INDENT
-		'presence' ':' presence=('mandatory' | 'optional')
+		'presence' ':' presence=ProfPresence
 		// TODO: or optional field ('expansion'|'localized'|'development')
 		'version' ':' '{' '$ref' ':' versionAddress=STRING '}' //  TODO: validator
 		'note' ':' note=STRING
 	DEDENT	
 ;
+ProfPresence: ProfPresenceEnum | ProfPresenceOptional;
+ProfPresenceEnum: ('mandatory' | 'optional');
+ProfPresenceOptional: ('expansion' | 'localized' | 'development');
 ProfSource: '$source' ':' source=STRING;
 
 /* Conditions */

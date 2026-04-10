@@ -80,6 +80,13 @@ public class UdbValidator extends AbstractUdbValidator {
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
+    
+    /**
+    * When 'kind' is identified as CSR, checkCsrSchema ensures that 'schema' is a valid
+    * reference to the CSR schema so that these two fields match.
+    *
+    * @param  csr  the CSR Model object
+    */
     @Check
     public void checkCsrSchema(CsrModel csr) {
 		String schema = csr.getSchema().getSchema();
@@ -89,6 +96,12 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
     }
     
+    /**
+    * checkCsrName ensures that the 'name' field follows the proper regular expression
+    * for a CSR name (distinct to this model). 
+    *
+    * @param  name  the CsrName object containing the name
+    */
 	@Check
 	public void checkCsrName(CsrName name) {
 	    String value = name.getName();
