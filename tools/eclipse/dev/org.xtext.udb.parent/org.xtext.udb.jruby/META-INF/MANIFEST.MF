@@ -3,7 +3,7 @@ Automatic-Module-Name: org.xtext.udb.jruby
 Bundle-ManifestVersion: 2
 Bundle-Name: JRuby Bundle
 Bundle-SymbolicName: org.xtext.udb.jruby
-Bundle-Version: 9.4.5.qualifier
+Bundle-Version: 1.0.0.qualifier
 Import-Package: org.osgi.framework;version="1.8.0",
  org.eclipse.core.runtime;version="3.5.0"
 Export-Package: org.jruby,
@@ -12,5 +12,5 @@ Export-Package: org.jruby,
  org.jruby.runtime,
  org.jruby.runtime.builtin,
  org.xtext.udb.jruby
-Bundle-ClassPath: lib/jruby-complete-9.4.5.0.jar,
+Bundle-ClassPath: lib/jruby-complete-10.0.5.0.jar,
  .
