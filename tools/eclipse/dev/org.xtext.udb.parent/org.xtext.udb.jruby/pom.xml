@@ -33,6 +33,21 @@
 		    <version>3.20.0</version>
 		    <scope>provided</scope>
 		</dependency>
+		<dependency>
+		    <groupId>org.snakeyaml</groupId>
+		    <artifactId>snakeyaml-engine</artifactId>
+		    <version>2.10</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.bouncycastle</groupId>
+		    <artifactId>bcpkix-jdk18on</artifactId>
+		    <version>1.78.1</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.bouncycastle</groupId>
+		    <artifactId>bcprov-jdk18on</artifactId>
+		    <version>1.78.1</version>
+		</dependency>
     </dependencies>
 
     <build>
@@ -50,6 +65,42 @@
                             <outputDirectory>${project.basedir}/lib</outputDirectory>
                         </configuration>
                     </execution>
+                    <execution>
+			            <id>copy-snakeyaml</id>
+			            <phase>generate-resources</phase>
+			            <goals><goal>copy</goal></goals>
+			            <configuration>
+			                <artifactItems>
+			                    <artifactItem>
+			                        <groupId>org.snakeyaml</groupId>
+			                        <artifactId>snakeyaml-engine</artifactId>
+			                        <version>2.10</version>
+			                        <outputDirectory>${project.basedir}/lib</outputDirectory>
+			                    </artifactItem>
+			                </artifactItems>
+			            </configuration>
+		        	</execution>
+		        	<execution>
+					    <id>copy-bouncycastle</id>
+					    <phase>generate-resources</phase>
+					    <goals><goal>copy</goal></goals>
+					    <configuration>
+					        <artifactItems>
+					            <artifactItem>
+					                <groupId>org.bouncycastle</groupId>
+					                <artifactId>bcprov-jdk18on</artifactId>
+					                <version>1.78.1</version>
+					                <outputDirectory>${project.basedir}/lib</outputDirectory>
+					            </artifactItem>
+					            <artifactItem>
+					                <groupId>org.bouncycastle</groupId>
+					                <artifactId>bcpkix-jdk18on</artifactId>
+					                <version>1.78.1</version>
+					                <outputDirectory>${project.basedir}/lib</outputDirectory>
+					            </artifactItem>
+					        </artifactItems>
+					    </configuration>
+					</execution>
                 </executions>
             </plugin>
         </plugins>

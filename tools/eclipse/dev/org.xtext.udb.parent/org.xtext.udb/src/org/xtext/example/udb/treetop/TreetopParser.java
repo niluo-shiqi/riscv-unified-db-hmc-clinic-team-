@@ -37,7 +37,10 @@ public class TreetopParser {
 
             // vendor/bundle is where Bundler will install gems on first run.
             // This directory does NOT exist yet on a fresh checkout — Bundler creates it.
-            String vendorPath = new File(idlcDir, "vendor/bundle").getCanonicalPath();
+            String vendorPath = new File(
+        		bundleRootUrl.getPath(), 
+        		"../org.xtext.udb.jruby/vendor/bundle"
+            ).getCanonicalPath();
 
             // ----------------------------------------------------------------
             // Set Bundler's environment variables in the JRuby runtime.
@@ -51,6 +54,9 @@ public class TreetopParser {
             // ----------------------------------------------------------------
             ruby.runScriptlet("ENV['BUNDLE_GEMFILE'] = '" + rb(gemfilePath) + "'");
             ruby.runScriptlet("ENV['BUNDLE_PATH']    = '" + rb(vendorPath)  + "'");
+            ruby.runScriptlet("ENV['JARS_NO_REQUIRE'] = 'true'");
+            ruby.runScriptlet("ENV['JARS_SKIP']       = 'true'");
+            ruby.runScriptlet("ENV['BUNDLE_DISABLE_SHARED_GEMS'] = '1'");
             ruby.runScriptlet("require 'bundler'");
 
             // ----------------------------------------------------------------
