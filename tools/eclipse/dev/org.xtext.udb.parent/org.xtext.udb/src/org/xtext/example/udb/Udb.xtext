@@ -21,6 +21,55 @@ ParamModel:
 	
 ;
 
+JsonSchemaDraft7:
+	id = draft7ID?
+	& schema = Schema?
+	& ref = Ref?
+	& comment = Comment?
+	& title = Title?
+	& description = Description?
+	& default = Default?
+	& readOnly = ReadOnly?
+	& writeOnly = WriteOnly?
+	& examples = Examples?
+	& multipleOf = MultipleOf?
+	& maximum = Maximum?
+	& exclusiveMaximum = ExclusiveMaximum?
+	& minimum = Minimum?
+	& exclusiveMinimum = ExclusiveMinimum?
+	& maxLength = MaxLength?
+	& minLength = MinLength?
+	& pattern = Pattern?
+	& additionalItems = AdditionalItems?
+	& items = Items?
+	& maxItems = MaxItems?
+	& minItems = MinItems?
+	& uniqueItems = UniqueItems?
+	& contains = Contains?
+	& maxProperties = MaxProperties?
+	& minProperties = MinProperties?
+	& required = Required?
+	& additionalProperties = AdditionalProperties?
+	& definitions = Definitions?
+	& properties = Properties?
+	& patternProperties = PatternProperties?
+	& dependencies = Dependencies?
+	& propertyNames = PropertyNames?
+	& const = Const?
+	& enumField = Draft7Enum?
+	& type = Type?
+	& format = Format?
+	& contentMediaType = ContentMediaType?
+	& contentEncoding = ContentEncoding?
+	& if = If?
+	& then = Then?
+	& else = Else?
+	& allOf = AllOf?
+	& anyOf = AnyOf?
+	& oneOf = OneOf?
+	& not = Not?
+;
+
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
 	csrKind = CsrKind
@@ -474,11 +523,62 @@ ExtVersionContributorName:
 /* 
  * Param stuff (see param_schema.json) 
  */
-
+ParamSchema:'schema' ':' 
+	INDENT(
+	schema=JsonSchemaDraft7
+	)DEDENT
+;
 ParamKind: 'kind' ':' kind="parameter";
 ParamName: 'name' ':' name=ID; // "^[A-Z][A-Z_0-9]*$"
 ParamDefinedBy: 'definedBy' ':' dBName=Condition;
-ParamSchema:'schema' ":" schema=STRING;
+
+/* 
+ * JsonSchemaDraft7 stuff (see json-schema-draft-07.json) 
+ */
+draft7ID: "$id" ":" id=STRING;
+Ref: "$ref" ":" ref=STRING;
+Comment: "$comment" ":" comment=STRING;
+Title: "title" ":" title=STRING;
+Default: "default" ":" default=Boolean;
+ReadOnly: "readOnly" ":" readOnly=Boolean;
+WriteOnly: "writeOnly" ":" writeOnly=Boolean;
+Examples: "examples" ":" examples=STRING;
+MultipleOf: "multipleOf" ":" multipleOf=INT;
+Maximum: "maximum" ":" maximum=INT;
+ExclusiveMaximum: "exclusiveMaximum" ":" exclusiveMaximum=INT;
+Minimum: "minimum" ":" minimum=INT;
+ExclusiveMinimum: "exclusiveMinimum" ":" exclusiveMinimum=INT;
+MaxLength: "maxLength" ":" maxLength=INT; //non negative integer
+MinLength: "minLength" ":" minLength=INT; // non negatve integer default 0
+Pattern: "pattern" ":" pattern=STRING;
+AdditionalItems: "additionalItems" ":" additionalItems=STRING;
+Items: "items" ":" items=STRING;
+MaxItems: "maxItems" ":" maxItems=INT;
+MinItems: "minItems" ":" minItems=INT;
+UniqueItems: "uniqueItems" ":" uniqueItems=Boolean;
+Contains: "contains" ":" contains=STRING;
+MaxProperties: "maxProperties" ":" maxProperties=INT;
+MinProperties: "minProperties" ":" minProperties=INT;
+Required: "required" ":" required=STRING;
+AdditionalProperties: "additionalProperties" ":" additionalProperties=STRING;
+Definitions: "definitions" ":" definitions=STRING;
+Properties: "properties" ":" properties=STRING;
+PatternProperties: "patternProperties" ":" patternProperties=STRING;
+Dependencies: "dependencies" ":" dependencies=STRING;
+PropertyNames: "propertyNames" ":" propertyNames=STRING;
+Const: "const" ":" const=STRING;
+Draft7Enum: "enum" ":" draft7enum=STRING;
+Type: "type" ":" type=STRING;
+Format: "format" ":" format=STRING;
+ContentMediaType: "contentMediaType" ":" contentMediaType=STRING;
+ContentEncoding: "contentEncoding" ":" contentEncoding=STRING;
+If: "if" ":" if=STRING;
+Then: "then" ":" then=STRING;
+Else: "else" ":" else=STRING;
+AllOf: "allOf" ":" allOf=STRING;
+AnyOf: "anyOf" ":" anyOf=STRING;
+OneOf: "oneOf" ":" oneOf=STRING;
+Not: "not" ":" not=STRING;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
