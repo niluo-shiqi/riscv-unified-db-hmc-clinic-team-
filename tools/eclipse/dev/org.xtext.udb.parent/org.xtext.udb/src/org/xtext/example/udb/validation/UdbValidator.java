@@ -508,7 +508,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	        content = content.substring(1, content.length() - 1);
 	    }
 	    
-	    ValidationError error = treetopParser.parse(content);
+	    ValidationError error = treetopParser.parse(content, "function_call");
 	    if (error != null) {
 	        error(error.reason, UdbPackage.Literals.IDL__IDL);
 	    }
