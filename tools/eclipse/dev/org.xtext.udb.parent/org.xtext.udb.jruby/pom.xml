@@ -103,6 +103,36 @@
 					</execution>
                 </executions>
             </plugin>
+            <plugin>
+			  <artifactId>maven-resources-plugin</artifactId>
+			  <version>3.3.1</version>
+			  <executions>
+			
+			    <execution>
+			      <id>copy-idlc</id>
+			      <phase>process-resources</phase>
+			      <goals>
+			        <goal>copy-resources</goal>
+			      </goals>
+			      <configuration>
+			        <outputDirectory>
+			          ${project.basedir}/idlc
+			        </outputDirectory>
+			        <resources>
+			          <resource>
+			            <directory>
+			              ${project.basedir}/../../../../ruby-gems/idlc
+			            </directory>
+			            <includes>
+					    	<include>*.gemspec</include>
+					  	</includes>
+			          </resource>
+			        </resources>
+			      </configuration>
+			    </execution>
+			
+			  </executions>
+			</plugin>
         </plugins>
     </build>
 </project>
