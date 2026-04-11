@@ -32,6 +32,7 @@ build/
 
 lib/
 vendor/
+idlc/
 
 node_modules/
 

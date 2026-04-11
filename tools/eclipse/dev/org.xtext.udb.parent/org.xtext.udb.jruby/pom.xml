@@ -123,9 +123,6 @@
 			            <directory>
 			              ${project.basedir}/../../../../ruby-gems/idlc
 			            </directory>
-			            <includes>
-					    	<include>*.gemspec</include>
-					  	</includes>
 			          </resource>
 			        </resources>
 			      </configuration>
