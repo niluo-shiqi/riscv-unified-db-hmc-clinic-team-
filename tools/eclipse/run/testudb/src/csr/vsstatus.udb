@@ -56,9 +56,9 @@ fields:
       [when,"VUXLEN == 64"]
       Since the hart only supports VUXLEN==64, this is hardwired to 1.'
 
-    type(): "|
+    type(): | "
       return ($array_size(VUXLEN) > 1) ? CsrFieldType::RW : CsrFieldType::RO;"
-    reset_value(): "|
+    reset_value(): | "
       return ($array_size(VUXLEN) > 1) ? UNDEFINED_LEGAL : VUXLEN[0];"
   MXR:
     alias: "mstatus.MXR"
@@ -180,22 +180,22 @@ fields:
 
       [when,\"VU_MODE_ENDIANNESS == 'big'\"]
       Since the CPU does not support big endian, this is hardwired to 1."
-    type(): '|
-      return (VU_MODE_ENDIANNESS == "dynamic") ? CsrFieldType::RW : CsrFieldType::RO;'
+    type(): | "
+      return (VU_MODE_ENDIANNESS == \"dynamic\") ? CsrFieldType::RW : CsrFieldType::RO;"
     definedBy:'
       extension:
         name: S'
-    reset_value(): '|
-      if (VU_MODE_ENDIANNESS == "little") {
+    reset_value(): | "
+      if (VU_MODE_ENDIANNESS == \"little\") {
         # little endian
         return 0;
-      } else if (VU_MODE_ENDIANNESS == "big") {
+      } else if (VU_MODE_ENDIANNESS == \"big\") {
         # big endian
         return 1;
       } else {
         # mutable
         return UNDEFINED_LEGAL;
-      }'
+      }"
   SPIE:
     location: 5
     description: "|
