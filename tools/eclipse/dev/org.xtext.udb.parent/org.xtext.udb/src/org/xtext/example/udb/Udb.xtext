@@ -41,7 +41,7 @@ InstModel:
 	hints = InstHints? &
 	access = InstAccess &
 	accessDetail = InstAccessDetail? &
-	operation = InstOperation? & //idl
+	operation = InstOperation? &
 	operationAst = InstOperationAst? &
 	sail = InstSail? &
 	certNormativeRules = CertNormativeRules? &
@@ -263,7 +263,6 @@ InstHintElement: '-' '{' hint = STRING '}';
 
 InstAccessDetail: 'access_detail' ':' accessDetail=STRING;
 InstOperation: 'operation()' ':' operation=Idl;
-InstSail: 'sail()' ':' sail=Idl;
 InstDataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
 InstPseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array; 
 InstFormat: 'format' ':' 

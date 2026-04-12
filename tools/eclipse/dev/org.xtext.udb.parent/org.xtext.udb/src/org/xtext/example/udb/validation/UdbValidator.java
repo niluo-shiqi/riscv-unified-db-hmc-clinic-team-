@@ -12,7 +12,6 @@ import org.xtext.example.udb.treetop.ValidationError;
 
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
-import org.xtext.example.udb.udb.Idl;
 
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
@@ -24,12 +23,16 @@ import org.xtext.example.udb.udb.CsrLength;
 import org.xtext.example.udb.udb.CsrIntType;
 import org.xtext.example.udb.udb.CsrFieldDef;
 import org.xtext.example.udb.udb.CsrFieldAliasName;
+import org.xtext.example.udb.udb.CsrSwRead;
+import org.xtext.example.udb.udb.CsrFieldResetValueFunc;
+import org.xtext.example.udb.udb.CsrFieldSWWriteFunc;
+import org.xtext.example.udb.udb.CsrFieldLegalFunc;
+import org.xtext.example.udb.udb.CsrFieldTypeFunc;
 
 import org.xtext.example.udb.udb.InstModel;
 import org.xtext.example.udb.udb.InstName;
 import org.xtext.example.udb.udb.InstHints;
 import org.xtext.example.udb.udb.InstFormat;
-
 import org.xtext.example.udb.udb.InstOldEncoding;
 import org.xtext.example.udb.udb.InstEncoding;
 import org.xtext.example.udb.udb.InstEncodingMatch;
@@ -40,6 +43,7 @@ import org.xtext.example.udb.udb.InstRvPairEncoding;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
+import org.xtext.example.udb.udb.InstOperation;
 
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
@@ -497,21 +501,66 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 * Pass off IDL to the treetop parser
 	 */
-	private final TreetopParser treetopParser = TreetopParser.getInstance();
+	private final TreetopParser treetopParser = new TreetopParser();
 	
-	@Check
-	public void checkIdl(Idl idl) {
-	    String content = idl.getIdl();
-	    
+	/**
+     * Helper function for passing IDL snippets into treetop
+     *
+     * @param content   IDL source fragment
+     * @param root		Rule name to use as the root (e.g. "function_call"),
+     *                  or {@code null} for the grammar's default root.
+     */
+	public void checkIdl(String content, String root) {
 	    // Strip surrounding quotes that Xtext adds to STRING terminals
 	    if (content != null && content.startsWith("\"") && content.endsWith("\"")) {
-	        content = content.substring(1, content.length() - 1);
+	    	content = content.strip();
+	    	content = content.substring(1, content.length() - 1);
 	    }
 	    
-	    ValidationError error = treetopParser.parse(content, "function_call");
+	    ValidationError error = treetopParser.parse(content, root);
 	    if (error != null) {
 	        error(error.reason, UdbPackage.Literals.IDL__IDL);
 	    }
+	}
+	
+	
+	// Csr IDL checks
+	@Check
+	public void checkCsrSwRead(CsrSwRead swRead) {
+		String idl = swRead.getSwRead().getIdl();
+		checkIdl(idl, "function_body");
+	}
+	
+	@Check
+	public void checkCsrFieldResetValueFunc(CsrFieldResetValueFunc resetVal) {
+		String idl = resetVal.getResetValueFunc().getIdl();
+		checkIdl(idl, "function_body");
+	}
+	
+	@Check
+	public void checkCsrFieldSWWriteFunc(CsrFieldSWWriteFunc swWrite) {
+		String idl = swWrite.getSwWriteFunc().getIdl();
+		checkIdl(idl, "function_body");
+	}
+	
+	@Check
+	public void checkCsrFieldLegalFunc(CsrFieldLegalFunc legal) {
+		String idl = legal.getLegalFunc().getIdl();
+		checkIdl(idl, "function_body");
+	}
+	
+	@Check
+	public void checkCsrFieldTypeFunc(CsrFieldTypeFunc type) {
+		String idl = type.getIdl().getIdl();
+		checkIdl(idl, "function_body");
+	}
+	
+	
+	// Instruction IDL checks
+	@Check
+	public void checkInstOperation(InstOperation op) {
+		String idl = op.getOperation().getIdl();
+		checkIdl(idl, "instruction_operation");
 	}
 
 }
