@@ -43,7 +43,6 @@ InstModel:
 	accessDetail = InstAccessDetail? &
 	operation = InstOperation? &
 	operationAst = InstOperationAst? &
-	sail = InstSail? &
 	certNormativeRules = CertNormativeRules? &
 	assembly = InstAssembly &
 	dataIndependentTiming = InstDataIndependentTiming? &
