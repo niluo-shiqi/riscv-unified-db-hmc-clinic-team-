@@ -42,20 +42,14 @@ public final class RubyRuntime {
                 ENV['JARS_NO_REQUIRE']            = 'true'
                 ENV['JARS_SKIP']                  = 'true'
 
-                # Install gems from the local Gemfile (nothing is pre-vendored)
+                # Activate pre-vendored gems
 			    require 'bundler'
 			    Bundler.reset!
 			    Bundler.setup(:default)
-			    puts '[RubyRuntime] Bundler setup complete.'
-			    
 			    Bundler.require(:default)
-            	puts '[RubyRuntime] GEM_HOME after setup: ' + Gem.paths.home
-
-
+            	
                 # Prepend idlc's own lib/ so require 'idlc' resolves correctly
                 $LOAD_PATH.unshift('%s') unless $LOAD_PATH.include?('%s')
-
-                # Require the gem
                 require 'idlc'
                 """,
                 escape(gemfile),

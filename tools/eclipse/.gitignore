@@ -30,6 +30,7 @@ target/
 build/
 .gradle/
 
+# Generated for treetop compatbility
 lib/
 vendor/
 idlc/
