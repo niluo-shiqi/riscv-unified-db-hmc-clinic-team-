@@ -19,6 +19,7 @@
 		<moduleProperties></moduleProperties>
 		<systemProperties></systemProperties>
 		<additionalTestArguments></additionalTestArguments>
+		<jrubyVersion>10.0.5.0</jrubyVersion>
 	</properties>
 	<modules>
 		<module>org.xtext.udb.jruby</module>
@@ -42,7 +43,7 @@
 			<dependency>
 	            <groupId>org.jruby</groupId>
 	            <artifactId>jruby-complete</artifactId>
-	            <version>10.0.5.0</version>
+	            <version>${jrubyVersion}</version>
 	        </dependency>
 		</dependencies>
 	</dependencyManagement>

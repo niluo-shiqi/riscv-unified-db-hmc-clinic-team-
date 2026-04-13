@@ -15,6 +15,11 @@
     <artifactId>org.xtext.udb.jruby</artifactId>
     <packaging>eclipse-plugin</packaging>
     <version>1.0.0-SNAPSHOT</version>
+    
+    <properties>
+    	<idlc.dir>${project.basedir}/idlc</idlc.dir>
+    	<jruby.jar>${project.basedir}/lib/jruby-complete-${jrubyVersion}.jar</jruby.jar>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -107,7 +112,6 @@
 			  <artifactId>maven-resources-plugin</artifactId>
 			  <version>3.3.1</version>
 			  <executions>
-			
 			    <execution>
 			      <id>copy-idlc</id>
 			      <phase>process-resources</phase>
@@ -127,7 +131,6 @@
 			        </resources>
 			      </configuration>
 			    </execution>
-			
 			  </executions>
 			</plugin>
         </plugins>
