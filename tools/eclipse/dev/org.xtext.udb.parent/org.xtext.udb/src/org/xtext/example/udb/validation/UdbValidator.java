@@ -510,7 +510,7 @@ public class UdbValidator extends AbstractUdbValidator {
      * @param root		Rule name to use as the root (e.g. "function_call"),
      *                  or {@code null} for the grammar's default root.
      */
-	public void checkIdl(String content, String root) {
+	public String checkIdl(String content, String root) {
 	    // Strip surrounding quotes that Xtext adds to STRING terminals
 	    if (content != null && content.startsWith("\"") && content.endsWith("\"")) {
 	    	content = content.strip();
@@ -519,8 +519,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	    
 	    ValidationError error = treetopParser.parse(content, root);
 	    if (error != null) {
-	        error(error.reason, UdbPackage.Literals.IDL__IDL);
+	        return error.reason;
 	    }
+	    
+	    return null;
 	}
 	
 	
@@ -528,31 +530,51 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkCsrSwRead(CsrSwRead swRead) {
 		String idl = swRead.getSwRead().getIdl();
-		checkIdl(idl, "function_body");
+		String idlError = checkIdl(idl, "function_body");
+		
+		if (idlError != null) {
+			error(idlError, UdbPackage.Literals.CSR_SW_READ__SW_READ);
+		}
 	}
 	
 	@Check
 	public void checkCsrFieldResetValueFunc(CsrFieldResetValueFunc resetVal) {
 		String idl = resetVal.getResetValueFunc().getIdl();
-		checkIdl(idl, "function_body");
+		String idlError = checkIdl(idl, "function_body");
+		
+		if (idlError != null) {
+			error(idlError, UdbPackage.Literals.CSR_FIELD_RESET_VALUE_FUNC__RESET_VALUE_FUNC);
+		}
 	}
 	
 	@Check
 	public void checkCsrFieldSWWriteFunc(CsrFieldSWWriteFunc swWrite) {
 		String idl = swWrite.getSwWriteFunc().getIdl();
-		checkIdl(idl, "function_body");
+		String idlError = checkIdl(idl, "function_body");
+		
+		if (idlError != null) {
+			error(idlError, UdbPackage.Literals.CSR_FIELD_SW_WRITE_FUNC__SW_WRITE_FUNC);
+		}
 	}
 	
 	@Check
 	public void checkCsrFieldLegalFunc(CsrFieldLegalFunc legal) {
 		String idl = legal.getLegalFunc().getIdl();
-		checkIdl(idl, "function_body");
+		String idlError = checkIdl(idl, "function_body");
+		
+		if (idlError != null) {
+			error(idlError, UdbPackage.Literals.CSR_FIELD_LEGAL_FUNC__LEGAL_FUNC);
+		}
 	}
 	
 	@Check
 	public void checkCsrFieldTypeFunc(CsrFieldTypeFunc type) {
 		String idl = type.getIdl().getIdl();
-		checkIdl(idl, "function_body");
+		String idlError = checkIdl(idl, "function_body");
+		
+		if (idlError != null) {
+			error(idlError, UdbPackage.Literals.CSR_FIELD_TYPE_FUNC__IDL);
+		}
 	}
 	
 	
@@ -560,7 +582,11 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkInstOperation(InstOperation op) {
 		String idl = op.getOperation().getIdl();
-		checkIdl(idl, "instruction_operation");
+		String idlError = checkIdl(idl, "function_body");
+		
+		if (idlError != null) {
+			error(idlError, UdbPackage.Literals.INST_OPERATION__OPERATION);
+		}
 	}
 
 }
