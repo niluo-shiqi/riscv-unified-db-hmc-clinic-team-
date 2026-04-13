@@ -359,7 +359,6 @@ InstEncodingTwoKeyVar:
 	)DEDENT
 ;
 
-
 InstRvPairEncoding:
 	{InstRvPairEncoding}
 	INDENT(
@@ -498,8 +497,16 @@ Extension:
 
 ExtRequirement:
 	"name" ":" name=STRING & /* TODO: implement regex in validator */
-	("version" ":" verReqs=VersionRequirements)?
+	(version=ExtVersion)?
 ;
+
+ExtVersion: IndentVersion | NoIndentVersion;
+IndentVersion: 
+	INDENT
+		"version" ":" verReqs=VersionRequirements
+	DEDENT
+;
+NoIndentVersion: "version" ":" verReqs=VersionRequirements;
 
 ExtArray:
 	( "allOf" ":" 
@@ -551,19 +558,20 @@ Param:
 	paramReason=ParamReason?
 ;
 
-ParamName: "name" ":" name=STRING;
+ParamName: "name" ":" name=ID;
 ParamIndex: "index" ":" index=INT;
 ParamSize: "size" ":" size=Boolean;
 ParamEqual: "equal" ":" equal=ParamEqualType;
-ParamNotEqual: "notEqual" ":" notEqual=INT;//(INT|STRING|Boolean);
+ParamNotEqual: "notEqual" ":" notEqual=INT;
 ParamGreaterThan: "greaterThan" ":" greaterThan=INT;
 ParamLessThan: "lessThan" ":" lessThan=INT;
 ParamGreaterEqual: "greaterThanOrEqual" ":" greaterEqual=INT;
 ParamLessEqual: "lessThanOrEqual" ":" lessEqual=INT;
-ParamIncludes: "includes" ":" includes=INT;//(INT | STRING);
-ParamReason: "reason" ":" reason=STRING;
+ParamIncludes: "includes" ":" includes=ParamIncludesType;
+ParamReason: "reason" ":" reason=ID;
 
-ParamEqualType: INT|STRING|{Equal} Boolean;
+ParamEqualType: INT|ID|{Equal} Boolean;
+ParamIncludesType: INT|ID;
 
 ParamArray:
 	"oneOf" ":"
@@ -576,7 +584,7 @@ ParamArrayItem:
 	'-' item=ParamArrayType
 ;
 
-ParamArrayType: INT|STRING;
+ParamArrayType: INT|ID;
 
 
 XLenCondition: 
@@ -584,7 +592,7 @@ XLenCondition:
 ; /* can be 32 or 64 (TODO: implement in validator) */
 
 VersionRequirements:
-	versionReq=(ID) /* TODO: implement regex in validator */
+	versionReq=ID /* TODO: implement regex in validator */
 ;
 
 
@@ -617,21 +625,21 @@ IntArray: '[' element+=INT (',' element+=INT) + ']';
 
 
 /* Terminals */
-terminal CSR_NAME:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-;
-terminal FIELD_NAME:
-	('a'..'z' | 'A'..'Z')+
-;
-terminal CSR_FIELD:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-	('.')('A'..'Z' | '0'..'9')+
-;
-terminal CSR_FIELD_BITS:
-	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-	'.'('A'..'Z' | '0'..'9')+
-	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
-;
+//terminal CSR_NAME:
+//	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
+//;
+//terminal FIELD_NAME:
+//	('a'..'z' | 'A'..'Z')+
+//;
+//terminal CSR_FIELD:
+//	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
+//	('.')('A'..'Z' | '0'..'9')+
+//;
+//terminal CSR_FIELD_BITS:
+//	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
+//	'.'('A'..'Z' | '0'..'9')+
+//	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
+//;
 
 //terminal EXT_NAME:
 //	('A'..'WY') | (('SXZ')('a-z'|'0'..'9')+)
