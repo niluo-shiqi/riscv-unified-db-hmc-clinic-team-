@@ -133,6 +133,104 @@
 			    </execution>
 			  </executions>
 			</plugin>
+			<plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+ 
+                <executions>
+ 
+                    <!-- Step 1: configure Bundler gem path -->
+                    <execution>
+                        <id>jruby-bundle-config-path</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${idlc.dir}</workingDirectory>
+                            <arguments>
+                                <argument>-jar</argument>
+                                <argument>${jruby.jar}</argument>
+                                <argument>-S</argument>
+                                <argument>bundle</argument>
+                                <argument>config</argument>
+                                <argument>set</argument>
+                                <argument>path</argument>
+                                <argument>../vendor/bundle</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+ 
+                    <!-- Step 2: configure Bundler to exclude development gems -->
+                    <execution>
+                        <id>jruby-bundle-config-without</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${idlc.dir}</workingDirectory>
+                            <arguments>
+                                <argument>-jar</argument>
+                                <argument>${jruby.jar}</argument>
+                                <argument>-S</argument>
+                                <argument>bundle</argument>
+                                <argument>config</argument>
+                                <argument>set</argument>
+                                <argument>without</argument>
+                                <argument>development</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+ 
+                    <!-- Step 3: update Bundler so that it can install the ruby gems -->
+                    <execution>
+                        <id>jruby-gem-install-bundler</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${idlc.dir}</workingDirectory>
+                            <arguments>
+                                <argument>-jar</argument>
+                                <argument>${jruby.jar}</argument>
+                                <argument>-S</argument>
+                                <argument>gem</argument>
+                                <argument>install</argument>
+                                <argument>bundler</argument>
+                                <argument>-v</argument>
+                                <argument>4.0.8</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Step 4: install gems -->
+                    <execution>
+                        <id>jruby-bundle-install</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <workingDirectory>${idlc.dir}</workingDirectory>
+                            <arguments>
+                                <argument>-jar</argument>
+                                <argument>${jruby.jar}</argument>
+                                <argument>-S</argument>
+                                <argument>bundle</argument>
+                                <argument>install</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+ 
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
