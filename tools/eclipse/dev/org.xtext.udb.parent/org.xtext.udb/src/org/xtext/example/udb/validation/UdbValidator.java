@@ -37,6 +37,7 @@ import org.xtext.example.udb.udb.InstHintElement;
 import org.xtext.example.udb.udb.InstOpcodeEntry;
 import org.xtext.example.udb.udb.InstOpcodeInherits;
 import org.xtext.example.udb.udb.InstRvPairEncoding;
+import org.xtext.example.udb.udb.ManualModel;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
@@ -472,6 +473,17 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}	
 	}
+	/*
+	 * Manual Validation -- rules found in manual_schema.json
+	 */
+	@Check
+    public void checkManualSchema(ManualModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("manual_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
 	
 	
 	
