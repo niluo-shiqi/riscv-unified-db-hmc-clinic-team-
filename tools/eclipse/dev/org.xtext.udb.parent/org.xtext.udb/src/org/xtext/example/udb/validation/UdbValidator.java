@@ -10,7 +10,7 @@ import org.xtext.example.udb.udb.UdbPackage;
 
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
-
+import org.xtext.example.udb.udb.ExceptionCodeModel;
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrAddress;
@@ -472,7 +472,17 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}	
 	}
-	
+	/*
+     * Exception Code Validation -- rules found in exception_code_schema.json
+     */
+	@Check
+    public void checkExceptionCodeSchema(ExceptionCodeModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("exception_code_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
 	
 	
 	/*

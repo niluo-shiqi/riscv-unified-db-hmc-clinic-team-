@@ -5,8 +5,23 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	CsrModel | InstModel | ExtModel
+	CsrModel | InstModel | ExtModel | ExceptionCodeModel
 ;
+
+ExceptionCodeModel:
+	schema = Schema
+	ecKind = ECKind
+	ecName = ECName &
+	displayName = DisplayName &
+	num = Num &
+	definedBy = ECDefinedBy &
+	source = Source?
+	
+;
+
+
+
+
 
 
 CsrModel:
@@ -459,7 +474,15 @@ ExtVersionContributorName:
 	"name" ":" firstName = ID lastName = ID?
 ;
 
+/* 
+ * Exception Code stuff (see exception_code_schema.json) 
+ */
 
+ECKind: 'kind' ':' kind="exception_code";
+ECName: 'name' ':' name=ID;
+DisplayName: 'display_name' ':' displayName=STRING;
+Num: 'num' ':' num=INT;
+ECDefinedBy: 'definedBy' ':' definedBy=Condition;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
