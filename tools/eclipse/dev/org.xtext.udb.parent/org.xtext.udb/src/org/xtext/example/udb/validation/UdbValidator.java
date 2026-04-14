@@ -37,6 +37,7 @@ import org.xtext.example.udb.udb.InstHintElement;
 import org.xtext.example.udb.udb.InstOpcodeEntry;
 import org.xtext.example.udb.udb.InstOpcodeInherits;
 import org.xtext.example.udb.udb.InstRvPairEncoding;
+import org.xtext.example.udb.udb.ProfFamModel;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
@@ -472,6 +473,18 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}	
 	}
+	
+	/*
+	 * Profile Family Validation -- rules found in profile_family_schema.json
+	 */
+    @Check
+    public void checkProfileFamilySchema(ProfFamModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("profile_family_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
 	
 	
 	

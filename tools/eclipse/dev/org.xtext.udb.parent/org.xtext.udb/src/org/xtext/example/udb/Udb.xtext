@@ -102,8 +102,6 @@ UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
 TextUrl: 'text_url' ':' textUrl=STRING;
 Email: 'email' ':' email=STRING;
-ProcessorKind: 'processor_kind' ':' processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
-Introduction: 'introduction' ':' introduction=STRING;
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
@@ -479,7 +477,7 @@ ExtVersionContributorName:
  * Profile_Family stuff (see profile_family_schema.json) 
  */
 PFKind:
-	'kind' ':' 'profile' 'family' // ask about this
+	'kind' ':' kind='profile_family' 
 ;
 
 
@@ -501,6 +499,17 @@ PFCompany:
 		 url=Url?
 	) DEDENT 
 ;
+
+ProcessorKind: 'processor_kind' ':' processorKind=processorKindEnum;
+
+enum processorKindEnum:
+	GENERIC_UNPRIVILEGED="Generic Unprivileged" | 
+	MICROCONTROLLER="Microcontroller" | 
+	APPS_PROCESSOR="Apps Processor"
+;
+Introduction: 'introduction' ':' introduction=STRING;
+
+
 /* Conditions */
 Condition: cond=STRING; // placeholder
 //Condition: yamlCond=YAMLCondition | idlCond=IDLCondition;
