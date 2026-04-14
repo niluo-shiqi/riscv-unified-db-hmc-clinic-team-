@@ -9,6 +9,7 @@ import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
 
 import org.xtext.example.udb.udb.Url;
+import org.xtext.example.udb.udb.VarTypeEnum;
 import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.CsrModel;
@@ -46,7 +47,9 @@ import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 //import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 //import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
-
+import org.xtext.example.udb.udb.InstVarTypeModel;
+import org.xtext.example.udb.udb.InstVarTypeName;
+import org.xtext.example.udb.udb.InstVarTypeType;
 
 /**
  * This class contains custom validation rules.
@@ -472,7 +475,44 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}	
 	}
+	/*
+	 * InstVarType Validation -- rules found in inst_var_type_schema.json
+	 */
+	@Check
+    public void checkInstVarTypeSchema(InstVarTypeModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("inst_var_type_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
 	
+	
+	@Check
+	public void checkRegisterReferenceFields(InstVarTypeModel model) {
+		if (model.getInstVarTypeType() == null) return;
+
+	    boolean isRegisterReference = 
+	        model.getInstVarTypeType().getType() == VarTypeEnum.REGISTER_REFERENCE;
+
+	    if (isRegisterReference) {
+	        // Fields REQUIRED for register_reference
+	        if (model.getRegisterFile() == null)
+	            error("register_file is required for register_reference type",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
+	        if (model.getAccess() == null)
+	            error("access is required for register_reference type",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
+	    } else {
+	        // Fields NOT ALLOWED when type is not register_reference
+	        if (model.getRegisterFile() != null)
+	            error("register_file is only valid when type is 'register_reference'",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
+	        if (model.getAccess() != null)
+	            error("access is only valid when type is 'register_reference'",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
+	    }
+	}
 	
 	
 	/*
