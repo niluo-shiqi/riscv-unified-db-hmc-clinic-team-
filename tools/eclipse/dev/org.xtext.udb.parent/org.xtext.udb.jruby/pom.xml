@@ -140,7 +140,7 @@
  
                 <executions>
  
-                    <!-- Step 1: configure Bundler gem path -->
+                    <!-- Configure Bundler gem path -->
                     <execution>
                         <id>jruby-bundle-config-path</id>
                         <phase>generate-sources</phase>
@@ -163,7 +163,7 @@
                         </configuration>
                     </execution>
  
-                    <!-- Step 2: configure Bundler to exclude development gems -->
+                    <!-- Configure Bundler to exclude development gems -->
                     <execution>
                         <id>jruby-bundle-config-without</id>
                         <phase>generate-sources</phase>
@@ -186,7 +186,7 @@
                         </configuration>
                     </execution>
  
-                    <!-- Step 3: update Bundler so that it can install the ruby gems -->
+                    <!-- Update Bundler so that it can install the ruby gems -->
                     <execution>
                         <id>jruby-gem-install-bundler</id>
                         <phase>generate-sources</phase>
@@ -209,7 +209,7 @@
                         </configuration>
                     </execution>
                     
-                    <!-- Step 4: install gems -->
+                    <!-- Install gems -->
                     <execution>
                         <id>jruby-bundle-install</id>
                         <phase>generate-sources</phase>
