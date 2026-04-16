@@ -16,14 +16,14 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 		}
 		return QualifiedName.create(csr.getCsrName().getName());
 	}
-	
+
 	protected QualifiedName qualifiedName(InstModel inst) {
 		if (inst.getInstName() == null || inst.getInstName().getName() == null) {
 			return null;
 		}
 		return QualifiedName.create(inst.getInstName().getName());
 	}
-	
+
 	protected QualifiedName qualifiedName(ExtModel ext) {
 		if (ext.getExtName() == null || ext.getExtName().getName() == null) {
 			return null;

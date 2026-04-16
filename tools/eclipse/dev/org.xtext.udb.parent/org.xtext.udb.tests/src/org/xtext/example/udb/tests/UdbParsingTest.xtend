@@ -60,7 +60,7 @@ class UdbParsingTest {
 
 		// check basic inputs
 		var csr = result as CsrModel
-		
+
 		var schema = csr.getSchema().getSchema();
 		Assertions.assertEquals("csr_schema.json#", schema as String);
 		var k = csr.getCsrKind().getKind();
@@ -127,7 +127,7 @@ class UdbParsingTest {
 
 
 	}
-	
+
 	@Test
 	def void parsesValidExtension() {
 		val result = parseHelper.parse('''
@@ -151,9 +151,9 @@ class UdbParsingTest {
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
 		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
-		
+
 		var ext = result as ExtModel
-		
+
 		var schema = ext.getSchema().getSchema();
 		Assertions.assertEquals("ext_schema.json#", schema as String);
 		var kind = ext.getExtKind().getKind();
@@ -166,21 +166,21 @@ class UdbParsingTest {
 		Assertions.assertEquals("Vector Operations", longname);
 		var description = ext.getDescription().getDescription();
 		Assertions.assertEquals("|\n  General support for data-parallel execution.", description);
-		
+
 		// version testing
 		var version = ext.getExtVersions().getElements().get(0);
 		Assertions.assertEquals("1.0.0", version.getVersion());
 		Assertions.assertEquals("ratified", version.getVersionState().getState());
 		Assertions.assertEquals("2021-11", version.getRatificationDate().getDate());
-		
+
 		// requirements testing
 		var reqs = ext.getRequirements();
 		System.out.println(reqs.getRequirements());
-		
-		
-		
+
+
+
 	}
-	
-	
+
+
 
 }

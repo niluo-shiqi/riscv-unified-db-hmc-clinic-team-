@@ -35,7 +35,7 @@ public class UdbValueConverter extends DefaultTerminalConverters {
 			return "0x" + Integer.toHexString(value);
 		}
 	}
-	
+
 	@ValueConverter(rule = "BIN_VALUE")
 	public IValueConverter<Integer> BIN_VALUE() {
 		return new HexValueConverter();
