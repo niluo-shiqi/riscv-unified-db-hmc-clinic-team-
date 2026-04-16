@@ -5,8 +5,19 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	CsrModel | InstModel | ExtModel
+	CsrModel | InstModel | ExtModel | PrmModel
 ;
+
+PrmModel:
+	schema = Schema
+	prmKind = PrmKind
+	prmName = PrmName &
+	description = Description &
+	processorConfig = ProcessorConfig &
+	chapters = Chapters &
+	source = Source?
+;
+
 
 
 CsrModel:
@@ -87,7 +98,7 @@ Url: 'url' ':' url=STRING;
 TextUrl: 'text_url' ':' textUrl=STRING;
 Email: 'email' ':' email=STRING;
 ProcessorKind: 'processor_kind' ':' processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
-Introduction: 'introduction' ':' introduction=STRING;
+
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
@@ -459,7 +470,85 @@ ExtVersionContributorName:
 	"name" ":" firstName = ID lastName = ID?
 ;
 
+/* 
+ * Prm stuff (see prm_schema.json) 
+ */
 
+PrmKind: 'kind' ':' kind="programmer_reference_manual";
+PrmName: 'name' ':' name=ID;
+ProcessorConfig: 'processor_config' ':' 
+	INDENT
+		processorConfig=PrmRef
+	DEDENT
+;
+PrmRef: '$ref' ':' uriRef=STRING; 
+Chapters: 'chapters' ':'
+	INDENT
+		chapters+=PrmChapter+
+	DEDENT
+;
+PrmChapter:
+	'-' 'id' ':' id=ID
+	INDENT
+   	& ('title' ':' title=STRING)
+    & ('description' ':' description=STRING)?
+    & ('level' ':' level=INT)?
+    & ('type' ':' chapterType=ChapterTypeEnum)?
+    & ('auto_generate' ':' '[' autoGenerate+=AutoGenerateEnum (',' autoGenerate+=AutoGenerateEnum)* ']')?
+    & ('external_documentation' ':' externalDocumentation+=ExternalDocumentation+)?
+    & ('non_isa_specifications' ':' nonIsaSpecifications+=NonIsaSpecification+)?
+    DEDENT
+;
+
+NonIsaSpecification:
+	'-' 'name' ':' name=STRING
+	INDENT
+     & ('version' ':' version=VersionRequirements)
+    DEDENT
+;
+
+VersionRequirements:
+	SingleVersion | MultiVersion
+;
+
+MultiVersion: '[' versions+=STRING (',' versions+=STRING)* ']';
+
+SingleVersion: version=STRING;
+
+ExternalDocumentation:
+	'-' 'source' ':' source=STRING 
+	INDENT 
+    & ('type' ':' docType=ExternalDocTypeEnum)
+    & ('path' ':' path=STRING)
+    & ('version' ':' version=VersionRequirements)?
+    & ('resolve_includes' ':' resolveIncludes=Boolean)?
+    & ('chapters' ':' chapters+=ExternalChapter+)?
+    DEDENT
+;
+
+ExternalChapter:
+	'-' 'file' ':' file=STRING
+	INDENT
+    & ('title' ':' title=STRING)?
+    & ('level_offset' ':' levelOffset=INT)?
+    & ('exclude_content' ':' '[' excludeContent+=STRING (',' excludeContent+=STRING)* ']')?
+    DEDENT
+;
+
+enum ExternalDocTypeEnum:
+	ISA_MANUAL = 'isa_manual' |
+	EXTERNAL_SPEC = 'external_spec'
+;
+
+enum AutoGenerateEnum:
+	INSTRUCTION = 'instructions' |
+	CSRS = 'csrs'
+;
+
+enum ChapterTypeEnum:
+	STANDARD = 'standard' |
+	APPENDIX = 'appendix'
+;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
