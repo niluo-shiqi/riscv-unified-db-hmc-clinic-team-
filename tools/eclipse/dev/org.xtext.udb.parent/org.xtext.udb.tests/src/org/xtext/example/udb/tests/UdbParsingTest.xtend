@@ -39,7 +39,7 @@ class UdbParsingTest {
 					description: "See vxrm."
 					type: RW-RH
 					alias: "vxrm.VALUE[1:0]"
-					sw_write(csr_value): "|
+					sw_write(csr_value): | "
 					  CSR[vxrm].VALUE = csr_value.VXRM;
 					  return csr_value.VXRM;"
 					reset_value: UNDEFINED_LEGAL
@@ -48,7 +48,7 @@ class UdbParsingTest {
 					description: "See vxsat."
 					type: RW-RH
 					alias: "vxsat.VALUE[0]"
-					sw_write(csr_value): "|
+					sw_write(csr_value): | "
 					  CSR[vxsat].VALUE = csr_value.VXSAT;
 					  return csr_value.VXSAT;"
 					reset_value: UNDEFINED_LEGAL

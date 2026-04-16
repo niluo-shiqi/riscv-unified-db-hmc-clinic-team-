@@ -7,8 +7,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.eclipse.core.runtime.FileLocator;
 import java.io.File;
-import java.io.IOException;
 import java.io.StringWriter;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 public final class RubyRuntime {
     private static final ScriptingContainer ruby = new ScriptingContainer(
@@ -19,8 +21,7 @@ public final class RubyRuntime {
     static {
     	try {
     		// resolve idlc paths -- copied into this package with Maven
-            Bundle bundle = FrameworkUtil.getBundle(RubyRuntime.class);
-            File root = new File(FileLocator.toFileURL(bundle.getEntry("/")).getPath()).getCanonicalFile();
+    		File root = resolveRoot();
             File idlcDir   = new File(root, "idlc").getCanonicalFile();
             String idlcLib  = new File(idlcDir, "lib").getCanonicalPath();
             String gemfile  = new File(idlcDir, "Gemfile").getCanonicalPath();
@@ -66,9 +67,44 @@ public final class RubyRuntime {
             }
 
 	        
-    	} catch (IOException e) {
+    	} catch (IOException | URISyntaxException e) {
     		throw new RuntimeException("Failed to resolve gems path", e);
     	}
+    }
+    
+    
+    /**
+     * Resolves the bundle/project root directory in both OSGi and standalone
+     * environments (e.g. JUnit).
+     */
+    private static File resolveRoot() throws IOException, URISyntaxException {
+        Bundle bundle = FrameworkUtil.getBundle(RubyRuntime.class);
+ 
+        if (bundle != null) {
+            // OSGi path
+            return new File(FileLocator.toFileURL(bundle.getEntry("/")).getPath())
+                    .getCanonicalFile();
+        }
+ 
+        // Standalone / JUnit path
+        URL classUrl = RubyRuntime.class.getProtectionDomain()
+                                        .getCodeSource()
+                                        .getLocation();
+        File dir = new File(classUrl.toURI()).getCanonicalFile();
+ 
+        // Walk upward — handles both target/classes and arbitrary output dirs
+        File candidate = dir;
+        while (candidate != null) {
+            if (new File(candidate, "idlc").isDirectory()) {
+                return candidate;
+            }
+            candidate = candidate.getParentFile();
+        }
+ 
+        throw new IOException(
+            "Could not locate project root (directory containing 'idlc/') " +
+            "starting from: " + dir
+        );
     }
 
     public static ScriptingContainer get() {
@@ -79,3 +115,6 @@ public final class RubyRuntime {
         return path.replace("\\", "\\\\").replace("'", "\\'");
     }
 }
+
+// Bundle bundle = FrameworkUtil.getBundle(RubyRuntime.class);
+// File root = new File(FileLocator.toFileURL(bundle.getEntry("/")).getPath()).getCanonicalFile();
