@@ -31,7 +31,7 @@ CsrModel:
 ;
 
 
-InstModel: 
+InstModel:
 	schema = Schema // must be "inst_schema.json#"
 	kind = InstKind
 	instName = InstName &
@@ -54,7 +54,7 @@ InstModel:
 
 
 
-ExtModel: 
+ExtModel:
 	schema = Schema // must be "ext_schema.json#"
 	extKind = ExtKind
 	extName = ExtName &
@@ -72,12 +72,12 @@ ExtModel:
 
 
 
-/* 
+/*
  * Common stuff
  */
 Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
-Description: 'description' ':' description=STRING; 
+Description: 'description' ':' description=STRING;
 Requirements: "requirements" ":" requirements=Condition;
 Source:'$source' ':' source=STRING;
 Number: intVal=INT | bin=Bin | hex=Hex;
@@ -91,9 +91,9 @@ Introduction: 'introduction' ':' introduction=STRING;
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
-CertNormativeRules: 
-	'cert_normative_rules' ':' 
-	INDENT	
+CertNormativeRules:
+	'cert_normative_rules' ':'
+	INDENT
 		rules += CNRuleArrayElement+
 	DEDENT
 ;
@@ -105,7 +105,7 @@ CNRuleArrayElement:
 		description = Description
 	) DEDENT
 ;
-DocLinks:	
+DocLinks:
 	"doc_links" ":"
 	INDENT
 		links += DocLinksArrayElement+
@@ -115,11 +115,11 @@ DocLinksArrayElement:
 	'-' link = STRING	// TODO: this must follow the URI format
 ;
 
-// see "license" in schema_defs.json 
+// see "license" in schema_defs.json
 DocLicense:
 	'doc_license' ':'
 	INDENT (
-		('name' ':' name=STRING) & 
+		('name' ':' name=STRING) &
 		id=UdbId? &
 		url=Url? &
 		textUrl=TextUrl?
@@ -137,17 +137,17 @@ CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
 CsrDefinedBy: 'definedBy' ':' extensionName=Condition;
 CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
-CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
+CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ;
 CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=IDL;
 CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
 CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
-CsrIntType: intVal=INT; 
+CsrIntType: intVal=INT;
 CsrParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 // extension that must be implemented for this CSR to exist
-CsrRequires:'requires' ':' requires=STRING; 
+CsrRequires:'requires' ':' requires=STRING;
 
 // grammar for csr_field
 CsrFields:
@@ -208,7 +208,7 @@ CsrFieldAliasArray:
 	DEDENT
 ;
 CsrAliasArrayElement:
-	"-" alias = CsrFieldAliasName 
+	"-" alias = CsrFieldAliasName
 ;
 
 // TODO: cross-referencing
@@ -258,17 +258,17 @@ InstHints:
 		hints += InstHintElement+
 	DEDENT
 ;
-InstHintElement: '-' '{' hint = STRING '}'; 
+InstHintElement: '-' '{' hint = STRING '}';
 
 InstAccessDetail: 'access_detail' ':' accessDetail=STRING;
 InstOperation: 'operation()' ':' operation=IDL; // string for now, IDL later TODO
 
 InstDataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
-InstPseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array; 
-InstFormat: 'format' ':' 
+InstPseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array;
+InstFormat: 'format' ':'
 	INDENT (
 		'$inherits' ':' inherits=InstInheritType &
-		'opcodes' ':' opcodes=InstOpcodeType 
+		'opcodes' ':' opcodes=InstOpcodeType
 	)DEDENT
 ;
 InstInheritType:
@@ -287,25 +287,25 @@ InstOpcodeEntry:
 	| InstOpcodeInherits
 ;
 
-InstOpcodeField: // ex. funct7 
-	name=ID ':' 
+InstOpcodeField: // ex. funct7
+	name=ID ':'
 	INDENT
 		(opcodeProperties += InstOpcodeProps)+
 	DEDENT
-	
+
 ;
 
-InstOpcodeProps: 
-	'display_name' ':' displayName=ID 
+InstOpcodeProps:
+	'display_name' ':' displayName=ID
 	| 'value' ':' value=Number
 ;
 
-InstOpcodeInherits: 
+InstOpcodeInherits:
 	'opcode' ':' '{' '$inherits' ':' inheritsAddress=STRING '}'// must fit regex 'inst_opcode/' INST_OPCODE_FILE '.yaml#/data'
 ;
 
 
-InstEncoding: 
+InstEncoding:
 	'encoding' ':'
 	(
 		InstRvPairEncoding
@@ -314,7 +314,7 @@ InstEncoding:
 ;
 
 InstOldEncoding:
-	{InstOldEncoding} 
+	{InstOldEncoding}
 	INDENT(
 	    match=InstEncodingMatch &
 	    variables=InstEncodingVariables?
@@ -366,27 +366,27 @@ InstRvPairEncoding:
 	'RV32' ':' rv32=InstOldEncoding
 	'RV64' ':' rv64=InstOldEncoding
 	)DEDENT
-; 
+;
 
 
-/* 
- * Extension stuff (see ext_schema.json) 
+/*
+ * Extension stuff (see ext_schema.json)
  */
 ExtKind: 'kind' ':' kind="extension";
 ExtName: 'name' ':' name=ID;
 ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
 ExtRviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
-ExtCompany: 
-	'company' ':' 
+ExtCompany:
+	'company' ':'
 	INDENT (
 		('name' ':' name=STRING) &
 		 url=Url?
-	) DEDENT 
+	) DEDENT
 ;
 
 // versions grammar (see ext_schema.json)
 ExtVersions:
-	"versions" ":" 
+	"versions" ":"
 	INDENT
 		elements += ExtVersionArrayElement+
 	DEDENT
@@ -405,9 +405,9 @@ ExtVersionArrayElement:
 	) DEDENT
 ;
 
-ExtVersionState: 
-	"state" ":" 
-	state=("development" | "frozen" | "public-review" | 
+ExtVersionState:
+	"state" ":"
+	state=("development" | "frozen" | "public-review" |
 		   "ratification-ready" | "ratified" | "nonstandard-released")
 ;
 
@@ -429,7 +429,7 @@ ExtVersionRatificationDate:
 	date = (
 	  YEAR_MONTH			// when ratification date is known
 	| "unknown"				// when ratification date is unknown
-	| "null")				// when version isn't ratified			
+	| "null")				// when version isn't ratified
 ;
 
 ExtVersionVersionChanges:
@@ -445,7 +445,7 @@ ExtVersionChangesArrayElement:
 ExtVersionContributors:
 	"contributors" ":"
 	INDENT
-		contributors += ExtVersionContributorsArrayElement+ 
+		contributors += ExtVersionContributorsArrayElement+
 	DEDENT
 ;
 ExtVersionContributorsArrayElement:
@@ -526,8 +526,8 @@ terminal HEX_VALUE returns ecore::EInt:
 ;
 
 Bin: value=BIN_VALUE;
-terminal BIN_VALUE returns ecore::EInt: 
-	('0b' | '0B') 
+terminal BIN_VALUE returns ecore::EInt:
+	('0b' | '0B')
 	('0'|'1')
 	(('0' | '1' | '_')*('0' | '1'))?
 ;
@@ -536,7 +536,7 @@ terminal BIN_VALUE returns ecore::EInt:
  * Terminals
  */
 terminal YEAR_MONTH:
-	(('20')('0'..'9')('0'..'9')'-'    
+	(('20')('0'..'9')('0'..'9')'-'
 	  ('0'('1'..'9') | '1'('0'..'2')))
 ;
 
@@ -553,5 +553,3 @@ terminal WS: ('\r'|'\n'|'\t'|' ')+;
 
 @Override
 terminal ID: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'.')*;
-
-

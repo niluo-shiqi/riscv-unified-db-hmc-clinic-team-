@@ -54,7 +54,7 @@ import org.xtext.example.udb.udb.ExtVersionArrayElement;
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 public class UdbValidator extends AbstractUdbValidator {
-	
+
 	// Regex's found in schema_defs.json
 	String rviVersionRegex = "^[0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?$";
 	String csrFieldRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+$";
@@ -70,13 +70,13 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
-    
+
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-    
-	
-    
+
+
+
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
@@ -84,22 +84,22 @@ public class UdbValidator extends AbstractUdbValidator {
     public void checkCsrSchema(CsrModel csr) {
 		String schema = csr.getSchema().getSchema();
 		if (!schema.equals("csr_schema.json#")) {
-			error("Schema incompatible with kind", csr.getSchema(), 
+			error("Schema incompatible with kind", csr.getSchema(),
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
-    
+
 	@Check
 	public void checkCsrName(CsrName name) {
 	    String value = name.getName();
 	    if (!value.matches(csrNameRegex)) {
-	        error("Invalid csr name", 
+	        error("Invalid csr name",
 	              UdbPackage.Literals.CSR_NAME__NAME);
 	    }
 	}
-    
+
 	@Check
-	public void checkCsrAddressVal(CsrAddress address) {		
+	public void checkCsrAddressVal(CsrAddress address) {
 		// Address must be between 0 and 12 bits
 		int val = address.getAddress().getValue();
 		if (val < 0 || val > 4096) {
@@ -114,7 +114,7 @@ public class UdbValidator extends AbstractUdbValidator {
 		int val = vaddress.getVirtualAddress().getValue();
 
 		if (val < 0 || val > 4096) {
-			error("Virtual address must be between 0 and 12 bits.", 
+			error("Virtual address must be between 0 and 12 bits.",
 					UdbPackage.Literals.CSR_VIRTUAL_ADDRESS__VIRTUAL_ADDRESS);
 		}
 	}
@@ -125,18 +125,18 @@ public class UdbValidator extends AbstractUdbValidator {
 		int val = iaddress.getIndirectAddress().getValue();
 
 		if(val < 0 || val > (2^64)) {
-			error("Indirect address must be between 0 and 64 bits.", 
+			error("Indirect address must be between 0 and 64 bits.",
 					UdbPackage.Literals.CSR_INDIRECT_ADDRESS__INDIRECT_ADDRESS);
 		}
 	}
-	
+
 	@Check
 	public void checkCsrIndirectSlotVal(CsrIndirectSlot indirectSlot) {
 		// indirect_slot must be between 1 and 6
 		int slot = indirectSlot.getIndirectSlot();
 
 		if (slot < 1 || slot > 6) {
-			error("Indirect slot value must be between 1 and 6.", 
+			error("Indirect slot value must be between 1 and 6.",
 					UdbPackage.Literals.CSR_INDIRECT_SLOT__INDIRECT_SLOT);
 		}
 	}
@@ -147,18 +147,18 @@ public class UdbValidator extends AbstractUdbValidator {
 
 		if (iaddress != null) {
 			if (csr.getIndirectSlot() == null) {
-				error("Indirect address requires an indirect slot.", 
+				error("Indirect address requires an indirect slot.",
 						UdbPackage.Literals.CSR_MODEL__INDIRECT_ADDRESS);
 			}
 		}
 
 	}
-	
+
 	@Check
 	public void checkCsrPrivMode(CsrModel csr) {
 		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
 		java.util.Set<String> ALLOWED_TYPES = java.util.Set.of("M","S","U","VS","D");
-		
+
 		if (mode != null && !ALLOWED_TYPES.contains(mode)) {
 		    error(
 		        "Invalid privilege mode: " + mode,
@@ -166,30 +166,30 @@ public class UdbValidator extends AbstractUdbValidator {
 		    );
 		}
 	}
-	
+
 	@Check
 	public void checkCsrVirtualAddress(CsrModel csr) {
 		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
 
 		if (mode.equals("VS")) {
 			if (csr.getVirtualAddress() == null) {
-				error("VS mode requires a virtual address.", 
+				error("VS mode requires a virtual address.",
 						UdbPackage.Literals.CSR_MODEL__PRIVMODE);
 			}
 		}
 
 	}
-	
+
 	@Check
 	public void checkLengthValue(CsrLength length) {
 		CsrIntType lengthInt = length.getLength().getIntType();
-		
+
 		// Containment reference is always instantiated
 		if (length.getLength() == null) {
 			error("length should not be null",
 					UdbPackage.Literals.CSR_LENGTH__LENGTH);
 		}
-		
+
 		// If length is an integer, value is either 32 or 64
 		if (lengthInt != null) {
 			int lengthVal = lengthInt.getIntVal();
@@ -199,8 +199,8 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 	}
-	
-	
+
+
 	@Check
 	public void checkCsrFieldName(CsrFieldDef field) {
 		String value = field.getName();
@@ -209,7 +209,7 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.CSR_FIELD_DEF__NAME);
 		}
 	}
-	
+
 	@Check
 	public void checkCsrFieldAlias(CsrFieldAliasName alias) {
 		String value = alias.getName();
@@ -223,12 +223,12 @@ public class UdbValidator extends AbstractUdbValidator {
 	        );
 	    }
 	}
-// No longer need to validate regex since cross referencing already limits it to ID? Is this okay	
+// No longer need to validate regex since cross referencing already limits it to ID? Is this okay
 //	@Check
 //	public void checkCsrFieldAffectedBy(CsrFieldAffectedBy affectedBy) {
-//		CsrAffectedByType type = affectedBy.getAffectedBy(); 
+//		CsrAffectedByType type = affectedBy.getAffectedBy();
 //		String name = type.getAffectedByName();
-//		
+//
 //		if (name != null) {
 //			if (!name.matches(csrAffectedByRegex)) {
 //				error("Invalid extension name", // TODO: is this an okay error message?
@@ -246,13 +246,13 @@ public class UdbValidator extends AbstractUdbValidator {
 //		}
 //	}
 
-	
-	
-	
+
+
+
 	/*
 	 * Instruction Validation -- rules found in inst_schema.json
 	 */
-	
+
 	@Check
 	public void checkInstSchema(InstModel inst) {
 		/* Ensure base value is either 32 or 64 */
@@ -261,7 +261,7 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("Schema incompatible with kind", inst.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
 	}
-	
+
 	@Check
 	public void checkInstName(InstName name) {
 	    String value = name.getName();
@@ -269,11 +269,11 @@ public class UdbValidator extends AbstractUdbValidator {
 	        error("Invalid inst name", name, UdbPackage.Literals.INST_NAME__NAME);
 	    }
 	}
-	
 
-	
+
+
 	/*
-	 *  Check access detail field is present when at least one mode 
+	 *  Check access detail field is present when at least one mode
 	 *  within access field is sometimes
 	 */
 	@Check
@@ -303,26 +303,26 @@ public class UdbValidator extends AbstractUdbValidator {
 			if ("sometimes".equals(vu)) {
 				error("Must provide access_detail field when at least one access type is sometimes",inst.getAccess(), UdbPackage.Literals.INST_ACCESS__VU);
 			}
-			
+
 		}
 	}
-	
+
 	@Check
 	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
 	public void checkInstHints(InstHints hints) {
 		EList<InstHintElement> hintValue = hints != null ? hints.getHints(): null;
-		
+
 		for (InstHintElement hint : hintValue) {
 			String hintString = hint.getHint();
-			
+
 			if (!(hintString.matches(instHintsRegex))) {
 				error("hints must be of format $ref: inst/<path>.yaml# or $ref: inst/<path>.yaml#/...", hints, UdbPackage.Literals.INST_HINTS__HINTS);
 			}
 		}
 	}
-	
+
 	@Check
-	// Check that address within format are in correct format 
+	// Check that address within format are in correct format
 	public void checkInstInherits(InstFormat format) {
 	  if (format == null) return;
 
@@ -346,7 +346,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	  for (InstOpcodeEntry entry : format.getOpcodes().getOpcode()) {
 	    if (entry instanceof InstOpcodeInherits opcodeInherits) {
 	      String address = opcodeInherits.getInheritsAddress();
-	      if (address == null) continue; 
+	      if (address == null) continue;
 	      if (!address.matches(instOpcodeInheritTypeRegex)) {
 	        error(
 	          "$inherits field within opcodes must follow string address format inst_opcode/<file>.yaml#/data",
@@ -357,81 +357,81 @@ public class UdbValidator extends AbstractUdbValidator {
 	    }
 	  }
 	}
-	
+
 	// Check match regex within encoding
 	@Check
 	public void checkInstEncoding(InstEncoding encoding) {
-		
+
 		if (encoding instanceof InstOldEncoding) {
 			InstOldEncoding oldEncoding = (InstOldEncoding) encoding;
-			
+
 			InstEncodingMatch match = oldEncoding.getMatch();
 			String pattern = match.getPattern();
 			//error(match + " this is match", UdbPackage.Literals.INST_MODEL__ENCODING);
-			
+
 			// if match doesn't match any of these
 			if (!(pattern.matches(ENC_48)) && !(pattern.matches(ENC_16)) && !(pattern.matches(ENC_32))) {
 				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
 			}
 		}
-		
+
 		else if (encoding instanceof InstRvPairEncoding) {
 			InstRvPairEncoding rvEncoding = (InstRvPairEncoding) encoding;
-			
+
 			InstEncodingMatch Rv32Match = rvEncoding.getRv32().getMatch();
 			InstEncodingMatch Rv64Match = rvEncoding.getRv64().getMatch();
 			String Rv32Pattern = Rv32Match.getPattern();
 			String Rv64Pattern = Rv64Match.getPattern();
 			//error(Rv32match + " this is rv32 match", UdbPackage.Literals.INST_MODEL__ENCODING);
 			//error(Rv64match + " this is rv64 match", UdbPackage.Literals.INST_MODEL__ENCODING);
-			
+
 			// if match doesn't match any of these
 			if (!(Rv32Pattern.matches(ENC_48)) && !(Rv32Pattern.matches(ENC_16)) && !(Rv32Pattern.matches(ENC_32))) {
 				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", Rv32Match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
 			}
-			
+
 			if (!(Rv64Pattern.matches(ENC_48)) && !(Rv64Pattern.matches(ENC_16)) && !(Rv64Pattern.matches(ENC_32))) {
 				error("Expected match to follow one of these patterns: 48-bit ([01-]{43}11111), 32-bit ([01-]{30}11), or  16-bit ([01-]{14}(00|01|10)).", Rv64Match, UdbPackage.Literals.INST_ENCODING_MATCH__PATTERN);
 			}
 		}
-		
+
 	}
-	
+
 	// Check $inherits and $childof regex within variables within encoding(they share the same regex)
 	@Check
 	public void checkInstInheritsAndChildOf(InstEncoding encoding) {
-		
+
 		if (!(encoding instanceof InstOldEncoding)) {
 			return;
 		}
-		
+
 		InstOldEncoding old = (InstOldEncoding) encoding;
 		InstEncodingVariables varsList = old.getVariables();
-		
+
 		if (varsList == null) {
 			return;
 		}
-		
+
 		for (EObject var: varsList.getVars()) {
 			if (var instanceof InstEncodingTwoKeyVar) {
 				InstEncodingTwoKeyVar twoKey = (InstEncodingTwoKeyVar) var;
 				String inherits = twoKey.getInherits();
-				
+
 				if (inherits != null && !(inherits.matches(instChildOfRegex))) {
 					error("Expected $inherits to follow common/inst_variable_types\\.yaml#/SOMETHING format", twoKey, UdbPackage.Literals.INST_ENCODING_TWO_KEY_VAR__INHERITS);
 				}
 			} else if (var instanceof InstEncodingSevenKeyVar) {
 				InstEncodingSevenKeyVar sevenKey = (InstEncodingSevenKeyVar) var;
 				String childOf = sevenKey.getChildOf();
-				
+
 				if (childOf != null && !(childOf.matches(instChildOfRegex))) {
 					error("Expected $child_of to follow common/inst_variable_types\\.yaml#/SOMETHING format", sevenKey, UdbPackage.Literals.INST_ENCODING_SEVEN_KEY_VAR__CHILD_OF);
 				}
 			}
 		}
 	}
-	
-	
+
+
 	/*
 	 * Extension Validation -- rules found in ext_schema.json
 	 */
@@ -439,16 +439,16 @@ public class UdbValidator extends AbstractUdbValidator {
     public void checkExtSchema(ExtModel ext) {
 		String schema = ext.getSchema().getSchema();
 		if (!schema.equals("ext_schema.json#")) {
-			error("Schema incompatible with kind", ext.getSchema(), 
+			error("Schema incompatible with kind", ext.getSchema(),
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
-	
+
 	@Check
 	public void checkExtName(ExtName name) {
 	    String value = name.getName();
 	    if (!value.matches(extensionNameRegex)) {
-	        error("Invalid extension name", 
+	        error("Invalid extension name",
 	              UdbPackage.Literals.EXT_NAME__NAME);
 	    }
 	}
@@ -456,13 +456,13 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkExtVersionArrayElement(ExtVersionArrayElement elem) {
 		// Validate elements in the versions array
-		
+
 		// check that the string representation of the version is valid
     	String versionString = elem.getVersion();
     	if (!versionString.matches(rviVersionRegex)) {
 			error("Invalid version", UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION);
 		}
-    	
+
     	// if state is ratified, a ratification date must be given
     	String versionState = elem.getVersionState().getState();
 		if (versionState.equals("ratified")) {
@@ -470,11 +470,11 @@ public class UdbValidator extends AbstractUdbValidator {
 				error("Ratified states require a ratification date.",
 						UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION_STATE);
 			}
-		}	
+		}
 	}
-	
-	
-	
+
+
+
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)
 	 */
@@ -487,7 +487,7 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 
 	}
-	
+
 	public void checkEmailFormat(Email email) {
 		// Check that emails follow email format
 		String emailString = email.getEmail();
