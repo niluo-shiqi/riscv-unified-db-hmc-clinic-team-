@@ -48,11 +48,15 @@ ENV MISE_YES=1
 ENV MISE_TRUSTED_CONFIG_PATHS="/"
 ENV UV_CACHE_DIR="/tmp/uv-cache"
 ENV PATH="/mise/shims:$PATH"
-RUN curl https://mise.run | sh
+
+# renovate: datasource=github-releases depName=jdx/mise
+ARG MISE_VERSION=2026.4.4
+RUN MISE_VERSION=${MISE_VERSION} curl https://mise.run | sh
 
 # Install tools managed by mise (.mise.toml)
 COPY .mise.toml /mise/config.toml
-RUN mise install
+COPY .default-gems /mise/.default-gems
+RUN --mount=type=secret,id=MISE_GITHUB_TOKEN,env=MISE_GITHUB_TOKEN mise install
 RUN mise reshim
 RUN mkdir -p /mise/state && chmod -R 777 /mise
 
@@ -94,6 +98,8 @@ COPY tools/ruby-gems/udb/Gemfile /opt/tools/ruby-gems/udb/
 COPY tools/ruby-gems/udb/Gemfile.lock /opt/tools/ruby-gems/udb/
 COPY tools/ruby-gems/udb/udb.gemspec /opt/tools/ruby-gems/udb/
 COPY tools/ruby-gems/udb/lib/udb/version.rb /opt/tools/ruby-gems/udb/lib/udb/
+COPY tools/ruby-gems/udb/lib/udb/dep_versions.rb /opt/tools/ruby-gems/udb/lib/udb/
+COPY tools/ruby-gems/udb/ext/udb_download/extconf.rb /opt/tools/ruby-gems/udb/ext/udb_download/
 COPY tools/ruby-gems/udb-gen/Gemfile /opt/tools/ruby-gems/udb-gen/
 COPY tools/ruby-gems/udb-gen/Gemfile.lock /opt/tools/ruby-gems/udb-gen/
 COPY tools/ruby-gems/udb-gen/udb-gen.gemspec /opt/tools/ruby-gems/udb-gen/
@@ -104,7 +110,8 @@ RUN bundle install --gemfile /opt/Gemfile --jobs $(nproc) \
     && bundle install --gemfile /opt/tools/ruby-gems/idlc/Gemfile --jobs $(nproc) \
     && bundle install --gemfile /opt/tools/ruby-gems/udb/Gemfile --jobs $(nproc) \
     && bundle install --gemfile /opt/tools/ruby-gems/udb-gen/Gemfile --jobs $(nproc) \
-    && chmod -R a+rwX /usr/local/bundle
+    && chmod -R a+rwX /usr/local/bundle \
+    && rm -f /usr/local/bundle/bin/bundle
 
 # the binaries for gems need to be copied in
 RUN mkdir -p /workspace/bin/container

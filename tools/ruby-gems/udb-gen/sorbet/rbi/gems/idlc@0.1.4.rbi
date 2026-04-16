@@ -13,11 +13,8 @@ module Idl
   def _nt_ary_size_decl; end
   def _nt_assignment; end
   def _nt_bitfield_definition; end
-  def _nt_bits_cast; end
   def _nt_body_function_definition; end
   def _nt_builtin_function_definition; end
-  def _nt_builtin_read_only_var; end
-  def _nt_builtin_read_write_var; end
   def _nt_comment; end
   def _nt_concatenation_expression; end
   def _nt_constraint_body; end
@@ -26,11 +23,13 @@ module Idl
   def _nt_csr_name; end
   def _nt_csr_register_access_expression; end
   def _nt_declaration; end
+  def _nt_dollar_arg_list; end
+  def _nt_dollar_function_call; end
+  def _nt_dollar_variable; end
   def _nt_dontcare_lvalue; end
   def _nt_dontcare_return; end
   def _nt_enum_definition; end
   def _nt_enum_ref; end
-  def _nt_enum_to_a; end
   def _nt_execute_if_block; end
   def _nt_expression; end
   def _nt_fetch; end
@@ -238,10 +237,6 @@ class Idl::ArraySizeAst < ::Idl::AstNode
   end
 end
 
-class Idl::ArraySizeSyntaxNode < ::Idl::SyntaxNode
-  def to_ast; end
-end
-
 module Idl::AryAccess0
   def expression; end
 end
@@ -426,6 +421,7 @@ module Idl::Assignment1
 end
 
 module Idl::Assignment2
+  def dollar_variable; end
   def rval; end
 end
 
@@ -475,6 +471,12 @@ class Idl::AstNode
 
   sig { abstract.params(symtab: ::Idl::SymbolTable).returns(T::Boolean) }
   def const_eval?(symtab); end
+
+  sig { overridable.returns(T::Boolean) }
+  def declaration?; end
+
+  sig { overridable.returns(T::Boolean) }
+  def executable?; end
 
   sig { params(klass: ::Class).returns(T.nilable(::Idl::AstNode)) }
   def find_ancestor(klass); end
@@ -550,6 +552,12 @@ class Idl::AstNode
   end
   def set_input_file_unless_already_set(filename, starting_line = T.unsafe(nil), starting_offset = T.unsafe(nil), line_file_offsets = T.unsafe(nil)); end
 
+  sig { returns(T.nilable(T::Array[::Integer])) }
+  def source_line_file_offsets; end
+
+  sig { returns(::Integer) }
+  def source_starting_offset; end
+
   sig { returns(T::Hash[::String, T.untyped]) }
   def source_yaml; end
 
@@ -564,9 +572,6 @@ class Idl::AstNode
 
   sig { abstract.returns(::String) }
   def to_idl; end
-
-  sig { overridable.returns(::String) }
-  def to_idl_verbose; end
 
   sig { params(reason: ::String).void }
   def truncation_warn(reason); end
@@ -766,17 +771,33 @@ end
 class Idl::BitfieldDefinitionAst < ::Idl::AstNode
   include ::Idl::Declaration
 
+  sig do
+    params(
+      input: T.nilable(::String),
+      interval: T.nilable(T::Range[::Integer]),
+      name: T.any(::Idl::BuiltinTypeNameAst, ::Idl::UserTypeNameAst),
+      size: ::Idl::IntLiteralAst,
+      fields: T::Array[::Idl::BitfieldFieldDefinitionAst]
+    ).void
+  end
   def initialize(input, interval, name, size, fields); end
 
+  sig { override.params(symtab: ::Idl::SymbolTable).void }
   def add_symbol(symtab); end
 
   sig { override.params(symtab: ::Idl::SymbolTable).returns(T::Boolean) }
   def const_eval?(symtab); end
 
+  sig { returns(T::Array[::String]) }
   def element_names; end
+
+  sig { params(symtab: ::Idl::SymbolTable).returns(T::Array[T::Range[::Integer]]) }
   def element_ranges(symtab); end
-  def freeze_tree(global_symtab); end
+
+  sig { returns(::String) }
   def name; end
+
+  sig { params(symtab: ::Idl::SymbolTable).returns(::Integer) }
   def size(symtab); end
 
   sig { override.returns(T::Hash[::String, T.untyped]) }
@@ -785,19 +806,35 @@ class Idl::BitfieldDefinitionAst < ::Idl::AstNode
   sig { override.returns(::String) }
   def to_idl; end
 
+  sig { params(symtab: ::Idl::SymbolTable).returns(::Idl::Type) }
   def type(symtab); end
+
+  sig { override.params(symtab: ::Idl::SymbolTable, strict: T::Boolean).void }
   def type_check(symtab, strict:); end
+
+  sig do
+    params(
+      _symtab: ::Idl::SymbolTable
+    ).returns(T.any(::Integer, ::String, T::Array[::Integer], T::Array[::String], T::Array[T::Boolean], T::Boolean, T::Hash[::String, T.any(::Integer, ::String, T::Array[::Integer], T::Array[::String], T::Array[T::Boolean], T::Boolean)]))
+  end
   def value(_symtab); end
 
   class << self
     sig do
-      params(
-        yaml: T::Hash[::String, T.untyped],
-        source_mapper: T::Hash[::String, ::String]
-      ).returns(::Idl::AstNode)
+      override
+        .params(
+          yaml: T::Hash[::String, T.untyped],
+          source_mapper: T::Hash[::String, ::String]
+        ).returns(::Idl::AstNode)
     end
     def from_h(yaml, source_mapper); end
   end
+end
+
+class Idl::BitfieldDefinitionAst::Memo < ::T::Struct
+  prop :type, T.nilable(::Idl::Type)
+  prop :element_names, T.nilable(T::Array[::String])
+  prop :element_ranges, T.nilable(T::Hash[::Idl::SymbolTable, T::Array[T::Range[::Integer]]]), default: T.unsafe(nil)
 end
 
 class Idl::BitfieldDefinitionSyntaxNode < ::Idl::SyntaxNode
@@ -844,10 +881,6 @@ end
 Idl::Bits1Type = T.let(T.unsafe(nil), Idl::Type)
 Idl::Bits32Type = T.let(T.unsafe(nil), Idl::Type)
 Idl::Bits64Type = T.let(T.unsafe(nil), Idl::Type)
-
-module Idl::BitsCast0
-  def expr; end
-end
 
 class Idl::BitsCastAst < ::Idl::AstNode
   include ::Idl::Rvalue
@@ -993,10 +1026,12 @@ class Idl::BuiltinTypeNameAst < ::Idl::AstNode
 
   def bits_expression; end
 
+  sig { params(symtab: ::Idl::SymbolTable).returns(::Idl::Type) }
+  def bits_type(symtab); end
+
   sig { override.params(symtab: ::Idl::SymbolTable).returns(T::Boolean) }
   def const_eval?(symtab); end
 
-  def freeze_tree(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
 
   sig { override.returns(T::Hash[::String, T.untyped]) }
@@ -1019,6 +1054,10 @@ class Idl::BuiltinTypeNameAst < ::Idl::AstNode
     end
     def from_h(yaml, source_mapper); end
   end
+end
+
+class Idl::BuiltinTypeNameAst::Memo < ::T::Struct
+  prop :bits_type, T::Hash[::Idl::SymbolTable, T.nilable(::Idl::Type)], default: T.unsafe(nil)
 end
 
 class Idl::BuiltinVariableAst < ::Idl::AstNode
@@ -1582,7 +1621,6 @@ class Idl::CsrReadExpressionAst < ::Idl::AstNode
   def csr_def(symtab); end
   def csr_known?(symtab); end
   def csr_name; end
-  def freeze_tree(symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def prune(symtab, forced_type: T.unsafe(nil)); end
 
@@ -1709,10 +1747,13 @@ class Idl::CsrWriteSyntaxNode < ::Idl::SyntaxNode
 end
 
 module Idl::Declaration
-  interface!
+  abstract!
 
   sig { abstract.params(symtab: ::Idl::SymbolTable).void }
   def add_symbol(symtab); end
+
+  sig { returns(T::Boolean) }
+  def declaration?; end
 end
 
 module Idl::Declaration0
@@ -1723,6 +1764,46 @@ module Idl::Declaration1
   def first; end
   def rest; end
   def type_name; end
+end
+
+module Idl::DollarArgList0
+  def expression; end
+end
+
+module Idl::DollarArgList1
+  def first; end
+  def rest; end
+end
+
+module Idl::DollarFunctionCall0; end
+
+module Idl::DollarFunctionCall1
+  def args; end
+  def name; end
+end
+
+class Idl::DollarFunctionCallSyntaxNode < ::Idl::SyntaxNode
+  def to_ast; end
+
+  private
+
+  def builtin_arg_type_name(arg_ast); end
+  def builtin_call_ast(dollar_name, arg_nodes, expected_arg_count, ast_class, arg_type_validations = T.unsafe(nil)); end
+  def dollar_arg_list_elements; end
+end
+
+module Idl::DollarVariable0; end
+
+module Idl::DollarVariable1
+  def name; end
+end
+
+class Idl::DollarVariableAssignmentSyntaxNode < ::Idl::SyntaxNode
+  def to_ast; end
+end
+
+class Idl::DollarVariableSyntaxNode < ::Idl::SyntaxNode
+  def to_ast; end
 end
 
 class Idl::DontCareLvalueAst < ::Idl::AstNode
@@ -1853,7 +1934,7 @@ class Idl::EnumArrayCastAst < ::Idl::AstNode
     params(
       input: T.nilable(::String),
       interval: T.nilable(T::Range[::Integer]),
-      enum_class_name: ::Idl::UserTypeNameAst
+      enum_class_name: T.any(::Idl::IdAst, ::Idl::UserTypeNameAst)
     ).void
   end
   def initialize(input, interval, enum_class_name); end
@@ -1885,10 +1966,6 @@ class Idl::EnumArrayCastAst < ::Idl::AstNode
   end
 end
 
-class Idl::EnumArrayCastSyntaxNode < ::Idl::SyntaxNode
-  def to_ast; end
-end
-
 class Idl::EnumCastAst < ::Idl::AstNode
   include ::Idl::Rvalue
 
@@ -1896,7 +1973,7 @@ class Idl::EnumCastAst < ::Idl::AstNode
     params(
       input: T.nilable(::String),
       interval: T.nilable(T::Range[::Integer]),
-      type_name: ::Idl::UserTypeNameAst,
+      type_name: T.any(::Idl::IdAst, ::Idl::UserTypeNameAst),
       expression: T.all(::Idl::AstNode, ::Idl::Rvalue)
     ).void
   end
@@ -1928,10 +2005,6 @@ class Idl::EnumCastAst < ::Idl::AstNode
     end
     def from_h(yaml, source_mapper); end
   end
-end
-
-class Idl::EnumCastSyntaxNode < ::Idl::SyntaxNode
-  def to_ast; end
 end
 
 module Idl::EnumDefinition0
@@ -2011,7 +2084,7 @@ class Idl::EnumElementSizeAst < ::Idl::AstNode
     params(
       input: T.nilable(::String),
       interval: T.nilable(T::Range[::Integer]),
-      enum_class_name: ::Idl::UserTypeNameAst
+      enum_class_name: T.any(::Idl::IdAst, ::Idl::UserTypeNameAst)
     ).void
   end
   def initialize(input, interval, enum_class_name); end
@@ -2041,10 +2114,6 @@ class Idl::EnumElementSizeAst < ::Idl::AstNode
     end
     def from_h(yaml, source_mapper); end
   end
-end
-
-class Idl::EnumElementSizeSyntaxNode < ::Idl::SyntaxNode
-  def to_ast; end
 end
 
 module Idl::EnumRef0
@@ -2100,6 +2169,13 @@ end
 class Idl::EnumSizeAst < ::Idl::AstNode
   include ::Idl::Rvalue
 
+  sig do
+    params(
+      input: T.nilable(::String),
+      interval: T.nilable(T::Range[::Integer]),
+      enum_class_name: T.any(::Idl::IdAst, ::Idl::UserTypeNameAst)
+    ).void
+  end
   def initialize(input, interval, enum_class_name); end
 
   sig { override.params(symtab: ::Idl::SymbolTable).returns(T::Boolean) }
@@ -2127,14 +2203,6 @@ class Idl::EnumSizeAst < ::Idl::AstNode
     end
     def from_h(yaml, source_mapper); end
   end
-end
-
-class Idl::EnumSizeSyntaxNode < ::Idl::SyntaxNode
-  def to_ast; end
-end
-
-module Idl::EnumToA0
-  def type_name; end
 end
 
 class Idl::EnumerationType < ::Idl::Type
@@ -2174,7 +2242,10 @@ class Idl::EnumerationType < ::Idl::Type
 end
 
 module Idl::Executable
-  interface!
+  abstract!
+
+  sig { returns(T::Boolean) }
+  def executable?; end
 
   sig { abstract.params(symtab: ::Idl::SymbolTable).void }
   def execute(symtab); end
@@ -2570,17 +2641,17 @@ class Idl::FunctionBodySyntaxNode < ::Idl::SyntaxNode
 end
 
 module Idl::FunctionCall0
-  def csr; end
-  def expression; end
-end
-
-module Idl::FunctionCall1
-  def csr; end
   def function_arg_list; end
   def function_name; end
 end
 
+module Idl::FunctionCall1
+  def csr; end
+  def expression; end
+end
+
 module Idl::FunctionCall2
+  def csr; end
   def function_arg_list; end
   def function_name; end
 end
@@ -3259,7 +3330,6 @@ class Idl::IntLiteralAst < ::Idl::AstNode
   sig { override.params(symtab: ::Idl::SymbolTable).returns(T::Boolean) }
   def const_eval?(symtab); end
 
-  def freeze_tree(global_symtab); end
   def gen_adoc(indent = T.unsafe(nil), indent_spaces: T.unsafe(nil)); end
   def gen_option_adoc; end
   def prune(symtab, forced_type: T.unsafe(nil)); end
@@ -3278,9 +3348,6 @@ class Idl::IntLiteralAst < ::Idl::AstNode
   sig { override.returns(::String) }
   def to_idl; end
 
-  sig { override.returns(::String) }
-  def to_idl_verbose; end
-
   def type(symtab); end
   def type_check(symtab, strict:); end
   def unsigned_value; end
@@ -3298,6 +3365,13 @@ class Idl::IntLiteralAst < ::Idl::AstNode
 
     def radix_to_verilog(r); end
   end
+end
+
+class Idl::IntLiteralAst::Memo < ::T::Struct
+  prop :type, T.nilable(::Idl::Type)
+  prop :width, T.nilable(T.any(::Integer, ::Symbol))
+  prop :value, T.nilable(T.any(::Idl::UnknownLiteral, ::Integer))
+  prop :unsigned_value, T.nilable(T.any(::Idl::UnknownLiteral, ::Integer))
 end
 
 module Idl::IntLiteralSyntaxNode
@@ -3621,6 +3695,28 @@ end
 
 class Idl::ParenExpressionSyntaxNode < ::Idl::SyntaxNode
   def to_ast; end
+end
+
+class Idl::ParseTimeDetectedTypeError < ::Idl::AstNode
+  def initialize(input, interval, reason); end
+
+  sig { override.params(symtab: ::Idl::SymbolTable).returns(T::Boolean) }
+  def const_eval?(symtab); end
+
+  sig { override.returns(T::Hash[::String, T.untyped]) }
+  def to_h; end
+
+  sig { override.returns(::String) }
+  def to_idl; end
+
+  sig { params(symtab: ::Idl::SymbolTable).returns(::Idl::Type) }
+  def type(symtab); end
+
+  sig { override.params(symtab: ::Idl::SymbolTable, strict: T::Boolean).void }
+  def type_check(symtab, strict:); end
+
+  sig { params(symtab: ::Idl::SymbolTable).returns(T.untyped) }
+  def value(symtab); end
 end
 
 class Idl::PcAssignmentAst < ::Idl::AstNode
@@ -4707,36 +4803,6 @@ module Idl::UnaryExpression1
 end
 
 module Idl::UnaryExpression2
-  def expression; end
-end
-
-module Idl::UnaryExpression3
-  def expression; end
-end
-
-module Idl::UnaryExpression4
-  def type_name; end
-end
-
-module Idl::UnaryExpression5
-  def type_name; end
-end
-
-module Idl::UnaryExpression6
-  def expression; end
-  def type_name; end
-end
-
-module Idl::UnaryExpression7
-  def expression; end
-end
-
-module Idl::UnaryExpression8
-  def ary; end
-  def value; end
-end
-
-module Idl::UnaryExpression9
   def e; end
   def o; end
 end
