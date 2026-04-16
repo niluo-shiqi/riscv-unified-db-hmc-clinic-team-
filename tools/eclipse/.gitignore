@@ -30,6 +30,11 @@ target/
 build/
 .gradle/
 
+# Generated for treetop compatbility
+lib/
+vendor/
+idlc/
+
 node_modules/
 
 udb-vscode/out/

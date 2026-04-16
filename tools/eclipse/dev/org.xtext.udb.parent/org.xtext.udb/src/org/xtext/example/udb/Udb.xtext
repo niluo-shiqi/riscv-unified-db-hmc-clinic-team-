@@ -41,7 +41,7 @@ InstModel:
 	hints = InstHints? &
 	access = InstAccess &
 	accessDetail = InstAccessDetail? &
-	operation = InstOperation? & //idl
+	operation = InstOperation? &
 	operationAst = InstOperationAst? &
 	certNormativeRules = CertNormativeRules? &
 	assembly = InstAssembly &
@@ -139,7 +139,7 @@ CsrDefinedBy: 'definedBy' ':' extensionName=Condition;
 CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
 CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
-CsrSwRead:'sw_read()' ':' swRead=IDL;
+CsrSwRead:'sw_read()' ':' swRead=Idl;
 CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
 CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
@@ -190,14 +190,14 @@ CsrFieldLocation: value=INT | range=Range;
 CsrFieldResetValueType: value=CsrFieldResetValue | function=CsrFieldResetValueFunc;
 CsrFieldResetValue: "reset_value" ":" resetValue=CsrFieldResetValueValue;
 CsrFieldResetValueValue: value=INT | undefinedLegal=UndefinedLegal;
-CsrFieldResetValueFunc: "reset_value()" ":" resetValueFunc=IDL;
+CsrFieldResetValueFunc: "reset_value()" ":" resetValueFunc=Idl;
 
-CsrFieldSWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=IDL;
-CsrFieldLegalFunc: "legal?(csr_value)" ":" legalFunc=IDL;
+CsrFieldSWWriteFunc: "sw_write(csr_value)" ":" swWriteFunc=Idl;
+CsrFieldLegalFunc: "legal?(csr_value)" ":" legalFunc=Idl;
 
 CsrFieldTypeType: typeVal=CsrFieldType | typeFunc=CsrFieldTypeFunc;
 CsrFieldType: "type" ":" perms=("RO"|"RO-H"|"RW"|"RW-R"|"RW-H"|"RW-RH");
-CsrFieldTypeFunc: "type()" ":" idl=IDL;
+CsrFieldTypeFunc: "type()" ":" idl=Idl;
 
 CsrFieldAlias: "alias" ":" (aliasName=CsrFieldAliasName | aliasArray=CsrFieldAliasArray);
 CsrFieldAliasName: name=STRING;
@@ -261,8 +261,7 @@ InstHints:
 InstHintElement: '-' '{' hint = STRING '}'; 
 
 InstAccessDetail: 'access_detail' ':' accessDetail=STRING;
-InstOperation: 'operation()' ':' operation=IDL; // string for now, IDL later TODO
-
+InstOperation: 'operation()' ':' operation=Idl;
 InstDataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
 InstPseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array; 
 InstFormat: 'format' ':' 
@@ -492,7 +491,7 @@ Condition: cond=STRING; // placeholder
 
 
 /* IDL Grammar */
-IDL: idl=STRING;
+Idl: '|' idl=STRING;
 
 
 
