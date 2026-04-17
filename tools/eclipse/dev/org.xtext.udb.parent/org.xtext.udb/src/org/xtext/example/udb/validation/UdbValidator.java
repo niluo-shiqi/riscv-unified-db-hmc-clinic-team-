@@ -40,6 +40,9 @@ import org.xtext.example.udb.udb.InstHintElement;
 import org.xtext.example.udb.udb.InstOpcodeEntry;
 import org.xtext.example.udb.udb.InstOpcodeInherits;
 import org.xtext.example.udb.udb.InstRvPairEncoding;
+import org.xtext.example.udb.udb.ManualVersionManual;
+import org.xtext.example.udb.udb.ManualVersionModel;
+import org.xtext.example.udb.udb.ManualVersionVersion;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
@@ -48,6 +51,7 @@ import org.xtext.example.udb.udb.InstOperation;
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
+import org.xtext.example.udb.udb.ExtensionElement;
 
 
 /**
@@ -72,7 +76,9 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
-
+    String manualVersionManualRegex = "^manual/.*\\\\.yaml#$";
+    String manualVersionVersionRegex = "^(0|[1-9]\\\\d*)\\\\.(0|[1-9]\\\\d*)\\\\.(0|[1-9]\\\\d*)(?:-((?:0|[1-9]\\\\d*|\\\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\\\.(?:0|[1-9]\\\\d*|\\\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\\\+([0-9a-zA-Z-]+(?:\\\\.[0-9a-zA-Z-]+)*))?$";
+    String manualVersionExtensionVersion = "^[0-9]+(\\\\.[0-9]+(\\\\.[0-9]+(-pre)?)?)?$";
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
@@ -475,7 +481,41 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 
+    /*
+     * Manual Version Validation -- rules found in manual_version_schema.json
+     */
+	@Check
+	public void checkManualVersionSchema(ManualVersionModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("manual_version_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+	}
 
+	@Check
+	public void checkManualVersionManualString(ManualVersionManual manual) {
+	    String value = manual.getRef();
+	    if (!value.matches(manualVersionManualRegex)) {
+	        error("Manual ref format must follow 'manual/[name].yaml#' format", manual, UdbPackage.Literals.MANUAL_VERSION_MANUAL__REF);
+	    }
+	}
+	
+	@Check
+	public void checkManualVersionVersionString(ManualVersionVersion version) {
+	    String value = version.getVersion();
+	    if (!value.matches(manualVersionVersionRegex)) {
+	        error("Version must follow semantic versioning format (e.g. 1.2.3, 1.0.0-alpha.1, 2.3.4+build.42)", version, UdbPackage.Literals.MANUAL_VERSION_VERSION__VERSION);
+	    }
+	}
+	
+	@Check
+	public void checkManualVersionExtensionVersion(ExtensionElement element) {
+	    String value = element.getVersion();
+	    if (!value.matches(manualVersionExtensionVersion)) {
+	        error("Version must be a numeric version string (e.g. 1, 1.2, 1.2.3, or 1.2.3-pre)", element, UdbPackage.Literals.EXTENSION_ELEMENT__VERSION);
+	    }
+	}
+	
 
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)
