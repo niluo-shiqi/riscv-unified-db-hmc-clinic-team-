@@ -15,10 +15,10 @@
     <artifactId>org.xtext.udb.jruby</artifactId>
     <packaging>eclipse-plugin</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    
+
     <properties>
-    	<idlc.dir>${project.basedir}/idlc</idlc.dir>
-    	<jruby.jar>${project.basedir}/lib/jruby-complete-${jrubyVersion}.jar</jruby.jar>
+        <idlc.dir>${project.basedir}/idlc</idlc.dir>
+        <jruby.jar>${project.basedir}/lib/jruby-complete-${jrubyVersion}.jar</jruby.jar>
     </properties>
 
     <dependencies>
@@ -27,32 +27,32 @@
             <artifactId>jruby-complete</artifactId>
         </dependency>
         <dependency>
-		    <groupId>org.osgi</groupId>
-		    <artifactId>org.osgi.core</artifactId>
-		    <version>6.0.0</version>
-		    <scope>provided</scope>
-		</dependency>
-		<dependency>
-		    <groupId>org.eclipse.platform</groupId>
-		    <artifactId>org.eclipse.core.runtime</artifactId>
-		    <version>3.20.0</version>
-		    <scope>provided</scope>
-		</dependency>
-		<dependency>
-		    <groupId>org.snakeyaml</groupId>
-		    <artifactId>snakeyaml-engine</artifactId>
-		    <version>2.10</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.bouncycastle</groupId>
-		    <artifactId>bcpkix-jdk18on</artifactId>
-		    <version>1.78.1</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.bouncycastle</groupId>
-		    <artifactId>bcprov-jdk18on</artifactId>
-		    <version>1.78.1</version>
-		</dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.core.runtime</artifactId>
+            <version>3.20.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.snakeyaml</groupId>
+            <artifactId>snakeyaml-engine</artifactId>
+            <version>2.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>1.78.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78.1</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -61,85 +61,91 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
+                
                     <execution>
                         <id>copy-jruby</id>
-                        <phase>generate-resources</phase>
+                        <phase>initialize</phase>
                         <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <includeArtifactIds>jruby-complete</includeArtifactIds>
                             <outputDirectory>${project.basedir}/lib</outputDirectory>
                         </configuration>
                     </execution>
+
                     <execution>
-			            <id>copy-snakeyaml</id>
-			            <phase>generate-resources</phase>
-			            <goals><goal>copy</goal></goals>
-			            <configuration>
-			                <artifactItems>
-			                    <artifactItem>
-			                        <groupId>org.snakeyaml</groupId>
-			                        <artifactId>snakeyaml-engine</artifactId>
-			                        <version>2.10</version>
-			                        <outputDirectory>${project.basedir}/lib</outputDirectory>
-			                    </artifactItem>
-			                </artifactItems>
-			            </configuration>
-		        	</execution>
-		        	<execution>
-					    <id>copy-bouncycastle</id>
-					    <phase>generate-resources</phase>
-					    <goals><goal>copy</goal></goals>
-					    <configuration>
-					        <artifactItems>
-					            <artifactItem>
-					                <groupId>org.bouncycastle</groupId>
-					                <artifactId>bcprov-jdk18on</artifactId>
-					                <version>1.78.1</version>
-					                <outputDirectory>${project.basedir}/lib</outputDirectory>
-					            </artifactItem>
-					            <artifactItem>
-					                <groupId>org.bouncycastle</groupId>
-					                <artifactId>bcpkix-jdk18on</artifactId>
-					                <version>1.78.1</version>
-					                <outputDirectory>${project.basedir}/lib</outputDirectory>
-					            </artifactItem>
-					        </artifactItems>
-					    </configuration>
-					</execution>
+                        <id>copy-snakeyaml</id>
+                        <phase>generate-resources</phase>
+                        <goals><goal>copy</goal></goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.snakeyaml</groupId>
+                                    <artifactId>snakeyaml-engine</artifactId>
+                                    <version>2.10</version>
+                                    <outputDirectory>${project.basedir}/lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>copy-bouncycastle</id>
+                        <phase>generate-resources</phase>
+                        <goals><goal>copy</goal></goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.bouncycastle</groupId>
+                                    <artifactId>bcprov-jdk18on</artifactId>
+                                    <version>1.78.1</version>
+                                    <outputDirectory>${project.basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.bouncycastle</groupId>
+                                    <artifactId>bcpkix-jdk18on</artifactId>
+                                    <version>1.78.1</version>
+                                    <outputDirectory>${project.basedir}/lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
+
             <plugin>
-			  <artifactId>maven-resources-plugin</artifactId>
-			  <version>3.3.1</version>
-			  <executions>
-			    <execution>
-			      <id>copy-idlc</id>
-			      <phase>process-resources</phase>
-			      <goals>
-			        <goal>copy-resources</goal>
-			      </goals>
-			      <configuration>
-			        <outputDirectory>
-			          ${project.basedir}/idlc
-			        </outputDirectory>
-			        <resources>
-			          <resource>
-			            <directory>
-			              ${project.basedir}/../../../../ruby-gems/idlc
-			            </directory>
-			          </resource>
-			        </resources>
-			      </configuration>
-			    </execution>
-			  </executions>
-			</plugin>
-			<plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+
+                    <execution>
+                        <id>copy-idlc</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/idlc</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>
+                                        ${project.basedir}/../../../../ruby-gems/idlc
+                                    </directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
- 
+
                 <executions>
- 
+
                     <!-- Configure Bundler gem path -->
                     <execution>
                         <id>jruby-bundle-config-path</id>
@@ -162,7 +168,7 @@
                             </arguments>
                         </configuration>
                     </execution>
- 
+
                     <!-- Configure Bundler to exclude development gems -->
                     <execution>
                         <id>jruby-bundle-config-without</id>
@@ -185,8 +191,7 @@
                             </arguments>
                         </configuration>
                     </execution>
- 
-                    <!-- Update Bundler so that it can install the ruby gems -->
+
                     <execution>
                         <id>jruby-gem-install-bundler</id>
                         <phase>generate-sources</phase>
@@ -208,7 +213,7 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    
+
                     <!-- Install gems -->
                     <execution>
                         <id>jruby-bundle-install</id>
@@ -228,9 +233,36 @@
                             </arguments>
                         </configuration>
                     </execution>
- 
+
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.eclipse.m2e</groupId>
+                <artifactId>lifecycle-mapping</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <lifecycleMappingMetadata>
+                        <pluginExecutions>
+                            <pluginExecution>
+                                <pluginExecutionFilter>
+                                    <groupId>org.codehaus.mojo</groupId>
+                                    <artifactId>exec-maven-plugin</artifactId>
+                                    <versionRange>[1.0,)</versionRange>
+                                    <goals>
+                                        <goal>exec</goal>
+                                    </goals>
+                                </pluginExecutionFilter>
+                                <action>
+                                    <ignore/>
+                                </action>
+                            </pluginExecution>
+                        </pluginExecutions>
+                    </lifecycleMappingMetadata>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
+
 </project>
