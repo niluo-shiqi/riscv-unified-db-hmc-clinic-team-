@@ -7,7 +7,7 @@ $schema: "inst_schema.json#"
 kind: instruction
 name: divw
 long_name: "Signed 32-bit division"
-description: "| 
+description: "|
   Divide the lower 32-bits of register xs1 by the lower 32-bits of register xs2,
   and store the sign-extended result in xd.
 

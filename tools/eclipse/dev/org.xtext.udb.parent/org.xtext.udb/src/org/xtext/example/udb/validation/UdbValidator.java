@@ -497,12 +497,12 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("Email not in formatted correctly", UdbPackage.Literals.EMAIL__EMAIL);
 		}
 	}
-	
+
 	/*
 	 * Pass off IDL to the treetop parser
 	 */
 	private final TreetopParser treetopParser = new TreetopParser();
-	
+
 	/**
      * Helper function for passing IDL snippets into treetop
      *
@@ -516,74 +516,74 @@ public class UdbValidator extends AbstractUdbValidator {
 	    	content = content.strip();
 	    	content = content.substring(1, content.length() - 1);
 	    }
-	    
+
 	    ValidationError error = treetopParser.parse(content, root);
 	    if (error != null) {
 	        return error.reason;
 	    }
-	    
+
 	    return null;
 	}
-	
-	
+
+
 	// Csr IDL checks
 	@Check
 	public void checkCsrSwRead(CsrSwRead swRead) {
 		String idl = swRead.getSwRead().getIdl();
 		String idlError = checkIdl(idl, "function_body");
-		
+
 		if (idlError != null) {
 			error(idlError, UdbPackage.Literals.CSR_SW_READ__SW_READ);
 		}
 	}
-	
+
 	@Check
 	public void checkCsrFieldResetValueFunc(CsrFieldResetValueFunc resetVal) {
 		String idl = resetVal.getResetValueFunc().getIdl();
 		String idlError = checkIdl(idl, "function_body");
-		
+
 		if (idlError != null) {
 			error(idlError, UdbPackage.Literals.CSR_FIELD_RESET_VALUE_FUNC__RESET_VALUE_FUNC);
 		}
 	}
-	
+
 	@Check
 	public void checkCsrFieldSWWriteFunc(CsrFieldSWWriteFunc swWrite) {
 		String idl = swWrite.getSwWriteFunc().getIdl();
 		String idlError = checkIdl(idl, "function_body");
-		
+
 		if (idlError != null) {
 			error(idlError, UdbPackage.Literals.CSR_FIELD_SW_WRITE_FUNC__SW_WRITE_FUNC);
 		}
 	}
-	
+
 	@Check
 	public void checkCsrFieldLegalFunc(CsrFieldLegalFunc legal) {
 		String idl = legal.getLegalFunc().getIdl();
 		String idlError = checkIdl(idl, "function_body");
-		
+
 		if (idlError != null) {
 			error(idlError, UdbPackage.Literals.CSR_FIELD_LEGAL_FUNC__LEGAL_FUNC);
 		}
 	}
-	
+
 	@Check
 	public void checkCsrFieldTypeFunc(CsrFieldTypeFunc type) {
 		String idl = type.getIdl().getIdl();
 		String idlError = checkIdl(idl, "function_body");
-		
+
 		if (idlError != null) {
 			error(idlError, UdbPackage.Literals.CSR_FIELD_TYPE_FUNC__IDL);
 		}
 	}
-	
-	
+
+
 	// Instruction IDL checks
 	@Check
 	public void checkInstOperation(InstOperation op) {
 		String idl = op.getOperation().getIdl();
 		String idlError = checkIdl(idl, "function_body");
-		
+
 		if (idlError != null) {
 			error(idlError, UdbPackage.Literals.INST_OPERATION__OPERATION);
 		}
