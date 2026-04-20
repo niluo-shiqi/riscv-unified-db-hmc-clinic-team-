@@ -9,8 +9,9 @@ import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
 
 import org.xtext.example.udb.udb.Url;
+import org.xtext.example.udb.udb.XLenCondition;
 import org.xtext.example.udb.udb.Email;
-
+import org.xtext.example.udb.udb.ExtArrayList;
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrAddress;
@@ -37,12 +38,16 @@ import org.xtext.example.udb.udb.InstHintElement;
 import org.xtext.example.udb.udb.InstOpcodeEntry;
 import org.xtext.example.udb.udb.InstOpcodeInherits;
 import org.xtext.example.udb.udb.InstRvPairEncoding;
+import org.xtext.example.udb.udb.ParamArrayList;
+import org.xtext.example.udb.udb.ParamFieldsList;
+import org.xtext.example.udb.udb.ParamOneOf;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
 
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
+import org.xtext.example.udb.udb.ExtRequirement;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 //import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 //import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
@@ -67,6 +72,8 @@ public class UdbValidator extends AbstractUdbValidator {
     String instInheritTypeRegex="^.+\\.yaml#(/.*)?$";
     String instOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
     String instChildOfRegex="common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+";
+    String versionRequirementsRegex="^((>=)|(>)|(~>)|(<)|(<=)|(=))?\\s*[0-9]+(\\.[0-9]+(\\.[0-9]+(-[a-fA-F0-9]+)?)?)?$";
+    String paramNameRegex="^[A-Z][A-Z_0-9]*$";
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
@@ -473,7 +480,73 @@ public class UdbValidator extends AbstractUdbValidator {
 		}	
 	}
 	
+	/*
+	 * Conditions Validation
+	 */
 	
+	@Check
+	public void checkExtReqName(ExtRequirement extReq) {
+		String extName = extReq.getName();
+		if (!extName.matches(extensionNameRegex)) {
+			error("Invalid extension name.", UdbPackage.Literals.EXT_REQUIREMENT__NAME);
+		}
+	}
+	
+	@Check
+	public void checkExtArraySize(ExtArrayList array) {
+		int arraySize = array.getExtArray().size();
+		if (arraySize < 2) {
+			error("Minimum of two list items required.", UdbPackage.Literals.EXT_ARRAY_LIST__EXT_ARRAY);
+		}
+	}
+	
+	@Check 
+	public void checkExtVersion(ExtRequirement requirement) {
+		String version = requirement.getVersion().getVerReqs().getVersionReq();
+		if (!(version.matches(versionRequirementsRegex))){
+			error("Invalid version format.", UdbPackage.Literals.EXT_REQUIREMENT__VERSION);
+		}
+	}
+	
+	@Check
+	public void checkParamName(ParamFieldsList name) {
+		String paramName = name.getName();
+		if (!paramName.matches(paramNameRegex)) {
+			error("Invalid parameter name.", UdbPackage.Literals.PARAM_FIELDS_LIST__NAME);
+		}
+	}
+	
+	@Check
+	public void checkParamFieldsSize(ParamFieldsList fields) {
+		int fieldsSize = fields.getParamFieldsList().size();
+		if (!(fieldsSize > 0 && fieldsSize < 3)) {
+			error("Must include 2-3 properties.", UdbPackage.Literals.PARAM_FIELDS_LIST__PARAM_FIELDS_LIST);
+		}
+	}
+	
+	@Check
+	public void checkParamOneOfSize(ParamOneOf oneOf) {
+		int oneOfSize = oneOf.getOneOf().size();
+		if (oneOfSize < 2) {
+			error("Minimum of two list items required.", UdbPackage.Literals.PARAM_ONE_OF__ONE_OF);
+		}
+	}
+	
+	@Check
+	public void checkParamArraySize(ParamArrayList array) {
+		int arraySize = array.getParamArray().size();
+		if (arraySize < 2) {
+			error("Minimum of two list items required.", UdbPackage.Literals.PARAM_ARRAY_LIST__PARAM_ARRAY);
+		}
+	}
+	
+	@Check
+	public void checkXLenValue(XLenCondition xlen) {
+		int xlenValue = xlen.getXlen();
+		if (xlenValue != 32 && xlenValue != 64) {
+			error("xlen must be 32 or 64.", UdbPackage.Literals.XLEN_CONDITION__XLEN);
+		}
+	}
 	
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)

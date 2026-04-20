@@ -25,7 +25,7 @@ CsrModel:
 	length = CsrLength &
 	requires = CsrRequires? &
 	csrFields = CsrFields? &
-	swRead = CsrSwRead? &
+	swRead = CsrSwRead? & 
 	source = Source? &
 	certNormativeRules = CertNormativeRules?
 ;
@@ -132,7 +132,7 @@ DocLicense:
  * CSR stuff (see csr_schema.json)
  */
 CsrKind: 'kind' ':' kind="csr";
-CsrName: 'name' ':' name=STRING; //name=ID;
+CsrName: 'name' ':' name=ID;
 CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
 CsrDefinedBy: 'definedBy' ':' extensionName=ConditionBlock;
@@ -140,7 +140,7 @@ CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ; 
 CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=IDL;
-CsrPrivMode:'priv_mode' ':' privMode=STRING; //privMode=ID;
+CsrPrivMode:'priv_mode' ':' privMode=ID;
 CsrLength: 'length' ':' length=CsrLengthType;
 CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
 CsrIntType: intVal=INT; 
@@ -158,7 +158,7 @@ CsrFields:
 ;
 
 CsrFieldDef:
-	name=STRING ':' //name=ID ':'
+	name=ID ':'
 	INDENT (
 		displayName = CsrFieldDisplayName? &
 		longName = LongName? &
@@ -469,21 +469,72 @@ ConditionBlock:
 ;
 
 Condition: 
-	YAMLCondition | IDLCondition
+	 YAMLCondition | IDLCondition | ConditionArray
 ;
 
-YAMLCondition:
-	ExtensionCondition 
-	| XLenCondition
-	| ParamCondition
+ConditionArray: ConditionArrayList | ConditionNot;
+
+ConditionArrayList:
+	( 'allOf' ':'
+	| 'anyOf' ':'
+	| 'oneOf' ':'
+	| 'noneOf' ':') &
+	(INDENT
+		condArray+=ConditionElement+
+	DEDENT)
+;
+
+ConditionNot: /* Mandates only one element for 'not' */
+	'not' ':'
+	INDENT
+		condArray=ConditionElement
+	DEDENT
+;
+
+ConditionElement: '-' cond=Condition;
+
+YAMLCondition: 
+	ExtensionCondition | XLenCondition | ParamCondition | YAMLArray | YAMLIfThen
+;
+
+YAMLArray: YAMLArrayList | YAMLNot;
+
+YAMLArrayList:
+	( 'allOf' ':'
+	| 'anyOf' ':'
+	| 'oneOf' ':'
+	| 'noneOf' ':') &
+	(INDENT
+		yamlArray+=YAMLElement+
+	DEDENT)
+;
+
+YAMLNot: /* Mandates only one element for 'not' */
+	'not' ':'
+	INDENT
+		yamlArray=YAMLElement
+	DEDENT
+;
+
+YAMLElement: '-' yamlArrayElement=YAMLCondition;
+
+YAMLIfThen:
+	('if' ':' 
+	INDENT
+		ifCond=YAMLCondition 
+	DEDENT) &
+	('then' ':'
+	INDENT
+		thenCond=YAMLCondition
+	DEDENT)
 ;
 
 IDLCondition:
-	"idl()" ":" idl=IDL
+	'idl()' ':' idl=IDL
 ;
 
 ExtensionCondition:
-	"extension" ":"
+	'extension' ':'
 	INDENT
 		extCond=Extension
 	DEDENT
@@ -496,105 +547,124 @@ Extension:
 ;
 
 ExtRequirement:
-	"name" ":" name=STRING & /* TODO: implement regex in validator */
+	'name' ':' name=STRING &
 	(version=ExtVersion)?
 ;
 
 ExtVersion: IndentVersion | NoIndentVersion;
 IndentVersion: 
 	INDENT
-		"version" ":" verReqs=VersionRequirements
+		'version' ':' verReqs=VersionRequirements
 	DEDENT
 ;
-NoIndentVersion: "version" ":" verReqs=VersionRequirements;
-
-ExtArray:
-	( "allOf" ":" 
-	| "anyOf" ":"
-	| "oneOf" ":"
-	| "noneOf" ":"
-	| "not" ":") &
-	(INDENT
-		extArray+=ExtArrayElement+
-	DEDENT)
-;
-
-/* TODO: implement in validator (verify only two) */
-ExtArrayElement:
-	'-' extConds=Extension
-;
-
-ExtIfThen: // is this deprecated ?
-	("if" ":" 
-	INDENT
-		ifCond=YAMLCondition 
-	DEDENT) &
-	("then" ":"
-	INDENT
-		thenCond=YAMLCondition
-	DEDENT)
-;
-
-
-ParamCondition: /* TODO: in validator, mandate 2-3 properties, depending if reason is given */
-	"param" ":" 
-	INDENT
-		param=Param /* TODO: add allOf, noneOf, etc. support */
-	DEDENT
-;
-
-Param:
-	name=ParamName & /* TODO: Validate regex  ^[A-Z][A-Z_0-9]*$ */
-	paramIndex=ParamIndex? &
-	paramSize=ParamSize? &
-	paramEqual=ParamEqual? &
-	paramArray=ParamArray? &
-	paramNotEqual=ParamNotEqual? &
-	paramGreaterThan=ParamGreaterThan? &
-	paramLessThan=ParamLessThan? &
-	paramGreaterEqual=ParamGreaterEqual? &
-	paramLessEqual=ParamLessEqual? &
-	paramIncludes=ParamIncludes? &
-	paramReason=ParamReason?
-;
-
-ParamName: "name" ":" name=ID;
-ParamIndex: "index" ":" index=INT;
-ParamSize: "size" ":" size=Boolean;
-ParamEqual: "equal" ":" equal=ParamEqualType;
-ParamNotEqual: "notEqual" ":" notEqual=INT;
-ParamGreaterThan: "greaterThan" ":" greaterThan=INT;
-ParamLessThan: "lessThan" ":" lessThan=INT;
-ParamGreaterEqual: "greaterThanOrEqual" ":" greaterEqual=INT;
-ParamLessEqual: "lessThanOrEqual" ":" lessEqual=INT;
-ParamIncludes: "includes" ":" includes=ParamIncludesType;
-ParamReason: "reason" ":" reason=ID;
-
-ParamEqualType: INT|ID|{Equal} Boolean;
-ParamIncludesType: INT|ID;
-
-ParamArray:
-	"oneOf" ":"
-	INDENT
-		paramArray+=ParamArrayItem+
-	DEDENT
-;
-
-ParamArrayItem:
-	'-' item=ParamArrayType
-;
-
-ParamArrayType: INT|ID;
-
-
-XLenCondition: 
-	'xlen' ':' xlen=INT
-; /* can be 32 or 64 (TODO: implement in validator) */
+NoIndentVersion: 'version' ':' verReqs=VersionRequirements;
 
 VersionRequirements:
-	versionReq=ID /* TODO: implement regex in validator */
+	versionReq=STRING 
 ;
 
+ExtArray: ExtArrayList | ExtNot;
+
+ExtArrayList:
+	( 'allOf' ':'
+	| 'anyOf' ':'
+	| 'oneOf' ':'
+	| 'noneOf' ':') &
+	(INDENT
+		extArray+=ExtArrayElement+ 
+	DEDENT)
+;
+
+ExtNot: /* Mandates only one element for 'not' */
+	'not' ':' 
+	INDENT
+		extNotArray=ExtArrayElement
+	DEDENT
+;
+
+ExtArrayElement: '-' extConds=Extension;
+
+ExtIfThen: 
+	('if' ':' 
+	INDENT
+		ifCond=Condition 
+	DEDENT) &
+	('then' ':'
+	INDENT
+		thenCond=ExtensionCondition
+	DEDENT)
+;
+
+
+ParamCondition:
+	'param' ':'
+	INDENT
+		param=Param 
+	DEDENT
+;
+
+Param: ParamFieldsList | ParamArray;
+
+ParamArray: ParamArrayList | ParamNot;
+
+ParamArrayList:
+	( 'allOf' ':' 
+	| 'anyOf' ':' 
+	| 'oneOf' ':' 
+	| 'noneOf' ':') &
+	(INDENT
+		paramArray+=ParamArrayElement+
+	DEDENT)
+;
+
+ParamNot: /* Mandates only one element for 'not' */
+	'not' ':'
+	INDENT
+		paramArray=ParamArrayElement
+	DEDENT
+;
+
+ParamArrayElement: '-' paramElement=Param;
+
+ParamFieldsList:
+	'name' ':' name=ID &
+	(INDENT
+		paramFieldsList+=ParamFields+
+	DEDENT)?
+;
+
+ParamFields: 
+	(ParamIndex |
+	ParamSize |
+	ParamEqual |
+	ParamOneOf |
+	ParamNotEqual |
+	ParamGreaterThan |
+	ParamLessThan |
+	ParamGreaterEqual | 
+	ParamLessEqual |
+	ParamIncludes |
+	ParamReason)
+;
+
+ParamIndex: 'index' ':' index=INT;
+ParamSize: 'size' ':' size=Boolean;
+ParamEqual: 'equal' ':' (equalInt=INT | equalBool=Boolean | equalStr=STRING);
+ParamOneOf: 
+	'oneOf' ':' 
+	INDENT
+		oneOf+=ParamOneOfElement+
+	DEDENT;
+ParamOneOfElement: '-' (paramInt=INT|paramStr=ID); 
+ParamNotEqual: 'notEqual' ':' (notEqualInt=INT | notEqualStr=ID | notEqualBool=Boolean);
+ParamGreaterThan: 'greaterThan' ':' greaterThan=INT;
+ParamLessThan: 'lessThan' ':' lessThan=INT;
+ParamGreaterEqual: 'greaterThanOrEqual' ':' greaterEqual=INT;
+ParamLessEqual: 'lessThanOrEqual' ':' lessEqual=INT;
+ParamIncludes: 'includes' ':' (includeInt=INT | includeStr=ID);
+ParamReason: 'reason' ':' reason=STRING; /* TODO: multiline string support */
+
+XLenCondition: 'xlen' ':' xlen=INT;
 
 /* IDL Grammar */
 IDL: idl=STRING;
@@ -616,43 +686,9 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
-// ReqStringArray: '[' reqs+=ID (',' reqs+=ID)+ ']'; /* TODO: implement regex in validator */
-
-
 /*
  * Hex & Binary
  */
-
-
-/* Terminals */
-//terminal CSR_NAME:
-//	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-//;
-//terminal FIELD_NAME:
-//	('a'..'z' | 'A'..'Z')+
-//;
-//terminal CSR_FIELD:
-//	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-//	('.')('A'..'Z' | '0'..'9')+
-//;
-//terminal CSR_FIELD_BITS:
-//	('a'..'z')('a'..'z' | '0'..'9' | '_' | '.')+
-//	'.'('A'..'Z' | '0'..'9')+
-//	'[' ('0'..'9')+(':'('0'..'9')+)? ']'
-//;
-
-//terminal EXT_NAME:
-//	('A'..'WY') | (('SXZ')('a-z'|'0'..'9')+)
-//;
-//terminal REQUIREMENT_STRING:
-//	('>='|'>'|'~>'|'<'|'<='|'+')? (WS*)
-//	('0'..'9')+
-//	(('.')('0'..'9')+ 
-//		(('.')('0'..'9')+ 
-//			(('-')('a'..'f' | 'A'..'F' | '0'..'9')+)?
-//		)?
-//	)?
-//;
 
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
