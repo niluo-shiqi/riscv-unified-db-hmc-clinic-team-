@@ -26,13 +26,13 @@ public final class RubyRuntime {
             String idlcLib  = new File(idlcDir, "lib").getCanonicalPath();
             String gemfile  = new File(idlcDir, "Gemfile").getCanonicalPath();
             String vendorDir = new File(root, "vendor/bundle").getCanonicalPath();
-            
+
             // Capture JRuby stdout/stderr so it surfaces in the Eclipse log
             StringWriter out = new StringWriter();
             StringWriter err = new StringWriter();
             ruby.setOutput(out);
             ruby.setError(err);
-            
+
             // Build and run a single consolidated scriptlet
             String scriptlet = String.format("""
                 # Point Bundler at the Gemfile Maven copied into the package
@@ -48,7 +48,7 @@ public final class RubyRuntime {
 			    Bundler.reset!
 			    Bundler.setup(:default)
 			    Bundler.require(:default)
-            	
+
                 # Prepend idlc's own lib/ so require 'idlc' resolves correctly
                 $LOAD_PATH.unshift('%s') unless $LOAD_PATH.include?('%s')
                 require 'idlc'
@@ -66,13 +66,12 @@ public final class RubyRuntime {
                 System.err.println("[RubyRuntime] JRuby errors:\n" + err);
             }
 
-	        
     	} catch (IOException | URISyntaxException e) {
     		throw new RuntimeException("Failed to resolve gems path", e);
     	}
     }
-    
-    
+
+
     /**
      * Resolves the bundle/project root directory in both OSGi and standalone
      * environments (e.g. JUnit).
@@ -85,13 +84,13 @@ public final class RubyRuntime {
             return new File(FileLocator.toFileURL(bundle.getEntry("/")).getPath())
                     .getCanonicalFile();
         }
- 
+
         // Standalone / JUnit path
         URL classUrl = RubyRuntime.class.getProtectionDomain()
                                         .getCodeSource()
                                         .getLocation();
         File dir = new File(classUrl.toURI()).getCanonicalFile();
- 
+
         // Walk upward — handles both target/classes and arbitrary output dirs
         File candidate = dir;
         while (candidate != null) {
@@ -110,11 +109,8 @@ public final class RubyRuntime {
     public static ScriptingContainer get() {
         return ruby;
     }
-    
+
     private static String escape(String path) {
         return path.replace("\\", "\\\\").replace("'", "\\'");
     }
 }
-
-// Bundle bundle = FrameworkUtil.getBundle(RubyRuntime.class);
-// File root = new File(FileLocator.toFileURL(bundle.getEntry("/")).getPath()).getCanonicalFile();

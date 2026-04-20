@@ -9,7 +9,7 @@ public class TreetopParser {
 
     public TreetopParser() {
     	ruby.runScriptlet("$idl_parser = IdlParser.new");
-    	
+
     	// Verify it was actually created
         Object check = ruby.runScriptlet("$idl_parser");
         if (check == null) {
