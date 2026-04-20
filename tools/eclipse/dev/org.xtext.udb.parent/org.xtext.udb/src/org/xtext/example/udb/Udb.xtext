@@ -77,7 +77,7 @@ ExtModel:
  */
 Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
-Description: 'description' ':' description=STRING;
+Description: 'description' ':' description=StringBlock;
 Requirements: "requirements" ":" requirements=Condition;
 Source:'$source' ':' source=STRING;
 Number: intVal=INT | bin=Bin | hex=Hex;
@@ -543,6 +543,16 @@ terminal YEAR_MONTH:
 terminal INDENT: 'synthetic:INDENT';
 terminal DEDENT: 'synthetic:DEDENT';
 
+/*
+ *  Unquoted strings
+ */ 
+StringValue: STRING_FOLLOWS value=UNQUOTED_STRING STRING_END;
+StringBlock: STRING_FOLLOWS '|' INDENT lines+=UNQUOTED_STRING+ DEDENT; // for multi-line strings
+
+// Indicator that the following tokens are part of an unquoted string
+terminal STRING_FOLLOWS: 'synthetic:STRING_FOLLOWS';
+terminal STRING_END: 'synthetic:STRING_END';
+terminal UNQUOTED_STRING: 'synthetic:UNQUOTED_STRING';
 
 @Override
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
