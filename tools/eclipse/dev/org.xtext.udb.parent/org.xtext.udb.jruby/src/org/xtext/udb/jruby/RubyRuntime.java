@@ -78,7 +78,7 @@ public final class RubyRuntime {
      */
     private static File resolveRoot() throws IOException, URISyntaxException {
         Bundle bundle = FrameworkUtil.getBundle(RubyRuntime.class);
- 
+
         if (bundle != null) {
             // OSGi path
             return new File(FileLocator.toFileURL(bundle.getEntry("/")).getPath())
@@ -99,7 +99,7 @@ public final class RubyRuntime {
             }
             candidate = candidate.getParentFile();
         }
- 
+
         throw new IOException(
             "Could not locate project root (directory containing 'idlc/') " +
             "starting from: " + dir
