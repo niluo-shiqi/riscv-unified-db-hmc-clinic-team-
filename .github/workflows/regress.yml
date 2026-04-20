@@ -263,6 +263,21 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
+		cache: maven
+	# Build and copy the JAR
+    - name: Build language server JAR
+      working-directory: tools/eclipse/dev/org.xtext.udb.parent
+      env:
+        MAVEN_OPTS: "-Djdk.xml.maxGeneralEntitySizeLimit=0 -Djdk.xml.totalEntitySizeLimit=0 -Djdk.xml.entityExpansionLimit=0"
+      run: |
+        mvn clean verify -DskipTests
+        mvn -DskipTests package
+    
+    - name: Copy JAR to extension folder
+      run: |
+        JAR=$(find ../dev/org.xtext.udb.parent/org.xtext.udb.ide/target -name "*SNAPSHOT-ls.jar" -type f)
+        cp "$JAR" server/udb-ls-all.jar
+	        ls -lh server/udb-ls-all.jar
     - name: Install deps
       run: npm ci
     - name: Compile
