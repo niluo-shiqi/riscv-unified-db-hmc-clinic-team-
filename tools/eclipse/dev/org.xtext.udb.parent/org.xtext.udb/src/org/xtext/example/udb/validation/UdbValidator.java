@@ -52,6 +52,7 @@ import org.xtext.example.udb.udb.ExtVersionArrayElement;
 import org.xtext.example.udb.udb.InterruptCodeModel;
 import org.xtext.example.udb.udb.IntrptCodeName;
 
+import org.xtext.example.udb.udb.ExceptionCodeModel;
 
 
 /**
@@ -503,7 +504,17 @@ public class UdbValidator extends AbstractUdbValidator {
 
 	}
 
-
+	/*
+     * Exception Code Validation -- rules found in exception_code_schema.json
+     */
+	@Check
+    public void checkExceptionCodeSchema(ExceptionCodeModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("exception_code_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
 
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)
