@@ -77,7 +77,7 @@ ExtModel:
  */
 Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
-Description: 'description' ':' description=StringBlock;
+Description: 'description' ':' description=MultilineString;
 Requirements: "requirements" ":" requirements=Condition;
 Source:'$source' ':' source=STRING;
 Number: intVal=INT | bin=Bin | hex=Hex;
@@ -147,6 +147,7 @@ CsrIntType: intVal=INT;
 CsrParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 // extension that must be implemented for this CSR to exist
+// TODO: is this still needed?
 CsrRequires:'requires' ':' requires=STRING;
 
 // grammar for csr_field
@@ -160,7 +161,7 @@ CsrFields:
 CsrFieldDef:
 	name=ID ':'
 	INDENT (
-		displayName = CsrFieldDisplayName? &
+		displayName = CsrFieldDisplayName? & // CAN THIS BE ID?
 		longName = LongName? &
 		location = CsrFieldLocationType &
 		resetValue = CsrFieldResetValueType &
@@ -544,15 +545,10 @@ terminal INDENT: 'synthetic:INDENT';
 terminal DEDENT: 'synthetic:DEDENT';
 
 /*
- *  Unquoted strings
+ *  Unquoted multi-line strings
  */ 
-StringValue: STRING_FOLLOWS value=UNQUOTED_STRING STRING_END;
-StringBlock: STRING_FOLLOWS '|' INDENT lines+=UNQUOTED_STRING+ DEDENT; // for multi-line strings
-
-// Indicator that the following tokens are part of an unquoted string
-terminal STRING_FOLLOWS: 'synthetic:STRING_FOLLOWS';
-terminal STRING_END: 'synthetic:STRING_END';
-terminal UNQUOTED_STRING: 'synthetic:UNQUOTED_STRING';
+MultilineString: '|' INDENT value=MULTILINE_STRING DEDENT;
+terminal MULTILINE_STRING: 'synthetic:MULTILINE_STRING';
 
 @Override
 terminal SL_COMMENT: '#' !('\n'|'\r')*;
