@@ -115,13 +115,11 @@ gen_subcmd_usage() {
 }
 
 gen_ruby_type_def_usage() {
-  echo "Usage: chore gen ruby-type-def [-g GEM]"
+  echo "Usage: chore gen ruby-type-def"
   echo ""
   echo "Options:"
   echo ""
-  echo "  -g GEM:   Generate type signatures for GEM"
-  echo "            If not provided, generates for all gems"
-  echo "            Valid gems are: [udb, idlc, udb-gen]"
+  echo "  -h:      Print help"
   echo ""
 }
 
@@ -299,18 +297,12 @@ do_lock_all_gemfiles() {
   # Always include both x86_64 and aarch64 Linux platforms so lock files are
   # valid on both architectures.
   local platforms="--add-platform x86_64-linux --add-platform x86_64-linux-gnu --add-platform aarch64-linux --add-platform aarch64-linux-gnu"
-  # Root first — per-gem locks must be derived from this resolved graph.
-  #
-  # BUNDLE_GEMFILE must be set to match --gemfile for each call so that
-  # Bundler writes PATH remote: entries relative to the correct directory.
+  # BUNDLE_GEMFILE must be set to match --gemfile so that Bundler writes PATH
+  # remote: entries relative to the correct directory.
   # Note: `bundle lock` (not `bundle exec bundle lock`) is used deliberately —
   # `bundle exec` requires an existing lockfile to activate the bundle first,
   # which breaks when lockfiles are missing or being regenerated from scratch.
   env BUNDLE_GEMFILE="${UDB_ROOT}"/Gemfile "${UDB_ROOT}"/bin/bundle lock $platforms "$@" --gemfile "${UDB_ROOT}"/Gemfile
-  env BUNDLE_GEMFILE="${UDB_ROOT}"/tools/ruby-gems/idlc/Gemfile "${UDB_ROOT}"/bin/bundle lock $platforms "$@" --gemfile "${UDB_ROOT}"/tools/ruby-gems/idlc/Gemfile
-  env BUNDLE_GEMFILE="${UDB_ROOT}"/tools/ruby-gems/udb/Gemfile "${UDB_ROOT}"/bin/bundle lock $platforms "$@" --gemfile "${UDB_ROOT}"/tools/ruby-gems/udb/Gemfile
-  env BUNDLE_GEMFILE="${UDB_ROOT}"/tools/ruby-gems/udb-gen/Gemfile "${UDB_ROOT}"/bin/bundle lock $platforms "$@" --gemfile "${UDB_ROOT}"/tools/ruby-gems/udb-gen/Gemfile
-  env BUNDLE_GEMFILE="${UDB_ROOT}"/tools/ruby-gems/udb_helpers/Gemfile "${UDB_ROOT}"/bin/bundle lock $platforms "$@" --gemfile "${UDB_ROOT}"/tools/ruby-gems/udb_helpers/Gemfile
 }
 
 #
@@ -375,76 +367,27 @@ do_gen_xqci_golden() {
 # Returns: 0 on success, exits with 1 on error
 #
 do_install_gems() {
-  "${UDB_ROOT}"/bin/bundle exec bundle lock --gemfile "${UDB_ROOT}"/tools/ruby-gems/idlc/Gemfile
-  "${UDB_ROOT}"/bin/bundle exec bundle lock --gemfile "${UDB_ROOT}"/tools/ruby-gems/udb/Gemfile
-  "${UDB_ROOT}"/bin/bundle exec bundle lock --gemfile "${UDB_ROOT}"/tools/ruby-gems/udb-gen/Gemfile
-  "${UDB_ROOT}"/bin/bundle exec bundle lock --gemfile "${UDB_ROOT}"/tools/ruby-gems/udb_helpers/Gemfile
-  "${UDB_ROOT}"/bin/bundle exec bundle lock --gemfile "${UDB_ROOT}"/Gemfile
-
   do_lock_all_gemfiles
 
   "${UDB_ROOT}"/bin/bundle install
-  do_ruby_type_def idlc
-  do_ruby_type_def udb
-  do_ruby_type_def udb-gen
+  do_ruby_type_def
 }
 
 #
 # Generate Ruby type definitions (Sorbet RBI files)
-# Args: $1 - gem name ("all", "udb", "idlc", or "udb-gen")
 # Returns: 0 on success, exits with 1 on error
 #
 do_ruby_type_def() {
-  gem=$1
+  cd "${UDB_ROOT}" || exit 1
+  "${UDB_ROOT}"/bin/bundle exec --gemfile "${UDB_ROOT}"/Gemfile tapioca gems --all
+  "${UDB_ROOT}"/bin/bundle exec --gemfile "${UDB_ROOT}"/Gemfile tapioca dsl
 
-  gems=()
-  case "$gem" in
-    all )
-      gems=("udb" "idlc" "udb-gen")
-      ;;
-    udb )
-      gems=("udb")
-      ;;
-    idlc )
-      gems=("idlc")
-      ;;
-    udb-gen )
-      gems=("udb-gen")
-      ;;
-    * )
-      echo "Invalid gem '$gem'" >&2
-      echo "Options are: [all, udb, idlc, udb-gen]" >&2
-      exit 1 # Exit with error
-      ;;
-  esac
-  # Background jobs are not a TTY; strip -it from RUN to avoid docker complaints.
-  local RUN_NO_TTY="${RUN//-it /}"
-
-  # Run tapioca gems+dsl for each gem in parallel (writes are per-gem).
-  local pids=()
-  for gem in "${gems[@]}"; do
-    gem_gemfile="${UDB_ROOT}/tools/ruby-gems/${gem}/Gemfile"
-    steps=$(cat << STEPS
-      cd ${UDB_ROOT}/tools/ruby-gems/${gem} && \
-      BUNDLE_GEMFILE=${gem_gemfile} "${UDB_ROOT}"/bin/bundle exec tapioca gems --all && \
-      BUNDLE_GEMFILE=${gem_gemfile} "${UDB_ROOT}"/bin/bundle exec tapioca dsl
-STEPS
-    )
-    /bin/bash -c "$steps" &
-    pids+=($!)
-  done
-
-  local rc=0
-  for pid in "${pids[@]}"; do
-    wait "$pid" || rc=$?
-  done
-  [ $rc -ne 0 ] && exit $rc
-
-  # Run tapioca annotations sequentially to avoid races on the shared gem cache.
-  for gem in "${gems[@]}"; do
-    gem_gemfile="${UDB_ROOT}/tools/ruby-gems/${gem}/Gemfile"
-    /bin/bash -c "cd ${UDB_ROOT}/tools/ruby-gems/${gem} && BUNDLE_GEMFILE=${gem_gemfile} ${UDB_ROOT}/bin/bundle exec tapioca annotations" || exit $?
-  done
+  # tapioca annotations requires the ext/rbi-central submodule to be initialized.
+  if [ ! -f "${UDB_ROOT}/ext/rbi-central/index.json" ]; then
+    echo "Initializing ext/rbi-central submodule..."
+    git -C "${UDB_ROOT}" submodule update --init ext/rbi-central
+  fi
+  "${UDB_ROOT}"/bin/bundle exec --gemfile "${UDB_ROOT}"/Gemfile tapioca annotations
 }
 
 #
@@ -617,18 +560,13 @@ case "$subcommand" in
         exit 0
         ;;
       ruby-type-def )
-        gem=all
-        while getopts ":hg:" opt; do # Go through the options
+        while getopts ":h" opt; do # Go through the options
           case $opt in
             # help
             h )
               gen_ruby_type_def_usage
               exit 0 # Exit correctly
             ;;
-            g )
-              gem=$OPTARG
-              shift
-              ;;
             # Invalid option
             ? )
                 echo "[ERROR]: Invalid option: -${OPTARG}"
@@ -643,7 +581,7 @@ case "$subcommand" in
             gen_ruby_type_def_usage
             exit 1
         fi
-        do_ruby_type_def "$gem"
+        do_ruby_type_def
         exit 0
         ;;
       * )
