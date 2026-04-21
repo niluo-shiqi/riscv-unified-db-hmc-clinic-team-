@@ -5,7 +5,7 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	CsrModel | InstModel | ExtModel
+	CsrModel | InstModel | ExtModel | InterruptCodeModel | ExceptionCodeModel
 ;
 
 
@@ -70,7 +70,26 @@ ExtModel:
 	certNormativeRules = CertNormativeRules?
 ;
 
+InterruptCodeModel:
+	schema = Schema
+	intrptCodeKind = IntrptCodeKind
+	intrptCodeName = IntrptCodeName &
+	displayName = DisplayName &
+	intrptNum = IntrptCodeNum &
+	definedBy = IntrptCodeDefinedBy &
+	source = Source?
+;
 
+ExceptionCodeModel:
+	schema = Schema
+	ecKind = ECKind
+	ecName = ECName &
+	displayName = DisplayName &
+	num = Num &
+	definedBy = ECDefinedBy &
+	source = Source?
+	
+;
 
 /*
  * Common stuff
@@ -80,6 +99,7 @@ LongName: 'long_name' ":" longName=STRING;
 Description: 'description' ':' description=DescriptionType;
 DescriptionType: (value=STRING) | MultilineString;
 Requirements: "requirements" ":" requirements=Condition;
+DisplayName:'display_name' ':' displayName=STRING;
 Source:'$source' ':' source=STRING;
 Number: intVal=INT | bin=Bin | hex=Hex;
 Range: upper=INT '-' lower=INT;
@@ -459,7 +479,24 @@ ExtVersionContributorName:
 	"name" ":" name=STRING
 ;
 
+/* 
+ * Interrupt Code stuff (see interrupt_code_schema.json) 
+ */
 
+IntrptCodeKind:'kind' ':' kind="interrupt_code";
+IntrptCodeName:'name' ':' name=ID;
+
+IntrptCodeNum:'num' ':' num=INT; //Interrupt number, as reported in the `*cause` CSRs (not including the leading INT bit)
+IntrptCodeDefinedBy:'definedBy' ':' definedBy=Condition;
+
+/* 
+ * Exception Code stuff (see exception_code_schema.json) 
+ */
+
+ECKind: 'kind' ':' kind="exception_code";
+ECName: 'name' ':' name=ID;
+Num: 'num' ':' num=INT;
+ECDefinedBy: 'definedBy' ':' definedBy=Condition;
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
