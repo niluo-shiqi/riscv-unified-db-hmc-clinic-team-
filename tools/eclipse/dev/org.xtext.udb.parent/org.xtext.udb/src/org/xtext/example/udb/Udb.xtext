@@ -77,7 +77,8 @@ ExtModel:
  */
 Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
-Description: 'description' ':' description=STRING;
+Description: 'description' ':' description=DescriptionType;
+DescriptionType: (value=STRING) | MultilineString;
 Requirements: "requirements" ":" requirements=Condition;
 Source:'$source' ':' source=STRING;
 Number: intVal=INT | bin=Bin | hex=Hex;
@@ -112,7 +113,7 @@ DocLinks:
 	DEDENT
 ;
 DocLinksArrayElement:
-	'-' link = STRING	// TODO: this must follow the URI format
+	'-' link = STRING
 ;
 
 // see "license" in schema_defs.json
@@ -132,7 +133,7 @@ DocLicense:
  * CSR stuff (see csr_schema.json)
  */
 CsrKind: 'kind' ':' kind="csr";
-CsrName: 'name' ':' name=ID;
+CsrName: 'name' ':' name=STRING;
 CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
 CsrDefinedBy: 'definedBy' ':' extensionName=Condition;
@@ -234,7 +235,7 @@ CsrAffectedByList:
  * Instruction stuff (see inst_schema.json)
  */
 InstKind: 'kind' ':' kind="instruction";
-InstName: 'name' ':' name=ID;
+InstName: 'name' ':' name=STRING;
 InstDefinedBy: 'definedBy' ':' dbname=Condition;
 InstAccess:
 	'access' ':'
@@ -332,7 +333,7 @@ InstEncodingVariables:
 
 
 InstEncodingSevenKeyVar:
-  '-' 'name' ':' name=ID
+  '-' 'name' ':' name=STRING
   INDENT
     (
       'location' ':' location=Range &
@@ -352,7 +353,7 @@ InstNotRule:
 
 
 InstEncodingTwoKeyVar:
-	'-' 'name' ':' name=ID
+	'-' 'name' ':' name=STRING
 	INDENT(
 		'$inherits' ':' inherits=STRING // must match ^common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+
 	)DEDENT
@@ -372,7 +373,7 @@ InstRvPairEncoding:
  * Extension stuff (see ext_schema.json)
  */
 ExtKind: 'kind' ':' kind="extension";
-ExtName: 'name' ':' name=ID;
+ExtName: 'name' ':' name=STRING;
 ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
 ExtRviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
 ExtCompany:
@@ -455,7 +456,7 @@ ExtVersionContributorsArrayElement:
 	) DEDENT)?
 ;
 ExtVersionContributorName:
-	"name" ":" firstName = ID lastName = ID?
+	"name" ":" name=STRING
 ;
 
 
@@ -511,6 +512,8 @@ Boolean returns ecore::EBoolean: "true" | "false";
 Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
+
+MultilineString: '|' value=STRING;
 
 
 /*
