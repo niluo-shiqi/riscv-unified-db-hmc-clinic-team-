@@ -49,6 +49,10 @@ import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 
+import org.xtext.example.udb.udb.InterruptCodeModel;
+import org.xtext.example.udb.udb.IntrptCodeName;
+
+
 
 /**
  * This class contains custom validation rules.
@@ -72,6 +76,7 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
+    String legalIDLName="^[a-zA-Z_][a-zA-Z0-9_]*$";
 
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
@@ -473,6 +478,29 @@ public class UdbValidator extends AbstractUdbValidator {
 						UdbPackage.Literals.EXT_VERSION_ARRAY_ELEMENT__VERSION_STATE);
 			}
 		}
+	}
+	
+	/*
+	 * Interrupt Code Validation -- rules found in interrupt_code_schema.json
+	 */
+	@Check
+    public void checkInterruptSchema(InterruptCodeModel intrptModel) {
+		String schema = intrptModel.getSchema().getSchema();
+		if (!schema.equals("interrupt_code_schema.json#")) {
+			error("Schema incompatible with kind", intrptModel.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
+	
+	@Check
+	public void checkInterruptName(IntrptCodeName intrptName) {
+		// Check that interrupt code name is legal IDL variable name
+		String value = intrptName.getName();
+	    if (!value.matches(legalIDLName)) {
+	        error("Invalid interrupt code name, must be legal IDL variable name", 
+	              UdbPackage.Literals.INTRPT_CODE_NAME__NAME);
+	    }
+
 	}
 
 
