@@ -277,12 +277,16 @@ jobs:
           mvn clean verify -DskipTests
           mvn -DskipTests package
       - name: Copy JAR to extension folder
-        run: >
-          JAR=$(find ../dev/org.xtext.udb.parent/org.xtext.udb.ide/target -name
-          "*SNAPSHOT-ls.jar" -type f)
-
+        run: |
+          mkdir -p server
+          JAR=$(find ../dev/org.xtext.udb.parent/org.xtext.udb.ide/target -name "*SNAPSHOT-ls.jar" -type f)
+          if [ -z "$JAR" ]; then
+            echo "ERROR: JAR not found!"
+            find ../dev/org.xtext.udb.parent -name "*.jar" -type f
+          exit 1
+          fi
+          echo "Found JAR: $JAR"
           cp "$JAR" server/udb-ls-all.jar
-
           ls -lh server/udb-ls-all.jar
       - name: Install deps
         run: npm ci
