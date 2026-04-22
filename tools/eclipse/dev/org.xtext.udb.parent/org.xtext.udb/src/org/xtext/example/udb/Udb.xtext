@@ -484,7 +484,7 @@ ExtVersionContributorName:
  */
 
 IntrptCodeKind:'kind' ':' kind="interrupt_code";
-IntrptCodeName:'name' ':' name=ID;
+IntrptCodeName:'name' ':' name=STRING;
 
 IntrptCodeNum:'num' ':' num=INT; //Interrupt number, as reported in the `*cause` CSRs (not including the leading INT bit)
 IntrptCodeDefinedBy:'definedBy' ':' definedBy=Condition;
@@ -494,7 +494,7 @@ IntrptCodeDefinedBy:'definedBy' ':' definedBy=Condition;
  */
 
 ECKind: 'kind' ':' kind="exception_code";
-ECName: 'name' ':' name=ID;
+ECName: 'name' ':' name=STRING;
 Num: 'num' ':' num=INT;
 ECDefinedBy: 'definedBy' ':' definedBy=Condition;
 
