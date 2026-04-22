@@ -25,7 +25,7 @@ class UdbParsingTest {
 		val result = parseHelper.parse('''
 			$schema: "csr_schema.json#"
 			kind: csr
-			name: vcsr
+			name: "vcsr"
 			long_name: "Vector Control and Status Register"
 			address: 0x00F
 			writable: true
@@ -77,7 +77,7 @@ class UdbParsingTest {
 		Assertions.assertEquals("U", priv);
 		var len = csr.getLength().getLength().getParmType().getParmName();
 		Assertions.assertEquals("MXLEN", len as String);
-		var desc = csr.getDescription().getDescription();
+		var desc = csr.getDescription().getDescription().getValue();
 		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc);
 		var def = csr.getDefinedBy().getExtensionName().getCond();
 		Assertions.assertEquals("V", def);
@@ -108,8 +108,8 @@ class UdbParsingTest {
 		Assertions.assertNotNull(satsw)
 
 		// testing description of fields
-		var rmdesc = vxrm.getDescription().getDescription();
-		var satdesc = vxsat.getDescription().getDescription();
+		var rmdesc = vxrm.getDescription().getDescription().getValue();
+		var satdesc = vxsat.getDescription().getDescription().getValue();
 		Assertions.assertEquals("See vxrm.", rmdesc);
 		Assertions.assertEquals("See vxsat.", satdesc);
 
@@ -133,14 +133,14 @@ class UdbParsingTest {
 		val result = parseHelper.parse('''
 		$schema: "ext_schema.json#"
 		kind: extension
-		name: V
+		name: "V"
 		type: unprivileged
 		long_name: "Vector Operations"
 		versions:
 		  - version: "1.0.0"
 		    state: ratified
 		    ratification_date: 2021-11
-		description: "|
+		description: | "
 		  General support for data-parallel execution."
 		requirements: '
 		  extension:
@@ -164,8 +164,8 @@ class UdbParsingTest {
 		Assertions.assertEquals("unprivileged", type);
 		var longname = ext.getLongName().getLongName();
 		Assertions.assertEquals("Vector Operations", longname);
-		var description = ext.getDescription().getDescription();
-		Assertions.assertEquals("|\n  General support for data-parallel execution.", description);
+		var description = ext.getDescription().getDescription().getValue();
+		Assertions.assertEquals("\n  General support for data-parallel execution.", description);
 
 		// version testing
 		var version = ext.getExtVersions().getElements().get(0);
