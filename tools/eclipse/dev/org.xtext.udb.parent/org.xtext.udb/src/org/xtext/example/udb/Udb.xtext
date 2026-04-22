@@ -88,7 +88,6 @@ ExceptionCodeModel:
 	num = Num &
 	definedBy = ECDefinedBy &
 	source = Source?
-	
 ;
 
 /*
@@ -479,8 +478,8 @@ ExtVersionContributorName:
 	"name" ":" name=STRING
 ;
 
-/* 
- * Interrupt Code stuff (see interrupt_code_schema.json) 
+/*
+ * Interrupt Code stuff (see interrupt_code_schema.json)
  */
 
 IntrptCodeKind:'kind' ':' kind="interrupt_code";
@@ -489,8 +488,8 @@ IntrptCodeName:'name' ':' name=STRING;
 IntrptCodeNum:'num' ':' num=INT; //Interrupt number, as reported in the `*cause` CSRs (not including the leading INT bit)
 IntrptCodeDefinedBy:'definedBy' ':' definedBy=Condition;
 
-/* 
- * Exception Code stuff (see exception_code_schema.json) 
+/*
+ * Exception Code stuff (see exception_code_schema.json)
  */
 
 ECKind: 'kind' ':' kind="exception_code";

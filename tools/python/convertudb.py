@@ -7,7 +7,7 @@ import re
 # String fields that should always have quotes around them
 QUOTED_FIELDS = [
     "$schema",
-    "version"
+    "version",
 ]
 
 # String fields that don't have quotes around them in YAML
@@ -16,12 +16,12 @@ STRING_FIELDS = [
     "name",
     "long_name",
     "description",
-    "$source", # TODO: check if this already has quotes
+    "$source",  # TODO: check if this already has quotes
     "id",
     "url",
     "text_url",
     "email",
-    "introduction", # TODO: check
+    "introduction",  # TODO: check
 
     # CSR fields
     "alias",
@@ -31,7 +31,7 @@ STRING_FIELDS = [
     "operation_ast",
     "access_detail",
     "match",
-    "$child_of" # TODO: check
+    "$child_of",  # TODO: check
 
     # Extension fields
     "rvi_jira_issue",
@@ -44,7 +44,7 @@ STRING_FIELDS = [
     "sw_write(csr_value)",
     "legal?(csr_value)",
     "type()",
-    "operation()"
+    "operation()",
 ]
 
 # Fields that are arrays of strings
@@ -57,14 +57,14 @@ ARRAY_STRING_FIELDS = [
     "hints",
     
     # Extension fields
-    "changes"
+    "changes",
 ]
 
 
 def convert_udb_to_yaml(udb_file):
     """Conversion from YAML to UDB involves removing quotes around string values"""
 
-    with open(udb_file, 'r') as file:
+    with open(udb_file, "r") as file:
         lines = file.readlines()
 
     output_lines = []
@@ -105,14 +105,14 @@ def convert_udb_to_yaml(udb_file):
                 output_lines.append(line)
 
     output_file = udb_file.rsplit(".", 1)[0] + ".yaml"
-    with open(output_file, 'w') as file:
+    with open(output_file, "w") as file:
         file.writelines(output_lines)
 
 
 def convert_yaml_to_udb(yaml_file):
     """Conversion from YAML to UDB involves adding quotes around string values"""
 
-    with open(yaml_file, 'r') as file:
+    with open(yaml_file, "r") as file:
         lines = file.readlines()
 
     output_lines = []
@@ -208,7 +208,7 @@ def convert_yaml_to_udb(yaml_file):
 
 
     output_file = yaml_file.rsplit(".", 1)[0] + ".udb"
-    with open(output_file, 'w') as file:
+    with open(output_file, "w") as file:
         file.writelines(output_lines)
 
 

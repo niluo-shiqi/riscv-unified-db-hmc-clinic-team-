@@ -480,7 +480,7 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 	}
-	
+
 	/*
 	 * Interrupt Code Validation -- rules found in interrupt_code_schema.json
 	 */
@@ -488,17 +488,17 @@ public class UdbValidator extends AbstractUdbValidator {
     public void checkInterruptSchema(InterruptCodeModel intrptModel) {
 		String schema = intrptModel.getSchema().getSchema();
 		if (!schema.equals("interrupt_code_schema.json#")) {
-			error("Schema incompatible with kind", intrptModel.getSchema(), 
+			error("Schema incompatible with kind", intrptModel.getSchema(),
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
-	
+
 	@Check
 	public void checkInterruptName(IntrptCodeName intrptName) {
 		// Check that interrupt code name is legal IDL variable name
 		String value = intrptName.getName();
 	    if (!value.matches(legalIDLName)) {
-	        error("Invalid interrupt code name, must be legal IDL variable name", 
+	        error("Invalid interrupt code name, must be legal IDL variable name",
 	              UdbPackage.Literals.INTRPT_CODE_NAME__NAME);
 	    }
 
@@ -511,7 +511,7 @@ public class UdbValidator extends AbstractUdbValidator {
     public void checkExceptionCodeSchema(ExceptionCodeModel model) {
 		String schema = model.getSchema().getSchema();
 		if (!schema.equals("exception_code_schema.json#")) {
-			error("Schema incompatible with kind", model.getSchema(), 
+			error("Schema incompatible with kind", model.getSchema(),
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
@@ -526,7 +526,6 @@ public class UdbValidator extends AbstractUdbValidator {
 		if (!urlString.matches(urlRegex)) {
 			error("URL not in URI format", UdbPackage.Literals.URL__URL);
 		}
-
 	}
 
 	public void checkEmailFormat(Email email) {
