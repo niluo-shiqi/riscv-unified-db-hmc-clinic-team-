@@ -573,12 +573,9 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
-<<<<<<< HEAD
 StringArray: '[' item+=STRING (',' item+=STRING) + ']';
-=======
-MultilineString: '|' value=STRING;
 
->>>>>>> refs/remotes/origin/main
+MultilineString: '|' value=STRING;
 
 /*
  * Hex & Binary
