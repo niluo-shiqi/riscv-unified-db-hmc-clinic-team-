@@ -12,6 +12,7 @@ import org.xtext.example.udb.treetop.ValidationError;
 
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
+import org.xtext.example.udb.udb.StringArray;
 
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
@@ -44,6 +45,10 @@ import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
 import org.xtext.example.udb.udb.InstOperation;
+
+import org.xtext.example.udb.udb.InstOpcodeModel;
+import org.xtext.example.udb.udb.InstOpcodeData;
+
 
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
@@ -78,10 +83,13 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
     String legalIDLName="^[a-zA-Z_][a-zA-Z0-9_]*$";
+    
 
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
+    String refUrlRegex = "^.*/.*\\.yaml#.*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+    
 
 
 
@@ -515,7 +523,42 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
-
+	/*
+	 * Inst Opcode Validation -- rules found in inst_opcode_schema.json
+	 */
+	@Check
+    public void checkInstOpcodeSchema(InstOpcodeModel instop) {
+		String schema = instop.getSchema().getSchema();
+		if (!schema.equals("inst_opcode_schema.json#")) {
+			error("Schema incompatible with kind", instop.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
+	
+	
+	// parent_of can be list of strings or singular string, must follow ^.*/.*\\.yaml#.*$
+	@Check
+	public void checkInstOpcodeParentOf(InstOpcodeData instopData) {
+	    StringArray parentOfArray = instopData.getParentOf();
+	    String parentOfString = instopData.getParentOfString();
+	    
+	    // Check single string case
+	    if (parentOfString != null && !parentOfString.matches(refUrlRegex)) {
+	        error("Invalid ref url. Expected a .yaml file path with an anchor, like schemas/my-file.yaml#SectionName", 
+	              instopData, UdbPackage.Literals.INST_OPCODE_DATA__PARENT_OF_STRING);
+	    }
+	    
+	    // Check array case
+	    if (parentOfArray != null) {
+	        for (String item : parentOfArray.getItem()) {
+	            if (!item.matches(refUrlRegex)) {
+	                error("Invalid ref url. Expected a .yaml file path with an anchor, like schemas/my-file.yaml#SectionName",
+	                      instopData, UdbPackage.Literals.INST_OPCODE_DATA__PARENT_OF);
+	            }
+	        }
+	    }
+	}
+	
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)
 	 */

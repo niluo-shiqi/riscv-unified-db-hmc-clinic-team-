@@ -5,7 +5,7 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	CsrModel | InstModel | ExtModel | InterruptCodeModel | ExceptionCodeModel
+	CsrModel | InstModel | ExtModel | InterruptCodeModel | ExceptionCodeModel | InstOpcodeModel
 ;
 
 
@@ -71,7 +71,7 @@ ExtModel:
 ;
 
 InterruptCodeModel:
-	schema = Schema
+	schema = Schema // must be "interript_code_schema.json#"
 	intrptCodeKind = IntrptCodeKind
 	intrptCodeName = IntrptCodeName &
 	displayName = DisplayName &
@@ -81,13 +81,19 @@ InterruptCodeModel:
 ;
 
 ExceptionCodeModel:
-	schema = Schema
+	schema = Schema // must be "exception_code_schema.json#"
 	ecKind = ECKind
 	ecName = ECName &
 	displayName = DisplayName &
 	num = Num &
 	definedBy = ECDefinedBy &
 	source = Source?
+;
+InstOpcodeModel:
+	schema = Schema // must be "inst_opcode_schema.json#"
+	instOpcodeKind = InstOpcodeKind &
+	instOpcodeName = InstOpcodeName? &
+	instOpcodedata = InstOpcodeData
 ;
 
 /*
@@ -231,7 +237,7 @@ CsrAliasArrayElement:
 	"-" alias = CsrFieldAliasName
 ;
 
-// TODO: cross-referencing
+
 CsrFieldAffectedBy:
     "affectedBy" ":" value=CsrAffectedByValue
 ;
@@ -270,6 +276,7 @@ InstAccessType:
 	accessLevel=('always'|'sometimes'|'never')
 ;
 InstAssembly: 'assembly' ':' assembly=STRING;
+
 /* Optional fields for the INST schema */
 InstOperationAst: 'operation_ast' ':' operationAst=STRING;
 InstHints:
@@ -292,7 +299,7 @@ InstFormat: 'format' ':'
 ;
 InstInheritType:
 	INDENT
-		('-' reference += STRING)+ //regex must fit yaml path
+		('-' reference += STRING)+ 
 	DEDENT
 ;
 
@@ -306,7 +313,7 @@ InstOpcodeEntry:
 	| InstOpcodeInherits
 ;
 
-InstOpcodeField: // ex. funct7
+InstOpcodeField: 
 	name=ID ':'
 	INDENT
 		(opcodeProperties += InstOpcodeProps)+
@@ -320,7 +327,7 @@ InstOpcodeProps:
 ;
 
 InstOpcodeInherits:
-	'opcode' ':' '{' '$inherits' ':' inheritsAddress=STRING '}'// must fit regex 'inst_opcode/' INST_OPCODE_FILE '.yaml#/data'
+	'opcode' ':' '{' '$inherits' ':' inheritsAddress=STRING '}'
 ;
 
 
@@ -356,8 +363,8 @@ InstEncodingSevenKeyVar:
   INDENT
     (
       'location' ':' location=Range &
-      ('$child_of' ':' childOf=STRING)? & //^common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+, Cookie crumb of the reference to variable metadata
-      ('sign_extend' ':' signExtend=Boolean)? & //default is false
+      ('$child_of' ':' childOf=STRING)? & 
+      ('sign_extend' ':' signExtend=Boolean)? & 
       ('left_shift' ':' leftShift=INT)? &
       ('alias' ':' alias=STRING)? &
       ('not' ':' not=InstNotRule)?
@@ -374,7 +381,7 @@ InstNotRule:
 InstEncodingTwoKeyVar:
 	'-' 'name' ':' name=STRING
 	INDENT(
-		'$inherits' ':' inherits=STRING // must match ^common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+
+		'$inherits' ':' inherits=STRING 
 	)DEDENT
 ;
 
@@ -412,7 +419,7 @@ ExtVersions:
 ;
 
 ExtVersionArrayElement:
-	'-' "version" ":" version=STRING // TODO: this has to be first, is that okay?
+	'-' "version" ":" version=STRING 
 	INDENT (
 		versionState = ExtVersionState &
 		repositories = ExtVersionRepositories? &
@@ -436,7 +443,7 @@ ExtVersionRepositories:
 		repositories += ExtVersionRepoArrayElement+
 	DEDENT
 ;
-ExtVersionRepoArrayElement: // TODO: this is ordered, that okay?
+ExtVersionRepoArrayElement: 
 	'-' url=Url
 	(INDENT
 		"branch" ":" branch=STRING
@@ -468,9 +475,9 @@ ExtVersionContributors:
 	DEDENT
 ;
 ExtVersionContributorsArrayElement:
-	'-' name=ExtVersionContributorName // TODO: is it okay that name must be the first element?
+	'-' name=ExtVersionContributorName 
 	(INDENT (
-		("company" ":" company=STRING)? & // company contributor worked for or 'Individual'
+		("company" ":" company=STRING)? & 
 		email=Email?
 	) DEDENT)?
 ;
@@ -485,7 +492,7 @@ ExtVersionContributorName:
 IntrptCodeKind:'kind' ':' kind="interrupt_code";
 IntrptCodeName:'name' ':' name=STRING;
 
-IntrptCodeNum:'num' ':' num=INT; //Interrupt number, as reported in the `*cause` CSRs (not including the leading INT bit)
+IntrptCodeNum:'num' ':' num=INT; 
 IntrptCodeDefinedBy:'definedBy' ':' definedBy=Condition;
 
 /*
@@ -496,6 +503,23 @@ ECKind: 'kind' ':' kind="exception_code";
 ECName: 'name' ':' name=STRING;
 Num: 'num' ':' num=INT;
 ECDefinedBy: 'definedBy' ':' definedBy=Condition;
+
+
+
+/* 
+ * Inst Opcode Code stuff (see inst_opcode_code_schema.json) 
+ */
+InstOpcodeKind: 'kind' ':' kind="instruction_opcode";
+InstOpcodeName: 'name' ':' name=STRING;
+InstOpcodeData: 'data' ':'
+	INDENT(
+		('display_name' ':' displayName=STRING) &
+		('value' ':' (value=Bin | value=Hex | valueInt=INT)) &
+		('location' ':' (location=Range | locationInt=INT))? &
+		('parent_of' ':' (parentOf=StringArray | parentOfString=STRING))?
+		)DEDENT
+;
+
 
 /* Conditions */
 Condition: cond=STRING; // placeholder
@@ -549,8 +573,12 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
+<<<<<<< HEAD
+StringArray: '[' item+=STRING (',' item+=STRING) + ']';
+=======
 MultilineString: '|' value=STRING;
 
+>>>>>>> refs/remotes/origin/main
 
 /*
  * Hex & Binary
