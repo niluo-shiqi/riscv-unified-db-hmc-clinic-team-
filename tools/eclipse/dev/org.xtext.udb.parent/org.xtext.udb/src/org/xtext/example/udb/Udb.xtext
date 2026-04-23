@@ -275,9 +275,11 @@ CsrAffectedByValue:
 
 CsrAffectedBySingle:
     ref=[ExtModel|STRING]
+    ref=[ExtModel|STRING]
 ;
 
 CsrAffectedByList:
+    "[" refs+=[ExtModel|STRING] ("," refs+=[ExtModel|STRING])* "]"
     "[" refs+=[ExtModel|STRING] ("," refs+=[ExtModel|STRING])* "]"
 ;
 
@@ -587,6 +589,7 @@ enum RegisterFileEnum:
 Condition: placeholder=STRING;
 /*
  * Conditions
+ * TODO: currently breaks syntax errors
  */
 //Condition: YAMLCondition | IDLCondition | ConditionArray;
 //
@@ -805,9 +808,11 @@ Array: '[' names+=ID (',' names+=ID)+ ']';
 
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
+
 StringArray: '[' item+=STRING (',' item+=STRING) + ']';
 
 MultilineString: '|' value=STRING;
+
 
 
 /*

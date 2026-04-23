@@ -25,6 +25,10 @@ import org.xtext.example.udb.udb.CsrAffectedByList;
 import org.xtext.example.udb.udb.CsrAffectedBySingle;
 import org.xtext.example.udb.udb.CsrAffectedByValue;
 import org.xtext.example.udb.udb.CsrFieldAffectedBy;
+import org.xtext.example.udb.udb.CsrAffectedByList;
+import org.xtext.example.udb.udb.CsrAffectedBySingle;
+import org.xtext.example.udb.udb.CsrAffectedByValue;
+import org.xtext.example.udb.udb.CsrFieldAffectedBy;
 import org.xtext.example.udb.udb.CsrVirtualAddress;
 import org.xtext.example.udb.udb.CsrIndirectAddress;
 import org.xtext.example.udb.udb.CsrIndirectSlot;
@@ -102,12 +106,16 @@ public class UdbValidator extends AbstractUdbValidator {
     String refUrlRegex = "^.*/.*\\.yaml#.*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     
+    
+    
 
 
 
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
+    
+    // Ensure CSR schema matches csr_schema.json#
     @Check
     public void checkCsrSchema(CsrModel csr) {
 		String schema = csr.getSchema().getSchema();
@@ -116,7 +124,8 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getSchema_Schema());
 		}
     }
-
+    
+    // Validate CSR name matches required pattern
 	@Check
 	public void checkCsrName(CsrName name) {
 	    String value = name.getName();
@@ -197,7 +206,7 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 
 	}
-
+	
 	@Check
 	public void checkLengthValue(CsrLength length) {
 		CsrIntType lengthInt = length.getLength().getIntType();
@@ -218,7 +227,6 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 
-
 	@Check
 	public void checkCsrFieldName(CsrFieldDef field) {
 		String value = field.getName();
@@ -227,7 +235,8 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getCsrFieldDef_Name());
 		}
 	}
-
+	
+	// Validate CSR field alias matches CSR_FIELD or CSR_FIELD_BITS format
 	@Check
 	public void checkCsrFieldAlias(CsrFieldAliasName alias) {
 		String value = alias.getName();
@@ -294,7 +303,8 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getSchema_Schema());
 		}
 	}
-
+	
+	// Validate instruction name matches required pattern
 	@Check
 	public void checkInstName(InstName name) {
 	    String value = name.getName();
@@ -302,9 +312,6 @@ public class UdbValidator extends AbstractUdbValidator {
 	        error("Invalid inst name", name, UdbPackage.eINSTANCE.getInstName_Name());
 	    }
 	}
-
-
-
 
 	// Check access detail field is present when at least one mode 
 	// within access field is sometimes
@@ -428,8 +435,6 @@ public class UdbValidator extends AbstractUdbValidator {
 			InstEncodingMatch Rv64Match = rvEncoding.getRv64().getMatch();
 			String Rv32Pattern = Rv32Match.getPattern();
 			String Rv64Pattern = Rv64Match.getPattern();
-			//error(Rv32match + " this is rv32 match", UdbPackage.Literals.INST_MODEL__ENCODING);
-			//error(Rv64match + " this is rv64 match", UdbPackage.Literals.INST_MODEL__ENCODING);
 
 			// if match doesn't match any of these
 			if (!(Rv32Pattern.matches(ENC_48)) && !(Rv32Pattern.matches(ENC_16)) && !(Rv32Pattern.matches(ENC_32))) {
@@ -490,6 +495,8 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 * Extension Validation -- rules found in ext_schema.json
 	 */
+	
+	// Ensure extension schema matches ext_schema.json#
     @Check
     public void checkExtSchema(ExtModel ext) {
 		String schema = ext.getSchema().getSchema();
@@ -498,7 +505,8 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getSchema_Schema());
 		}
     }
-
+    
+    // Validate extension name matches required pattern
 	@Check
 	public void checkExtName(ExtName name) {
 	    String value = name.getName();
@@ -508,6 +516,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	    }
 	}
 
+	// Validate extension version format and ratification date requirements
 	@Check
 	public void checkExtVersionArrayElement(ExtVersionArrayElement elem) {
 		// Validate elements in the versions array
@@ -546,7 +555,6 @@ public class UdbValidator extends AbstractUdbValidator {
 	// Validate interrupt code name is a legal IDL variable name
 	@Check
 	public void checkInterruptName(IntrptCodeName intrptName) {
-		// Check that interrupt code name is legal IDL variable name
 		String value = intrptName.getName();
 	    if (!value.matches(legalIDLName)) {
 	        error("Invalid interrupt code name, must be legal IDL variable name",
@@ -654,6 +662,33 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)
 	 */
+	
+	// Check that URLs follow the URI format
+	@Check
+	public void checkRegisterReferenceFields(InstVarTypeModel model) {
+		if (model.getInstVarTypeType() == null) return;
+
+	    boolean isRegisterReference = 
+	        model.getInstVarTypeType().getType() == VarTypeEnum.REGISTER_REFERENCE;
+
+	    if (isRegisterReference) {
+	        // Fields REQUIRED for register_reference
+	        if (model.getRegisterFile() == null)
+	            error("register_file is required for register_reference type",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
+	        if (model.getAccess() == null)
+	            error("access is required for register_reference type",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
+	    } else {
+	        // Fields NOT ALLOWED when type is not register_reference
+	        if (model.getRegisterFile() != null)
+	            error("register_file is only valid when type is 'register_reference'",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
+	        if (model.getAccess() != null)
+	            error("access is only valid when type is 'register_reference'",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
+	    }
+	}
 	
 	// Check that URLs follow the URI format
 	@Check
