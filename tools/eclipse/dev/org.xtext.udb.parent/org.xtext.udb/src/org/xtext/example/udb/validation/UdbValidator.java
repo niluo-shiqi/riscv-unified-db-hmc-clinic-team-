@@ -59,6 +59,8 @@ import org.xtext.example.udb.udb.IntrptCodeName;
 
 import org.xtext.example.udb.udb.ExceptionCodeModel;
 
+import org.xtext.example.udb.udb.InstVarTypeModel;
+import org.xtext.example.udb.udb.VarTypeEnum;
 
 /**
  * This class contains custom validation rules.
@@ -90,11 +92,17 @@ public class UdbValidator extends AbstractUdbValidator {
     String refUrlRegex = "^.*/.*\\.yaml#.*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     
+    
+    
 
 
 
     /*
      * CSR Validation -- rules found in csr_schema.json
+     */
+    
+    /*
+     * Ensure CSR schema matches csr_schema.json#
      */
     @Check
     public void checkCsrSchema(CsrModel csr) {
@@ -104,7 +112,10 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
-
+    
+    /*
+     * Validate CSR name matches required pattern
+     */
 	@Check
 	public void checkCsrName(CsrName name) {
 	    String value = name.getName();
@@ -113,7 +124,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	              UdbPackage.Literals.CSR_NAME__NAME);
 	    }
 	}
-
+	
+	/*
+	 * Validate CSR address is between 0 and 12 bits
+	 */
 	@Check
 	public void checkCsrAddressVal(CsrAddress address) {
 		// Address must be between 0 and 12 bits
@@ -122,7 +136,10 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("Address must be between 0 and 12 bits.", UdbPackage.Literals.CSR_ADDRESS__ADDRESS);
 		}
 	}
-
+	
+	/*
+	 * Validate CSR virtual address is between 0 and 12 bits
+	 */
 	@Check
 	public void checkCsrVirtualAddressVal(CsrVirtualAddress vaddress) {
 		// Virtual address must be between 0 and 12 bits
@@ -134,7 +151,10 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.CSR_VIRTUAL_ADDRESS__VIRTUAL_ADDRESS);
 		}
 	}
-
+	
+	/*
+	 * Validate CSR indirect address is between 0 and 64 bits
+	 */
 	@Check
 	public void checkCsrIndirectAddressVal(CsrIndirectAddress iaddress) {
 		// Indirect address must be between 0 and 64 bits
@@ -145,7 +165,10 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.CSR_INDIRECT_ADDRESS__INDIRECT_ADDRESS);
 		}
 	}
-
+	
+	/*
+	 * Validate indirect slot value is between 1 and 6
+	 */
 	@Check
 	public void checkCsrIndirectSlotVal(CsrIndirectSlot indirectSlot) {
 		// indirect_slot must be between 1 and 6
@@ -156,7 +179,10 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.CSR_INDIRECT_SLOT__INDIRECT_SLOT);
 		}
 	}
-
+	
+	/*
+	 * Ensure indirect slot is present when indirect address is specified
+	 */
 	@Check
 	public void checkCsrIndirectSlot(CsrModel csr) {
 		CsrIndirectAddress iaddress = csr.getIndirectAddress();
@@ -169,7 +195,10 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 
 	}
-
+	
+	/*
+	 * Validate privilege mode is one of: M, S, U, VS, D
+	 */
 	@Check
 	public void checkCsrPrivMode(CsrModel csr) {
 		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
@@ -182,7 +211,10 @@ public class UdbValidator extends AbstractUdbValidator {
 		    );
 		}
 	}
-
+	
+	/*
+	 * Ensure virtual address is present when privilege mode is VS
+	 */
 	@Check
 	public void checkCsrVirtualAddress(CsrModel csr) {
 		String mode = csr.getPrivmode() != null ? csr.getPrivmode().getPrivMode() : null;
@@ -195,7 +227,10 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 
 	}
-
+	
+	/*
+	 * Validate length is either 32 or 64 when specified as integer
+	 */
 	@Check
 	public void checkLengthValue(CsrLength length) {
 		CsrIntType lengthInt = length.getLength().getIntType();
@@ -216,7 +251,9 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 
-
+	/*
+	 * Validate CSR field name starts with alphabetic character
+	 */
 	@Check
 	public void checkCsrFieldName(CsrFieldDef field) {
 		String value = field.getName();
@@ -225,7 +262,10 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.CSR_FIELD_DEF__NAME);
 		}
 	}
-
+	
+	/*
+	 * Validate CSR field alias matches CSR_FIELD or CSR_FIELD_BITS format
+	 */
 	@Check
 	public void checkCsrFieldAlias(CsrFieldAliasName alias) {
 		String value = alias.getName();
@@ -239,28 +279,6 @@ public class UdbValidator extends AbstractUdbValidator {
 	        );
 	    }
 	}
-// No longer need to validate regex since cross referencing already limits it to ID? Is this okay
-//	@Check
-//	public void checkCsrFieldAffectedBy(CsrFieldAffectedBy affectedBy) {
-//		CsrAffectedByType type = affectedBy.getAffectedBy();
-//		String name = type.getAffectedByName();
-//
-//		if (name != null) {
-//			if (!name.matches(csrAffectedByRegex)) {
-//				error("Invalid extension name", // TODO: is this an okay error message?
-//						UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
-//			}
-//		} else {
-//			EList<String> exts = type.getAffectedByArray().getNames();
-//			for (int i = 0; i < exts.size(); i++) {
-//				String ext = exts.get(i);
-//				if (!ext.matches(csrAffectedByRegex)) {
-//					error("Invalid extension name",
-//							UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__AFFECTED_BY);
-//				}
-//			}
-//		}
-//	}
 
 
 
@@ -268,7 +286,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 * Instruction Validation -- rules found in inst_schema.json
 	 */
-
+	
+	/*
+	 * Ensure instruction schema matches inst_schema.json#
+	 */
 	@Check
 	public void checkInstSchema(InstModel inst) {
 		/* Ensure base value is either 32 or 64 */
@@ -277,7 +298,10 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("Schema incompatible with kind", inst.getSchema(), UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
 	}
-
+	
+	/*
+	 * Validate instruction name matches required pattern
+	 */
 	@Check
 	public void checkInstName(InstName name) {
 	    String value = name.getName();
@@ -322,9 +346,11 @@ public class UdbValidator extends AbstractUdbValidator {
 
 		}
 	}
-
+	
+	/*
+	 * Validate instruction hints follow format $ref: inst/<path>.yaml#
+	 */
 	@Check
-	// Check that hints (strings within array) are of format ^inst/.+\\.yaml#.*$
 	public void checkInstHints(InstHints hints) {
 		EList<InstHintElement> hintValue = hints != null ? hints.getHints(): null;
 
@@ -336,9 +362,11 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 	}
-
+	
+	/*
+	 * Validate instruction inherits addresses match expected format
+	 */
 	@Check
-	// Check that address within format are in correct format
 	public void checkInstInherits(InstFormat format) {
 	  if (format == null) return;
 
@@ -356,7 +384,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	    }
 	  }
 
-	  // 2, opcode inherits
+	  // 2. opcode inherits
 	  if (format.getOpcodes() == null || format.getOpcodes().getOpcode() == null) return;
 
 	  for (InstOpcodeEntry entry : format.getOpcodes().getOpcode()) {
@@ -374,7 +402,9 @@ public class UdbValidator extends AbstractUdbValidator {
 	  }
 	}
 
-	// Check match regex within encoding
+	/*
+	 * Validate instruction encoding match patterns for 16, 32, and 48-bit encodings
+	 */
 	@Check
 	public void checkInstEncoding(InstEncoding encoding) {
 
@@ -413,7 +443,9 @@ public class UdbValidator extends AbstractUdbValidator {
 
 	}
 
-	// Check $inherits and $childof regex within variables within encoding(they share the same regex)
+	/*
+	 * Validate $inherits and $child_of fields in encoding variables
+	 */
 	@Check
 	public void checkInstInheritsAndChildOf(InstEncoding encoding) {
 
@@ -451,6 +483,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 * Extension Validation -- rules found in ext_schema.json
 	 */
+	
+	/*
+	 * Ensure extension schema matches ext_schema.json#
+	 */
     @Check
     public void checkExtSchema(ExtModel ext) {
 		String schema = ext.getSchema().getSchema();
@@ -459,7 +495,10 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
-
+    
+    /*
+     * Validate extension name matches required pattern
+     */
 	@Check
 	public void checkExtName(ExtName name) {
 	    String value = name.getName();
@@ -468,7 +507,11 @@ public class UdbValidator extends AbstractUdbValidator {
 	              UdbPackage.Literals.EXT_NAME__NAME);
 	    }
 	}
-
+	
+	
+	/*
+	 * Validate extension version format and ratification date requirements
+	 */
 	@Check
 	public void checkExtVersionArrayElement(ExtVersionArrayElement elem) {
 		// Validate elements in the versions array
@@ -492,6 +535,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
 	 * Interrupt Code Validation -- rules found in interrupt_code_schema.json
 	 */
+	
+	/*
+	 * Ensure interrupt code schema matches interrupt_code_schema.json#
+	 */
 	@Check
     public void checkInterruptSchema(InterruptCodeModel intrptModel) {
 		String schema = intrptModel.getSchema().getSchema();
@@ -500,7 +547,10 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
-
+	
+	/*
+	 * Validate interrupt code name is a legal IDL variable name
+	 */
 	@Check
 	public void checkInterruptName(IntrptCodeName intrptName) {
 		// Check that interrupt code name is legal IDL variable name
@@ -515,6 +565,10 @@ public class UdbValidator extends AbstractUdbValidator {
 	/*
      * Exception Code Validation -- rules found in exception_code_schema.json
      */
+	
+	/*
+	 * Ensure exception code schema matches exception_code_schema.json#
+	 */
 	@Check
     public void checkExceptionCodeSchema(ExceptionCodeModel model) {
 		String schema = model.getSchema().getSchema();
@@ -523,8 +577,13 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.Literals.SCHEMA__SCHEMA);
 		}
     }
+	
 	/*
 	 * Inst Opcode Validation -- rules found in inst_opcode_schema.json
+	 */
+	
+	/*
+	 * Ensure instruction opcode schema matches inst_opcode_schema.json#
 	 */
 	@Check
     public void checkInstOpcodeSchema(InstOpcodeModel instop) {
@@ -536,7 +595,9 @@ public class UdbValidator extends AbstractUdbValidator {
     }
 	
 	
-	// parent_of can be list of strings or singular string, must follow ^.*/.*\\.yaml#.*$
+	/*
+	 * Validate parent_of field follows ref url format
+	 */
 	@Check
 	public void checkInstOpcodeParentOf(InstOpcodeData instopData) {
 	    StringArray parentOfArray = instopData.getParentOf();
@@ -560,7 +621,52 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 	
 	/*
-	 *  Validate general fields (e.g. url, email, etc.)
+	 * InstVarType Validation -- rules found in inst_var_type_schema.json
+	 */
+	
+	/*
+	 * Ensure instruction variable type schema matches inst_var_type_schema.json#
+	 */
+	@Check
+    public void checkInstVarTypeSchema(InstVarTypeModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("inst_var_type_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), 
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+    }
+	
+	/*
+	 * Validate register_file and access fields for register_reference type
+	 */
+	@Check
+	public void checkRegisterReferenceFields(InstVarTypeModel model) {
+		if (model.getInstVarTypeType() == null) return;
+
+	    boolean isRegisterReference = 
+	        model.getInstVarTypeType().getType() == VarTypeEnum.REGISTER_REFERENCE;
+
+	    if (isRegisterReference) {
+	        // Fields REQUIRED for register_reference
+	        if (model.getRegisterFile() == null)
+	            error("register_file is required for register_reference type",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
+	        if (model.getAccess() == null)
+	            error("access is required for register_reference type",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
+	    } else {
+	        // Fields NOT ALLOWED when type is not register_reference
+	        if (model.getRegisterFile() != null)
+	            error("register_file is only valid when type is 'register_reference'",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
+	        if (model.getAccess() != null)
+	            error("access is only valid when type is 'register_reference'",
+	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
+	    }
+	}
+	
+	/*
+	 * Validate URL follows proper URI format
 	 */
 	@Check
 	public void checkUrlFormat(Url url) {
@@ -570,7 +676,10 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("URL not in URI format", UdbPackage.Literals.URL__URL);
 		}
 	}
-
+	
+	/*
+	 * Validate email follows proper email format
+	 */
 	public void checkEmailFormat(Email email) {
 		// Check that emails follow email format
 		String emailString = email.getEmail();
