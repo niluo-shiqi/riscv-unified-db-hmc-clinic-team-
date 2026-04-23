@@ -25,6 +25,7 @@ STRING_FIELDS = [
 
     # CSR fields
     "alias",
+    # TODO: affectedBy
 
     # Instruction fields
     "assembly",
