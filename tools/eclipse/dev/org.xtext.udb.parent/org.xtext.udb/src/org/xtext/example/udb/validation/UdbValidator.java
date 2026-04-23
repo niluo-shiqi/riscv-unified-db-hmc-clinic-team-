@@ -9,6 +9,7 @@ import org.eclipse.xtext.validation.Check;
 import org.xtext.example.udb.udb.UdbPackage;
 
 import org.xtext.example.udb.udb.Url;
+import org.xtext.example.udb.udb.VersionRequirementString;
 import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.CsrModel;
@@ -37,6 +38,7 @@ import org.xtext.example.udb.udb.InstHintElement;
 import org.xtext.example.udb.udb.InstOpcodeEntry;
 import org.xtext.example.udb.udb.InstOpcodeInherits;
 import org.xtext.example.udb.udb.InstRvPairEncoding;
+
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
@@ -46,6 +48,20 @@ import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 //import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 //import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
+import org.xtext.example.udb.udb.ExtensionRequirement;
+import org.xtext.example.udb.udb.RegisterModel;
+import org.xtext.example.udb.udb.RegisterName;
+import org.xtext.example.udb.udb.RegisterRole;
+import org.xtext.example.udb.udb.RegisterRoles;
+import org.xtext.example.udb.udb.Registers;
+import org.xtext.example.udb.udb.RequiresNot;
+import org.xtext.example.udb.udb.RegisterAbiMnemonics;
+import org.xtext.example.udb.udb.RegisterClass;
+import org.xtext.example.udb.udb.RegisterDefinedBy;
+import org.xtext.example.udb.udb.RegisterEntry;
+import org.xtext.example.udb.udb.RegisterLength;
+import org.xtext.example.udb.udb.RegisterLengthInt;
+import org.xtext.example.udb.udb.RegisterLengthType;
 
 
 /**
@@ -70,6 +86,10 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
+    String registerFileNameRegex="^[A-Z]$";
+    String registerNameRegex="^[A-Za-z][A-Za-z0-9_.-]*$";
+    String registerAliasRegex="^[A-Za-z][A-Za-z0-9_.-]*$";
+    String requirementStringRegex="^((>=)|(>)|(~>)|(<)|(<=)|(=))?\\s*[0-9]+(\\.[0-9]+(\\.[0-9]+(-[a-fA-F0-9]+)?)?)?$";
 
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
@@ -472,8 +492,270 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 	}
+	
+	/*
+	 * Register Validation -- rules found in register_schema.json
+	 */
 
+	/*
+	 * Ensure register file schema matches register_file_schema.json#
+	 * Spec: const: "register_file_schema.json#"
+	 */
+	@Check
+	public void checkRegisterFileSchema(RegisterModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("register_file_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(),
+					UdbPackage.Literals.SCHEMA__SCHEMA);
+		}
+	}
 
+	/*
+	 * Validate register file name matches pattern ^[A-Z]$
+	 * Spec: pattern: "^[A-Z]$"
+	 */
+	@Check
+	public void checkRegisterFileName(RegisterName name) {
+		String value = name.getName();
+	    if (!value.matches(registerFileNameRegex)) {
+	        error("Invalid register file name'" + name + "': must be a single uppercase letter (A-Z)",
+	              UdbPackage.Literals.REGISTER_NAME__NAME);
+	    }
+	}
+	
+	/*
+	 * Validate register class is one of: general_purpose, floating_point, vector
+	 * Spec: enum: ["general_purpose", "floating_point", "vector"]
+	 */
+	@Check
+	public void checkRegisterClass(RegisterClass registerClass) {
+		String registerClassValue = registerClass.getRegisterClass();
+		
+		if (registerClassValue == null) {
+			error("Register class must be specified",
+					UdbPackage.Literals.REGISTER_CLASS__REGISTER_CLASS);
+			return;
+		}
+		
+		java.util.Set<String> ALLOWED_CLASSES = java.util.Set.of("general_purpose", "floating_point", "vector");
+		
+		if (!ALLOWED_CLASSES.contains(registerClassValue)) {
+			error("Register class '" + registerClassValue + "' must be one of: general_purpose, floating_point, vector",
+					UdbPackage.Literals.REGISTER_CLASS__REGISTER_CLASS);
+		}
+	}
+
+	/*
+	 * Validate register length is valid bit length value
+	 * Spec: $ref: schema_defs.json#/$defs/bit_length_value
+	 */
+	@Check
+	public void checkRegisterLength(RegisterLength length) {
+		RegisterLengthType bitLength = length.getRegisterLength();
+		
+		if (bitLength == null) {
+			error("register_length must be specified",
+					UdbPackage.Literals.REGISTER_LENGTH__REGISTER_LENGTH);
+			return;
+		}
+		
+		if (bitLength instanceof RegisterLengthInt) {
+			RegisterLengthInt intLength = (RegisterLengthInt) bitLength;
+			int val = intLength.getVal();
+			if (val < 1) {
+				error("register_length must be equal to or greater than 1",
+			              UdbPackage.Literals.REGISTER_LENGTH__REGISTER_LENGTH);
+			}
+		}
+		
+	}
+
+	/*
+	 * Validate registers array has at least one entry
+	 * Spec: minItems: 1
+	 */
+	@Check
+	public void checkRegistersNotEmpty(Registers registers) {
+		EList<RegisterEntry> entries = registers.getRegisters();
+		
+		if (entries == null || entries.size() == 0) {
+			error("Registers array must have at least one entry",
+					UdbPackage.Literals.REGISTERS__REGISTERS);
+		}
+	}
+
+	/*
+	 * Validate register name matches pattern ^[A-Za-z][A-Za-z0-9_.-]*$
+	 * Spec: $ref: schema_defs.json#/$defs/register_name
+	 */
+	@Check
+	public void checkRegisterName(RegisterEntry entry) {
+		String name = entry.getName();
+		
+		if (name == null || name.isEmpty()) {
+			error("Register name must not be empty",
+					UdbPackage.Literals.REGISTER_ENTRY__NAME);
+			return;
+		}
+		
+		if (!name.matches(registerNameRegex)) {
+			error("Register name '" + name + "' must start with a letter and contain only letters, numbers, underscores, dots, or hyphens",
+					UdbPackage.Literals.REGISTER_ENTRY__NAME);
+		}
+	}
+
+	/*
+	 * Validate ABI mnemonics are unique
+	 * Spec: uniqueItems: true
+	 */
+	@Check
+	public void checkRegisterAbiMnemonicsUnique(RegisterAbiMnemonics mnemonics) {
+		EList<String> mnemonicsList = mnemonics.getMnemonics();
+		
+		if (mnemonicsList == null || mnemonicsList.size() == 0) {
+			return;
+		}
+		
+		java.util.Set<String> seen = new java.util.HashSet<>();
+		
+		for (String mnemonic : mnemonicsList) {
+			if (seen.contains(mnemonic)) {
+				error("ABI mnemonic '" + mnemonic + "' is duplicated. Each mnemonic must be unique",
+						UdbPackage.Literals.REGISTER_ABI_MNEMONICS__MNEMONICS);
+			}
+			seen.add(mnemonic);
+		}
+	}
+
+	/*
+	 * Validate ABI mnemonic matches pattern ^[A-Za-z][A-Za-z0-9_.-]*$
+	 * Spec: $ref: schema_defs.json#/$defs/register_alias
+	 */
+	@Check
+	public void checkAbiMnemonicFormat(RegisterAbiMnemonics mnemonics) {
+		EList<String> mnemonicsList = mnemonics.getMnemonics();
+		
+		if (mnemonicsList == null || mnemonicsList.size() == 0) {
+			return;
+		}
+		
+		for (String mnemonic : mnemonicsList) {
+			if (mnemonic == null || mnemonic.isEmpty()) {
+				error("ABI mnemonic must not be empty",
+						UdbPackage.Literals.REGISTER_ABI_MNEMONICS__MNEMONICS);
+				continue;
+			}
+			
+			if (!mnemonic.matches(registerAliasRegex)) {
+				error("ABI mnemonic '" + mnemonic + "' must start with a letter and contain only letters, numbers, underscores, dots, or hyphens",
+						UdbPackage.Literals.REGISTER_ABI_MNEMONICS__MNEMONICS);
+			}
+		}
+	}
+
+	/*
+	 * Validate register roles are unique
+	 * Spec: uniqueItems: true
+	 */
+	@Check
+	public void checkRegisterRolesUnique(RegisterRoles roles) {
+		EList<RegisterRole> rolesList = roles.getRoles();
+		
+		if (rolesList == null || rolesList.size() == 0) {
+			return;
+		}
+		
+		java.util.Set<RegisterRole> seen = new java.util.HashSet<>();
+		
+		for (RegisterRole role : rolesList) {
+			if (seen.contains(role)) {
+				error("Register role '" + role + "' is duplicated. Each role must be unique",
+						UdbPackage.Literals.REGISTER_ROLES__ROLES);
+			}
+			seen.add(role);
+		}
+	}
+
+	/*
+	 * Validate extension name in register definedBy field follows pattern ^(([A-WY])|([SXZ][a-z0-9]+))$
+	 * Spec: $ref: schema_defs.json#/$defs/extension_name
+	 */
+	@Check
+	public void checkExtensionNameFormat(ExtensionRequirement extReq) {
+		String name = extReq.getName();
+		
+		if (name == null || name.isEmpty()) {
+			error("Extension name must not be empty",
+					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+			return;
+		}
+		
+		if (!name.matches(extensionNameRegex)) {
+			error("Extension name '" + name + "' must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
+					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+		}
+	}
+	
+	/*
+	 * Validate extension name in register requires not field follows pattern ^(([A-WY])|([SXZ][a-z0-9]+))$
+	 * Spec: $ref: schema_defs.json#/$defs/extension_name
+	 */
+	@Check
+	public void checkSimpleExtensionNameFormat(RequiresNot extReq) {
+		String name = extReq.getName();
+		
+		if (name == null || name.isEmpty()) {
+			error("Extension name must not be empty",
+					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+			return;
+		}
+		
+		if (!name.matches(extensionNameRegex)) {
+			error("Extension name '" + name + "' must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
+					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+		}
+	}
+	
+	/*
+	 * Validate extension name in register definedBy field follows pattern ^(([A-WY])|([SXZ][a-z0-9]+))$
+	 * Spec: $ref: schema_defs.json#/$defs/extension_name
+	 */
+	@Check
+	public void checkSimpleExtensionNameFormat(RegisterDefinedBy extReq) {
+		String name = extReq.getDefinedBy();
+		
+		if (name == null || name.isEmpty()) {
+			error("Extension name must not be empty",
+					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+			return;
+		}
+		
+		if (!name.matches(extensionNameRegex)) {
+			error("Extension name '" + name + "' must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
+					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+		}
+	}
+
+	/*
+	 * Validate version requirement format matches pattern
+	 * Spec: pattern: "^((>=)|(>)|(~>)|(<)|(<=)|(=))?\s*[0-9]+(\.[0-9]+(\.[0-9]+(-[a-fA-F0-9]+)?)?)?$"
+	 */
+	@Check
+	public void checkVersionRequirementFormat(VersionRequirementString versionReq) {
+		String version = versionReq.getVersion();
+		
+		if (version == null || version.isEmpty()) {
+			error("Version requirement must not be empty",
+					UdbPackage.Literals.VERSION_REQUIREMENT_STRING__VERSION);
+			return;
+		}
+
+		
+		if (!version.matches(requirementStringRegex)) {
+			error("Version requirement '" + version + "' must match format: [operator] major[.minor[.patch[-prerelease]]]",
+					UdbPackage.Literals.VERSION_REQUIREMENT_STRING__VERSION);
+		}
+	}
 
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)

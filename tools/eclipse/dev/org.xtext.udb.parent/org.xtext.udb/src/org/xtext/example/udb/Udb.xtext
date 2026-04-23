@@ -5,7 +5,7 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 Model:
-	CsrModel | InstModel | ExtModel
+	CsrModel | InstModel | ExtModel | RegisterModel
 ;
 
 
@@ -70,7 +70,152 @@ ExtModel:
 	certNormativeRules = CertNormativeRules?
 ;
 
+RegisterModel:
+	schema = Schema // must be "register_file_schema.json#"
+	regKind = RegisterKind
+	regName = RegisterName &
+	longName = LongName &
+	description = Description &
+	definedBy = RegisterDefinedBy? &
+	registerClass = RegisterClass? &
+	registerLength = RegisterLength &
+	registers = Registers &
+	source = Source?
+	
+;
 
+
+RegisterKind: 'kind' ':' kind="register_file";
+RegisterName: 'name' ':' name=STRING;
+RegisterDefinedBy: 'definedBy' ':' definedBy=STRING;
+RegisterClass: 'register_class' ':' registerClass=STRING;
+RegisterLength: 'register_length' ':' registerLength=RegisterLengthType;
+RegisterLengthType: intVal=RegisterLengthInt | paramName=RegisterLengthEnum;
+
+enum RegisterLengthEnum:
+	mxlen ='MXLEN' | 
+	flen = 'FLEN' | 
+	vlen = 'VLEN'
+;
+
+RegisterLengthInt: val=INT;
+Registers:
+	'registers' ':'
+	INDENT
+		registers += RegisterEntry+
+	DEDENT
+;
+RegisterEntry:
+	'-' 'name' ':' name=STRING
+		abiMnemonics = RegisterAbiMnemonics? &
+		description = RegisterDescription? &
+		when = RegisterWhen? &
+		archRead = RegisterArchRead? &
+		archWrite = RegisterArchWrite? &
+		callerSaved = RegisterCallerSaved? &
+		calleeSaved = RegisterCalleeSaved? &
+		roles = RegisterRoles?
+;
+
+RegisterAbiMnemonics:'abi_mnemonics' ':' '[' mnemonics+=STRING (',' mnemonics+=STRING)* ']';
+
+
+RegisterDescription:
+	'description' ':' description=STRING
+;
+
+RegisterWhen:
+	'when' ':'
+	(
+		when=RequiresNot |
+		(INDENT when=RequiresComposite DEDENT)
+	)
+
+;
+
+RegisterArchRead:
+	'arch_read()' ':' archRead=STRING
+;
+
+RegisterArchWrite:
+	'arch_write(value)' ':' archWrite=STRING
+;
+
+RegisterCallerSaved:
+	'caller_saved' ':' callerSaved=Boolean
+;
+
+RegisterCalleeSaved:
+	'callee_saved' ':' calleeSaved=Boolean
+;
+
+RegisterRoles:'roles' ':' '[' roles+=RegisterRole (',' roles+=RegisterRole)* ']';
+
+RequiresEntry:
+	('-' entry=RequiresEntryContent) | RequiresEntryContent
+;
+
+RequiresEntryContent:
+	ExtensionRequirement | RequiresComposite
+;
+
+ExtensionRequirement:
+	'name' ':' name=STRING ('version' ':' version=VersionRequirements)?
+;
+
+VersionRequirements:
+	versionSingle=VersionRequirementString | versionArray=VersionRequirementArray
+;
+
+VersionRequirementArray:
+	'[' versions+=VersionRequirementString (',' versions+=VersionRequirementString)* ']'
+;
+
+VersionRequirementString:
+	version=STRING
+;
+
+RequiresComposite:
+	RequiresAnyOf | RequiresAllOf | RequiresOneOf | RequiresNot
+;
+
+RequiresNot:
+	'not' ':' '{' 'name' ':' name=STRING '}'
+;
+RequiresAnyOf:
+	'anyOf' ':'
+	INDENT
+		entries += RequiresEntry+
+	DEDENT
+;
+
+RequiresAllOf:
+	'allOf' ':'
+	INDENT
+		entries += RequiresEntry+
+	DEDENT
+;
+
+RequiresOneOf:
+	'oneOf' ':'
+	INDENT
+		entries += RequiresEntry+
+	DEDENT
+;
+
+
+enum RegisterRole:
+	ZERO = 'zero' |
+	RETURN_ADDRESS = 'return_address' |
+	ALTERNATE_LINK_REGISTER = 'alternate_link_register' |
+	STACK_POINTER = 'stack_pointer' |
+	GLOBAL_POINTER = 'global_pointer' |
+	THREAD_POINTER = 'thread_pointer' |
+	FRAME_POINTER = 'frame_pointer' |
+	RETURN_VALUE = 'return_value' |
+	ARGUMENT = 'argument' |
+	TEMPORARY = 'temporary'
+;
 
 /*
  * Common stuff
