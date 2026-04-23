@@ -474,14 +474,14 @@ ExtVersionContributorName:
  */
 ProfKind: 'kind' ':' kind='profile';
 ProfName: 'name' ':' name=ID;
-ProfInherits: '$inherits' ':' inherits=STRING; // TODO: enforce pattern in validator
+ProfInherits: '$inherits' ':' inherits=STRING;
 ProfParentOf: '$parent_of' ':' parent_of=STRING;
 ProfChildOf: '$child_of' ':' child_of=STRING;
 ProfBase: 'base' ':' base=INT; //TODO: deprecated?
 ProfMarketingName: 'marketing_name' ':' marketing_name=STRING;
 ProfMode: 'mode' ':' mode=('M' | 'S' | 'U' | 'Unpriv');
 ProfRelease:
-	'release' ':' '{' '$ref' ':' releaseAddress=STRING '}' // TODO: validator
+	'release' ':' '{' '$ref' ':' releaseAddress=STRING '}'
 ;
 ProfIntroduction: 'introduction' ':' introduction=STRING;
 ProfRecommendations:
@@ -508,19 +508,36 @@ ProfExtraNotesArrayElement:
 ProfExtensions:
 	'extensions' ':'
 	INDENT
-		'$inherits' ':' '{' '$ref' ':' extAddress=STRING '}' // TODO: validator
-		extensions += ProfExtensionsArrayElement+
+		('$inherits' ':' ProfExtensionsInherits)
+		(extensions += ProfExtensionsArrayElement+)
 	DEDENT
 ;
+ProfExtensionsInherits:
+	(inhString=InheritsString | inhArray=InheritsArray)
+;
+InheritsString:
+	inherits=STRING
+;
+InheritsArray:
+	inherits += ProfExtensionsInheritsArrayElement+
+;
+ProfExtensionsInheritsArrayElement:
+	'-' extAddress=InheritsString
+;
+// TODO: make sure this works...
 ProfExtensionsArrayElement:
 	extension=STRING ':' // TODO: validator
 	INDENT
-		'presence' ':' presence=('mandatory' | 'optional')
-		// TODO: or optional field ('expansion'|'localized'|'development')
+		'presence' ':' (presence=('mandatory' | 'optional') | 'optional' ':' optional=ProfExtensionsArrayElementOptional)
 		'version' ':' '{' '$ref' ':' versionAddress=STRING '}' //  TODO: validator
 		'note' ':' note=STRING
-	DEDENT	
+	DEDENT
 ;
+
+ProfExtensionsArrayElementOptional:
+	('expansion'|'localized'|'development')
+;
+
 ProfSource: '$source' ':' source=STRING;
 
 /* Conditions */

@@ -47,6 +47,9 @@ import org.xtext.example.udb.udb.ExtVersionArrayElement;
 import org.xtext.example.udb.udb.ExtVersionRepoArrayElement;
 import org.xtext.example.udb.udb.ExtVersionContributorsArrayElement;
 
+import org.xtext.example.udb.udb.ProfModel;
+import org.xtext.example.udb.udb.ProfRelease;
+import org.xtext.example.udb.udb.InheritsString;
 
 /**
  * This class contains custom validation rules.
@@ -70,6 +73,8 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_48 = "^[01-]{43}11111$";
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
+    String profInheritsRegex = "^profile/.*#$";
+    String profReleaseRegex = "^profile_release.*#$";
     
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
@@ -473,7 +478,51 @@ public class UdbValidator extends AbstractUdbValidator {
 		}	
 	}
 	
+	/*
+	 * Profile Validation -- rules found in profile_schema.json
+	 */
 	
+	/**
+	 * When kind is profile, ensures that schema is a valid reference
+	 * to the profile schema
+	 *
+	 * @param prof  the profile model object
+	 */
+//	@Check
+//	public void checkProfSchema(ProfModel prof) {
+//		String schema = prof.getSchema().getSchema();
+//		if (!schema.equals("profile_schema.json#")) {
+//			error("Schema incompatible with kind", prof.getSchema(), 
+//					UdbPackage.Literals.SCHEMA__SCHEMA);
+//		}
+//    }
+	
+	/**
+	 * Check that item(s) in the $inherits field match the proper pattern/regex
+	 *
+	 * @param inherits  the object containing strings parsed from $inherits
+	 */
+//	@Check
+//	public void checkProfExtensionsInherits(InheritsString inherits) {
+//		String inherit = inherits.getInherits();
+//		if (!inherit.matches(profInheritsRegex)) {
+//			error("Invalid path to inherited extension", UdbPackage.Literals.PROF_INHERITS__INHERITS);
+//		}
+//	}
+	
+	/**
+	 * Check that the release address matches the proper pattern/regex
+	 *
+	 * @param release  the object containing strings parsed from $ref
+	 * inside the release field
+	 */
+//	@Check
+//	public void checkProfReleaseRef(ProfRelease release) {
+//		String ref = release.getReleaseAddress();
+//		if (!ref.matches(profReleaseRegex)) {
+//			error("Invalid release address", UdbPackage.Literals.PROF_INHERITS__INHERITS);
+//		}
+//	}
 	
 	/*
 	 *  Validate general fields (e.g. url, email, etc.)
