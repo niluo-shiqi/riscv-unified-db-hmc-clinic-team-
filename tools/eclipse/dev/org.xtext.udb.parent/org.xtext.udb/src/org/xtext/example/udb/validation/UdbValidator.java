@@ -17,6 +17,10 @@ import org.xtext.example.udb.udb.StringArray;
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrAddress;
+import org.xtext.example.udb.udb.CsrAffectedByList;
+import org.xtext.example.udb.udb.CsrAffectedBySingle;
+import org.xtext.example.udb.udb.CsrAffectedByValue;
+import org.xtext.example.udb.udb.CsrFieldAffectedBy;
 import org.xtext.example.udb.udb.CsrVirtualAddress;
 import org.xtext.example.udb.udb.CsrIndirectAddress;
 import org.xtext.example.udb.udb.CsrIndirectSlot;
@@ -278,6 +282,46 @@ public class UdbValidator extends AbstractUdbValidator {
 	            UdbPackage.Literals.CSR_FIELD_ALIAS_NAME__NAME
 	        );
 	    }
+	}
+	
+	/*
+	 * Validate CSR field affectedBy references valid extension names
+	 */
+	@Check
+	public void checkCsrFieldAffectedBy(CsrFieldAffectedBy affectedBy) {
+		CsrAffectedByValue value = affectedBy.getValue();
+		
+		if (value instanceof CsrAffectedBySingle) {
+			CsrAffectedBySingle single = (CsrAffectedBySingle) value;
+			ExtModel ref = single.getRef();
+			
+			if (ref != null) {
+				ExtName extName = ref.getExtName();
+				if (extName != null) {
+					String name = extName.getName();
+					if (!name.matches(csrAffectedByRegex)) {
+						error("Extension name '" + name + "' does not follow valid format: must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
+								UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__VALUE);
+					}
+				}
+			}
+		} else if (value instanceof CsrAffectedByList) {
+			CsrAffectedByList list = (CsrAffectedByList) value;
+			EList<ExtModel> refs = list.getRefs();
+			
+			for (ExtModel ref : refs) {
+				if (ref != null) {
+					ExtName extName = ref.getExtName();
+					if (extName != null) {
+						String name = extName.getName();
+						if (!name.matches(csrAffectedByRegex)) {
+							error("Extension name '" + name + "' does not follow valid format: must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
+									UdbPackage.Literals.CSR_FIELD_AFFECTED_BY__VALUE);
+						}
+					}
+				}
+			}
+		}
 	}
 
 

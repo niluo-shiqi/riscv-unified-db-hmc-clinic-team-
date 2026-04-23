@@ -257,11 +257,11 @@ CsrAffectedByValue:
 ;
 
 CsrAffectedBySingle:
-    ref=[Model|ID]
+    ref=[ExtModel|STRING]
 ;
 
 CsrAffectedByList:
-    "[" refs+=[Model|ID] ("," refs+=[Model|ID])* "]"
+    "[" refs+=[ExtModel|STRING] ("," refs+=[ExtModel|STRING])* "]"
 ;
 
 
