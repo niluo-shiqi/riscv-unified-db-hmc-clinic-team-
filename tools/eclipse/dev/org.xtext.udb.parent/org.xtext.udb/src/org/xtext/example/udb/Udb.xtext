@@ -4,10 +4,15 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
-Model:
-	CsrModel | InstModel | ExtModel | InterruptCodeModel | ExceptionCodeModel | InstOpcodeModel
+Model
+	: CsrModel
+	| InstModel
+	| ExtModel
+	| InterruptCodeModel
+	| ExceptionCodeModel
+	| InstOpcodeModel
+	| InstVarTypeModel
 ;
-
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
@@ -15,7 +20,7 @@ CsrModel:
 	csrName = CsrName &
 	longName = LongName &
 	description = Description &
-	definedBy = CsrDefinedBy &
+	definedBy = DefinedBy &
 	address = CsrAddress &
 	indirectAddress = CsrIndirectAddress? &
 	indirectSlot = CsrIndirectSlot? &
@@ -30,14 +35,13 @@ CsrModel:
 	certNormativeRules = CertNormativeRules?
 ;
 
-
 InstModel:
 	schema = Schema // must be "inst_schema.json#"
 	kind = InstKind
 	instName = InstName &
 	longName = LongName &
 	description = Description &
-	definedBy = InstDefinedBy &
+	definedBy = DefinedBy &
 	hints = InstHints? &
 	access = InstAccess &
 	accessDetail = InstAccessDetail? &
@@ -51,8 +55,6 @@ InstModel:
 	format = InstFormat? &
 	encoding = InstEncoding?
 ;
-
-
 
 ExtModel:
 	schema = Schema // must be "ext_schema.json#"
@@ -76,7 +78,7 @@ InterruptCodeModel:
 	intrptCodeName = IntrptCodeName &
 	displayName = DisplayName &
 	intrptNum = IntrptCodeNum &
-	definedBy = IntrptCodeDefinedBy &
+	definedBy = DefinedBy &
 	source = Source?
 ;
 
@@ -86,15 +88,28 @@ ExceptionCodeModel:
 	ecName = ECName &
 	displayName = DisplayName &
 	num = Num &
-	definedBy = ECDefinedBy &
+	definedBy = DefinedBy &
 	source = Source?
 ;
+
 InstOpcodeModel:
 	schema = Schema // must be "inst_opcode_schema.json#"
-	instOpcodeKind = InstOpcodeKind &
+	instOpcodeKind = InstOpcodeKind
 	instOpcodeName = InstOpcodeName? &
 	instOpcodedata = InstOpcodeData
 ;
+
+InstVarTypeModel:
+	schema = Schema
+	instVarTypeKind = InstVarTypeKind
+	instVarTypeName = InstVarTypeName &
+	instVarTypeType = InstVarTypeType &
+	registerFile = RegisterFile? &
+	access = InstVarTypeAccess?
+	
+;
+
+
 
 /*
  * Common stuff
@@ -103,7 +118,16 @@ Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
 Description: 'description' ':' description=DescriptionType;
 DescriptionType: (value=STRING) | MultilineString;
-Requirements: "requirements" ":" requirements=Condition;
+Requirements: "requirements" ":" 
+	INDENT 
+		requirements=Condition 
+	DEDENT
+;
+DefinedBy: "definedBy" ":" 
+	INDENT 
+		definedBy=Condition
+	DEDENT
+;
 DisplayName:'display_name' ':' displayName=STRING;
 Source:'$source' ':' source=STRING;
 Number: intVal=INT | bin=Bin | hex=Hex;
@@ -112,8 +136,12 @@ UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
 TextUrl: 'text_url' ':' textUrl=STRING;
 Email: 'email' ':' email=STRING;
-ProcessorKind: 'processor_kind' ':' processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
+ProcessorKind: 'processor_kind' ':' 
+	processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
 Introduction: 'introduction' ':' introduction=STRING;
+
+// IDL gets passed off to ruby in the validator
+Idl: '|' idl=STRING;
 
 // see "cert_normative_rules" in schema_defs.json
 // TODO: not tested
@@ -124,7 +152,7 @@ CertNormativeRules:
 	DEDENT
 ;
 CNRuleArrayElement:
-	'-' id = UdbId // TODO: makes id the first element (do we want this?)
+	'-' id = UdbId
 	INDENT (
 		('name' ':' name = STRING) &
 		docLinks = DocLinks &
@@ -161,12 +189,11 @@ CsrKind: 'kind' ':' kind="csr";
 CsrName: 'name' ':' name=STRING;
 CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
-CsrDefinedBy: 'definedBy' ':' extensionName=Condition;
 CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
 CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ;
 CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=Idl;
-CsrPrivMode:'priv_mode' ':' privMode=ID;
+CsrPrivMode:'priv_mode' ':' privMode=("M"|"S"|"U"|"VS"|"D");
 CsrLength: 'length' ':' length=CsrLengthType;
 CsrLengthType: intType = CsrIntType | parmType = CsrParmType;
 CsrIntType: intVal=INT;
@@ -195,7 +222,7 @@ CsrFieldDef:
 		description = Description &
 		type = CsrFieldTypeType &
 		alias = CsrFieldAlias? &
-		definedBy = CsrDefinedBy? &
+		definedBy = DefinedBy? &
 		affectedBy = CsrFieldAffectedBy? &
 		certNormativeRules = CertNormativeRules?
 	) DEDENT
@@ -247,11 +274,11 @@ CsrAffectedByValue:
 ;
 
 CsrAffectedBySingle:
-    ref=[Model|ID]
+    ref=[ExtModel|STRING]
 ;
 
 CsrAffectedByList:
-    "[" refs+=[Model|ID] ("," refs+=[Model|ID])* "]"
+    "[" refs+=[ExtModel|STRING] ("," refs+=[ExtModel|STRING])* "]"
 ;
 
 
@@ -261,7 +288,6 @@ CsrAffectedByList:
  */
 InstKind: 'kind' ':' kind="instruction";
 InstName: 'name' ':' name=STRING;
-InstDefinedBy: 'definedBy' ':' dbname=Condition;
 InstAccess:
 	'access' ':'
 	INDENT(
@@ -395,6 +421,7 @@ InstRvPairEncoding:
 ;
 
 
+
 /*
  * Extension stuff (see ext_schema.json)
  */
@@ -485,24 +512,23 @@ ExtVersionContributorName:
 	"name" ":" name=STRING
 ;
 
+
+
 /*
  * Interrupt Code stuff (see interrupt_code_schema.json)
  */
-
 IntrptCodeKind:'kind' ':' kind="interrupt_code";
 IntrptCodeName:'name' ':' name=STRING;
-
 IntrptCodeNum:'num' ':' num=INT; 
-IntrptCodeDefinedBy:'definedBy' ':' definedBy=Condition;
+
+
 
 /*
  * Exception Code stuff (see exception_code_schema.json)
  */
-
 ECKind: 'kind' ':' kind="exception_code";
 ECName: 'name' ':' name=STRING;
 Num: 'num' ':' num=INT;
-ECDefinedBy: 'definedBy' ':' definedBy=Condition;
 
 
 
@@ -521,40 +547,246 @@ InstOpcodeData: 'data' ':'
 ;
 
 
-/* Conditions */
-Condition: cond=STRING; // placeholder
-//Condition: yamlCond=YAMLCondition | idlCond=IDLCondition;
 
-//YAMLCondition:
-//	yaml = YAMLCondition (TODO: implement)
-//	  extensionCond = ExtensionCondition
-//	| paramCond = ParamCondition
-//	| xlenCond = XLenCondition
+/*
+ * Inst Var Type stuff (see inst_variable_type_schema.json)
+ */
+
+InstVarTypeKind:
+	'kind' ':' kind='instruction_variable_type'
+;
+InstVarTypeName:
+	'name' ':' name=STRING
+;
+InstVarTypeType:
+	'type' ':' type=VarTypeEnum
+;
+RegisterFile:
+	'register_file' ':' registerFile=RegisterFileEnum
+;
+InstVarTypeAccess:
+	'access' ':' access=AccessEnum
+;
+
+enum AccessEnum:
+	R = 'R' |
+	W = 'W' |
+	RW = 'RW'
+;
+enum VarTypeEnum:
+	REGISTER_REFERENCE = 'register_reference' |
+	IMMEDIATE = 'immediate'
+;
+enum RegisterFileEnum:
+	X = 'X' |
+	F = 'F' |
+	V = 'V'
+;
+
+
+Condition: placeholder=STRING;
+/*
+ * Conditions
+ */
+//Condition: YAMLCondition | IDLCondition | ConditionArray;
+//
+//ConditionArray: ConditionArrayList | ConditionNot;
+//
+//ConditionArrayList:
+//	( 'allOf' ':'
+//	| 'anyOf' ':'
+//	| 'oneOf' ':'
+//	| 'noneOf' ':') &
+//	(INDENT
+//		condArray+=ConditionElement+
+//	DEDENT)
 //;
-
+//
+//// Mandates only one element for 'not'
+//ConditionNot: 
+//	'not' ':'
+//	INDENT
+//		condArray=ConditionElement
+//	DEDENT
+//;
+//
+//ConditionElement: '-' cond=Condition;
+//
+//YAMLCondition: 
+//	ExtensionCondition | XLenCondition | ParamCondition | YAMLArray | YAMLIfThen
+//;
+//
+//YAMLArray: YAMLArrayList | YAMLNot;
+//
+//YAMLArrayList:
+//	( 'allOf' ':'
+//	| 'anyOf' ':'
+//	| 'oneOf' ':'
+//	| 'noneOf' ':') &
+//	(INDENT
+//		yamlArray+=YAMLElement+
+//	DEDENT)
+//;
+//
+//// Mandates only one element for 'not'
+//YAMLNot:
+//	'not' ':'
+//	INDENT
+//		yamlArray=YAMLElement
+//	DEDENT
+//;
+//
+//YAMLElement: '-' yamlArrayElement=YAMLCondition;
+//
+//YAMLIfThen:
+//	('if' ':' 
+//	INDENT
+//		ifCond=YAMLCondition 
+//	DEDENT) &
+//	('then' ':'
+//	INDENT
+//		thenCond=YAMLCondition
+//	DEDENT)
+//;
+//
 //IDLCondition:
-//	"idl()" ":" idl=IDL
-//	reason?=Reason
+//	'idl()' ':' idl=Idl
 //;
 //
 //ExtensionCondition:
-//	STRING /* TODO */
+//	'extension' ':'
+//	INDENT
+//		extCond=Extension
+//	DEDENT
 //;
 //
-//ParamCondition:
-//	STRING /* TODO */
+//Extension:
+//	 requirement=ExtRequirement
+//	| array=ExtArray
+//	| ifThen=ExtIfThen
 //;
-
-//XLenCondition: xlen=INT; /* can be 32 or 64 (TODO: implement in validator) */
-
-//Reason: "reason" ":" reasonStr=STRING;
-
-
-
-/* IDL Grammar */
-Idl: '|' idl=STRING;
-
-
+//
+//ExtRequirement:
+//	'name' ':' name=STRING &
+//	(version=ExtVersion)?
+//;
+//
+//ExtVersion: IndentVersion | NoIndentVersion;
+//IndentVersion: 
+//	INDENT
+//		'version' ':' verReqs=VersionRequirements
+//	DEDENT
+//;
+//NoIndentVersion: 'version' ':' verReqs=VersionRequirements;
+//
+//VersionRequirements:
+//	versionReq=STRING 
+//;
+//
+//ExtArray: ExtArrayList | ExtNot;
+//
+//ExtArrayList:
+//	( 'allOf' ':'
+//	| 'anyOf' ':'
+//	| 'oneOf' ':'
+//	| 'noneOf' ':') &
+//	(INDENT
+//		extArray+=ExtArrayElement+ 
+//	DEDENT)
+//;
+//
+//// Mandates only one element for 'not'
+//ExtNot: 
+//	'not' ':' 
+//	INDENT
+//		extNotArray=ExtArrayElement
+//	DEDENT
+//;
+//
+//ExtArrayElement: '-' extConds=Extension;
+//
+//ExtIfThen: 
+//	('if' ':' 
+//	INDENT
+//		ifCond=Condition 
+//	DEDENT) &
+//	('then' ':'
+//	INDENT
+//		thenCond=ExtensionCondition
+//	DEDENT)
+//;
+//
+//
+//ParamCondition:
+//	'param' ':'
+//	INDENT
+//		param=Param 
+//	DEDENT
+//;
+//
+//Param: ParamFieldsList | ParamArray;
+//
+//ParamArray: ParamArrayList | ParamNot;
+//
+//ParamArrayList:
+//	( 'allOf' ':' 
+//	| 'anyOf' ':' 
+//	| 'oneOf' ':' 
+//	| 'noneOf' ':') &
+//	(INDENT
+//		paramArray+=ParamArrayElement+
+//	DEDENT)
+//;
+//
+//// Mandates only one element for 'not'
+//ParamNot: 
+//	'not' ':'
+//	INDENT
+//		paramArray=ParamArrayElement
+//	DEDENT
+//;
+//
+//ParamArrayElement: '-' paramElement=Param;
+//
+//ParamFieldsList:
+//	'name' ':' name=STRING &
+//	(INDENT
+//		paramFieldsList+=ParamFields+
+//	DEDENT)?
+//;
+//
+//ParamFields: 
+//	(ParamIndex |
+//	ParamSize |
+//	ParamEqual |
+//	ParamOneOf |
+//	ParamNotEqual |
+//	ParamGreaterThan |
+//	ParamLessThan |
+//	ParamGreaterEqual | 
+//	ParamLessEqual |
+//	ParamIncludes |
+//	ParamReason)
+//;
+//
+//ParamIndex: 'index' ':' index=INT;
+//ParamSize: 'size' ':' size=Boolean;
+//ParamEqual: 'equal' ':' (equalInt=INT | equalBool=Boolean | equalStr=STRING);
+//ParamOneOf: 
+//	'oneOf' ':' 
+//	INDENT
+//		oneOf+=ParamOneOfElement+
+//	DEDENT;
+//ParamOneOfElement: '-' (paramInt=INT|paramStr=ID); 
+//ParamNotEqual: 'notEqual' ':' (notEqualInt=INT | notEqualStr=ID | notEqualBool=Boolean);
+//ParamGreaterThan: 'greaterThan' ':' greaterThan=INT;
+//ParamLessThan: 'lessThan' ':' lessThan=INT;
+//ParamGreaterEqual: 'greaterThanOrEqual' ':' greaterEqual=INT;
+//ParamLessEqual: 'lessThanOrEqual' ':' lessEqual=INT;
+//ParamIncludes: 'includes' ':' (includeInt=INT | includeStr=ID);
+//ParamReason: 'reason' ':' reason=STRING;
+//
+//XLenCondition: 'xlen' ':' xlen=INT;
 
 
 
@@ -577,10 +809,10 @@ StringArray: '[' item+=STRING (',' item+=STRING) + ']';
 
 MultilineString: '|' value=STRING;
 
+
 /*
  * Hex & Binary
  */
-
 Hex: value=HEX_VALUE;
 terminal HEX_VALUE returns ecore::EInt:
 	('0x' | '0X')

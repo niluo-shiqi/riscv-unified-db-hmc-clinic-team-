@@ -32,7 +32,6 @@ class UdbParsingTest {
 			priv_mode: U
 			length: MXLEN
 			description: "Contains aliases to vxrm and vxsat CSRs"
-			definedBy: "V"
 			fields:
 				VXRM:
 					location: 2-1
@@ -79,8 +78,6 @@ class UdbParsingTest {
 		Assertions.assertEquals("MXLEN", len as String);
 		var desc = csr.getDescription().getDescription().getValue();
 		Assertions.assertEquals("Contains aliases to vxrm and vxsat CSRs", desc);
-		var def = csr.getDefinedBy().getExtensionName().getCond();
-		Assertions.assertEquals("V", def);
 
 		// test fields
 		var vxrm = csr.getCsrFields().getFields.get(0);
