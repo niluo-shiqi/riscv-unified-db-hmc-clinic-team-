@@ -21,11 +21,10 @@ STRING_FIELDS = [
     "url",
     "text_url",
     "email",
-    "introduction",  # TODO: check
+    "introduction",
 
     # CSR fields
     "alias",
-    # TODO: affectedBy
 
     # Instruction fields
     "assembly",
@@ -48,8 +47,8 @@ STRING_FIELDS = [
     "operation()",
 ]
 
-# Fields that are arrays of strings
-ARRAY_STRING_FIELDS = [
+# Fields that are yaml arrays of strings
+YAML_ARRAY_STRING_FIELDS = [
     # CSR fields
     "items", # for alias
 
@@ -59,6 +58,11 @@ ARRAY_STRING_FIELDS = [
     
     # Extension fields
     "changes",
+]
+
+# Fields that are arrays of strings (i.e., denoted with square brackets)
+ARRAY_STRING_FIELDS = [
+    "affectedBy",
 ]
 
 
@@ -118,7 +122,7 @@ def convert_yaml_to_udb(yaml_file):
 
     output_lines = []
     inMultiLineString = False   # to keep track if we're currently processing a multi-line string
-    inStringArray = False       # to keep track if we're currently processing an array of strings
+    inYamlStringArray = False       # to keep track if we're currently processing an array of strings
     inHintsArray = False        # to keep track if we're currently processing the hints array, which has special formatting
     for i, line in enumerate(lines):
         # Don't process comments or empty lines
@@ -148,7 +152,7 @@ def convert_yaml_to_udb(yaml_file):
                     line = (" " * indentation) + "\"\n" + line
             
             # Check if the line is part of an array of strings
-            elif inStringArray:
+            elif inYamlStringArray:
                 if line.strip().startswith("-"):
                     # escape quotes
                     line = line.replace('"', '\\"')
@@ -164,7 +168,7 @@ def convert_yaml_to_udb(yaml_file):
                     
                     continue
                 else:
-                    inStringArray = False
+                    inYamlStringArray = False
 
             try:
                 field, value = line.split(":", 1)
@@ -190,9 +194,15 @@ def convert_yaml_to_udb(yaml_file):
                     if not (value.startswith('"') and value.endswith('"')):
                         value = f'"{value}"' if value else value
 
-                elif field.strip() in ARRAY_STRING_FIELDS:
-                    inStringArray = True
+                elif field.strip() in YAML_ARRAY_STRING_FIELDS:
+                    inYamlStringArray = True
                     inHintsArray = field.strip() == "hints"
+                
+                elif field.strip() in ARRAY_STRING_FIELDS:
+                    # Add quotes around each element in the array
+                    elements = [elem.strip() for elem in value.strip("[]").split(",")]
+                    quoted_elements = [f'"{elem}"' for elem in elements]
+                    value = f"[{', '.join(quoted_elements)}]"
 
                 # Opcode itself isn't a string, but it contains a string that needs quotes
                 elif field.strip() == "opcode":
