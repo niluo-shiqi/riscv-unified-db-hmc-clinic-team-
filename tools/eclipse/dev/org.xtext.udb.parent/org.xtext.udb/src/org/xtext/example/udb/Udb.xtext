@@ -76,7 +76,7 @@ RegisterModel:
 	regName = RegisterName &
 	longName = LongName &
 	description = Description &
-	definedBy = RegisterDefinedBy? &
+	definedBy = Condition? &
 	registerClass = RegisterClass? &
 	registerLength = RegisterLength &
 	registers = Registers &
@@ -87,7 +87,6 @@ RegisterModel:
 
 RegisterKind: 'kind' ':' kind="register_file";
 RegisterName: 'name' ':' name=STRING;
-RegisterDefinedBy: 'definedBy' ':' definedBy=STRING;
 RegisterClass: 'register_class' ':' registerClass=STRING;
 RegisterLength: 'register_length' ':' registerLength=RegisterLengthType;
 RegisterLengthType: intVal=RegisterLengthInt | paramName=RegisterLengthEnum;
