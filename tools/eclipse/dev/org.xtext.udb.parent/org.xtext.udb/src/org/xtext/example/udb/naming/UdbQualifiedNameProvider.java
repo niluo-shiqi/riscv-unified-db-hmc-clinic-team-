@@ -2,33 +2,68 @@ package org.xtext.example.udb.naming;
 
 import org.eclipse.xtext.naming.DefaultDeclarativeQualifiedNameProvider;
 import org.eclipse.xtext.naming.QualifiedName;
-// import your actual target model type here
-import org.xtext.example.udb.udb.CsrModel;
-import org.xtext.example.udb.udb.InstModel;
-import org.xtext.example.udb.udb.ExtModel;
-
+import org.eclipse.emf.ecore.EObject;
+import org.xtext.example.udb.udb.CsrName;
+import org.xtext.example.udb.udb.ECName;
+import org.xtext.example.udb.udb.InstName;
+import org.xtext.example.udb.udb.InstOpcodeName;
+import org.xtext.example.udb.udb.InstVarTypeName;
+import org.xtext.example.udb.udb.IntrptCodeName;
+import org.xtext.example.udb.udb.ExtName;
+import org.xtext.example.udb.udb.RegisterName;
 
 public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNameProvider {
 
-	protected QualifiedName qualifiedName(CsrModel csr) {
-		if (csr.getCsrName() == null || csr.getCsrName().getName() == null) {
-			return null;
+	public QualifiedName qualifiedName(CsrName csrName) {
+		if (csrName != null && csrName.getName() != null) {
+			return QualifiedName.create(csrName.getName());
 		}
-		return QualifiedName.create(csr.getCsrName().getName());
+		return null;
 	}
 
-	protected QualifiedName qualifiedName(InstModel inst) {
-		if (inst.getInstName() == null || inst.getInstName().getName() == null) {
-			return null;
+	public QualifiedName qualifiedName(InstName instName) {
+		if (instName != null && instName.getName() != null) {
+			return QualifiedName.create(instName.getName());
 		}
-		return QualifiedName.create(inst.getInstName().getName());
+		return null;
+	}
+	
+
+
+	public QualifiedName qualifiedName(ExtName extName) {
+		if (extName != null && extName.getName() != null) {
+			return QualifiedName.create(extName.getName());
+		}
+		return null;
+	}
+	public QualifiedName qualifiedName(IntrptCodeName intrptcodeName) {
+		if (intrptcodeName != null && intrptcodeName.getName() != null) {
+			return QualifiedName.create(intrptcodeName.getName());
+		}
+		return null;
+	}
+	public QualifiedName qualifiedName(ECName ecName) {
+		if (ecName != null && ecName.getName() != null) {
+			return QualifiedName.create(ecName.getName());
+		}
+		return null;
 	}
 
-	protected QualifiedName qualifiedName(ExtModel ext) {
-		if (ext.getExtName() == null || ext.getExtName().getName() == null) {
-			return null;
+	public QualifiedName qualifiedName(InstOpcodeName instopcodeName) {
+		if (instopcodeName != null && instopcodeName.getName() != null) {
+			return QualifiedName.create(instopcodeName.getName());
 		}
-		return QualifiedName.create(ext.getExtName().getName());
+		return null;
 	}
+	
+	public QualifiedName qualifiedName(InstVarTypeName instvartypeName) {
+		if (instvartypeName != null && instvartypeName.getName() != null) {
+			return QualifiedName.create(instvartypeName.getName());
+		}
+		return null;
+	}
+	
+
+	
 
 }
