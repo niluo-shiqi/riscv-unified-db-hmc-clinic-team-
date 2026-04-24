@@ -76,7 +76,7 @@ RegisterModel:
 	regName = RegisterName &
 	longName = LongName &
 	description = Description &
-	definedBy = Condition? &
+	definedBy = RegisterDefinedBy? &
 	registerClass = RegisterClass? &
 	registerLength = RegisterLength &
 	registers = Registers &
@@ -88,6 +88,7 @@ RegisterModel:
 RegisterKind: 'kind' ':' kind="register_file";
 RegisterName: 'name' ':' name=STRING;
 RegisterClass: 'register_class' ':' registerClass=STRING;
+RegisterDefinedBy: 'definedBy' ':' definedBy=Condition;
 RegisterLength: 'register_length' ':' registerLength=RegisterLengthType;
 RegisterLengthType: intVal=RegisterLengthInt | paramName=RegisterLengthEnum;
 
@@ -106,6 +107,7 @@ Registers:
 ;
 RegisterEntry:
 	'-' 'name' ':' name=STRING
+	INDENT(
 		abiMnemonics = RegisterAbiMnemonics? &
 		description = RegisterDescription? &
 		when = RegisterWhen? &
@@ -114,6 +116,7 @@ RegisterEntry:
 		callerSaved = RegisterCallerSaved? &
 		calleeSaved = RegisterCalleeSaved? &
 		roles = RegisterRoles?
+	)DEDENT
 ;
 
 RegisterAbiMnemonics:'abi_mnemonics' ':' '[' mnemonics+=STRING (',' mnemonics+=STRING)* ']';
@@ -124,12 +127,10 @@ RegisterDescription:
 ;
 
 RegisterWhen:
-	'when' ':'
-	(
+	'when' ':' (
 		when=RequiresNot |
-		(INDENT when=RequiresComposite DEDENT)
+		INDENT when=RequiresComposite DEDENT
 	)
-
 ;
 
 RegisterArchRead:
@@ -151,15 +152,13 @@ RegisterCalleeSaved:
 RegisterRoles:'roles' ':' '[' roles+=RegisterRole (',' roles+=RegisterRole)* ']';
 
 RequiresEntry:
-	('-' entry=RequiresEntryContent) | RequiresEntryContent
-;
-
-RequiresEntryContent:
 	ExtensionRequirement | RequiresComposite
 ;
 
+
 ExtensionRequirement:
-	'name' ':' name=STRING ('version' ':' version=VersionRequirements)?
+	'name' ':' name=STRING 
+	(INDENT? 'version' ':' version=VersionRequirements DEDENT?)?
 ;
 
 VersionRequirements:
@@ -184,21 +183,21 @@ RequiresNot:
 RequiresAnyOf:
 	'anyOf' ':'
 	INDENT
-		entries += RequiresEntry+
+		('-' entries += RequiresEntry)+
 	DEDENT
 ;
 
 RequiresAllOf:
 	'allOf' ':'
 	INDENT
-		entries += RequiresEntry+
+		('-' entries += RequiresEntry)+
 	DEDENT
 ;
 
 RequiresOneOf:
 	'oneOf' ':'
 	INDENT
-		entries += RequiresEntry+
+		('-' entries += RequiresEntry)+
 	DEDENT
 ;
 

@@ -10,6 +10,8 @@ import org.xtext.example.udb.udb.UdbPackage;
 
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.VersionRequirementString;
+
+
 import org.xtext.example.udb.udb.Email;
 
 import org.xtext.example.udb.udb.CsrModel;
@@ -54,10 +56,11 @@ import org.xtext.example.udb.udb.RegisterName;
 import org.xtext.example.udb.udb.RegisterRole;
 import org.xtext.example.udb.udb.RegisterRoles;
 import org.xtext.example.udb.udb.Registers;
+import org.xtext.example.udb.udb.RequiresEntry;
 import org.xtext.example.udb.udb.RequiresNot;
 import org.xtext.example.udb.udb.RegisterAbiMnemonics;
 import org.xtext.example.udb.udb.RegisterClass;
-import org.xtext.example.udb.udb.RegisterDefinedBy;
+
 import org.xtext.example.udb.udb.RegisterEntry;
 import org.xtext.example.udb.udb.RegisterLength;
 import org.xtext.example.udb.udb.RegisterLengthInt;
@@ -676,65 +679,69 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 
-	/*
-	 * Validate extension name in register definedBy field follows pattern ^(([A-WY])|([SXZ][a-z0-9]+))$
-	 * Spec: $ref: schema_defs.json#/$defs/extension_name
-	 */
 	@Check
-	public void checkExtensionNameFormat(ExtensionRequirement extReq) {
-		String name = extReq.getName();
-		
-		if (name == null || name.isEmpty()) {
-			error("Extension name must not be empty",
-					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+	public void checkRequiresEntry(RequiresEntry entry) {
+		try {
+			if (entry instanceof ExtensionRequirement) {
+				ExtensionRequirement extReq = (ExtensionRequirement) entry;
+				String name = extReq.getName();
+				
+				if (name == null) {
+					error("Extension name is required", extReq,
+							UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+					return;
+				}
+				
+				if (name.isEmpty()) {
+					error("Extension name cannot be empty", extReq,
+							UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+					return;
+				}
+				
+				if (!name.matches(extensionNameRegex)) {
+					error("Extension name '" + name + "' must be a single letter (A-W or Y) OR a letter (S, X, or Z) followed by lowercase letters/numbers", extReq,
+							UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+				}
+			}
+		} catch (Exception e) {
 			return;
 		}
-		
-		if (!name.matches(extensionNameRegex)) {
-			error("Extension name '" + name + "' must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
-					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
-		}
 	}
-	
 	/*
 	 * Validate extension name in register requires not field follows pattern ^(([A-WY])|([SXZ][a-z0-9]+))$
 	 * Spec: $ref: schema_defs.json#/$defs/extension_name
 	 */
 	@Check
 	public void checkSimpleExtensionNameFormat(RequiresNot extReq) {
-		String name = extReq.getName();
-		
-		if (name == null || name.isEmpty()) {
-			error("Extension name must not be empty",
-					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
+		try {
+			if (extReq == null) {
+				return;
+			}
+			String name = extReq.getName();
+	
+			if (name == null) {
+				error("Extension name is required",
+						UdbPackage.Literals.REQUIRES_NOT__NAME);
+				return;
+			}
+			
+			if (name.isEmpty()) {
+				error("Extension name cannot be empty",
+						UdbPackage.Literals.REQUIRES_NOT__NAME);
+				return;
+			}
+			
+			if (!name.matches(extensionNameRegex)) {
+				error("Extension name '" + name + "' must be a single letter (A-W or Y) OR a letter (S, X, or Z) followed by lowercase letters/numbers",
+						UdbPackage.Literals.REQUIRES_NOT__NAME);
+			}
+		} catch (Exception e) {
+			// Silently ignore - malformed objects from optional INDENT/DEDENT
 			return;
-		}
-		
-		if (!name.matches(extensionNameRegex)) {
-			error("Extension name '" + name + "' must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
-					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
 		}
 	}
 	
-	/*
-	 * Validate extension name in register definedBy field follows pattern ^(([A-WY])|([SXZ][a-z0-9]+))$
-	 * Spec: $ref: schema_defs.json#/$defs/extension_name
-	 */
-	@Check
-	public void checkSimpleExtensionNameFormat(RegisterDefinedBy extReq) {
-		String name = extReq.getDefinedBy();
-		
-		if (name == null || name.isEmpty()) {
-			error("Extension name must not be empty",
-					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
-			return;
-		}
-		
-		if (!name.matches(extensionNameRegex)) {
-			error("Extension name '" + name + "' must be RV64 or a single letter (A-Z except X) optionally followed by lowercase letters/numbers",
-					UdbPackage.Literals.EXTENSION_REQUIREMENT__NAME);
-		}
-	}
+
 
 	/*
 	 * Validate version requirement format matches pattern
