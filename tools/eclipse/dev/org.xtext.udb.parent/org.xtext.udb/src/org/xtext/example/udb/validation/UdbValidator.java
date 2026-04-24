@@ -118,7 +118,7 @@ import org.xtext.example.udb.udb.ParamArrayList;
 import org.xtext.example.udb.udb.ParamOneOf;
 import org.xtext.example.udb.udb.XLenCondition;
 
-//Config imports
+// Config imports
 import org.xtext.example.udb.udb.ConfigModel;
 //import org.xtext.example.udb.udb.ConfigParam;
 import org.xtext.example.udb.udb.FullConfigurationType;
