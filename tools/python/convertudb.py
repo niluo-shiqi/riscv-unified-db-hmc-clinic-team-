@@ -66,8 +66,6 @@ STRING_FIELDS = [
     # Conditions
     "reason",
     "equal",
-
-    # TODO: requires not
 ]
 
 # Fields that aren't strings, but have strings in them
