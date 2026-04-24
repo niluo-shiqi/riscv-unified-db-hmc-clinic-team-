@@ -9,6 +9,7 @@ import org.xtext.example.udb.udb.InstName;
 import org.xtext.example.udb.udb.InstOpcodeName;
 import org.xtext.example.udb.udb.InstVarTypeName;
 import org.xtext.example.udb.udb.IntrptCodeName;
+import org.xtext.example.udb.udb.ManualName;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.RegisterName;
 
@@ -59,6 +60,18 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 	public QualifiedName qualifiedName(InstVarTypeName instvartypeName) {
 		if (instvartypeName != null && instvartypeName.getName() != null) {
 			return QualifiedName.create(instvartypeName.getName());
+		}
+		return null;
+	}
+	public QualifiedName qualifiedName(RegisterName regName) {
+		if (regName != null && regName.getName() != null) {
+			return QualifiedName.create(regName.getName());
+		}
+		return null;
+	}
+	public QualifiedName qualifiedName(ManualName manualName) {
+		if (manualName != null && manualName.getName() != null) {
+			return QualifiedName.create(manualName.getName());
 		}
 		return null;
 	}

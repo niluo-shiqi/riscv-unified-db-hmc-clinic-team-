@@ -89,6 +89,7 @@ import org.xtext.example.udb.udb.RegisterLength;
 import org.xtext.example.udb.udb.RegisterLengthInt;
 import org.xtext.example.udb.udb.RegisterLengthType;
 
+import org.xtext.example.udb.udb.ManualModel;
 /**
  * This class contains custom validation rules.
  *
@@ -965,7 +966,16 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 
-
+	/*
+	 * Manual Validation -- rules found in manual_schema.json
+	 */
+	@Check
+    public void checkManualSchema(ManualModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("manual_schema.json#")) {
+			error("Schema incompatible with kind", UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+    }
 
 	/*
 	 * Conditions Validation

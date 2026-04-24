@@ -13,21 +13,10 @@ Model
 	| InstOpcodeModel
 	| InstVarTypeModel
 	| RegisterModel
+	| ManualModel
 ;
 
-RegisterModel:
-	schema = Schema // must be "register_file_schema.json#"
-	regKind = RegisterKind
-	regName = RegisterName &
-	longName = LongName &
-	description = Description &
-	definedBy = RegisterDefinedBy? &
-	registerClass = RegisterClass? &
-	registerLength = RegisterLength &
-	registers = Registers &
-	source = Source?
-	
-;
+
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
@@ -145,7 +134,32 @@ InstVarTypeModel:
 	
 ;
 
+RegisterModel:
+	schema = Schema // must be "register_file_schema.json#"
+	regKind = RegisterKind
+	regName = RegisterName &
+	longName = LongName &
+	description = Description &
+	definedBy = RegisterDefinedBy? &
+	registerClass = RegisterClass? &
+	registerLength = RegisterLength &
+	registers = Registers &
+	source = Source?
+	
+;
 
+ManualModel:
+	schema = Schema // must be "mmr_schema.json#"
+	manualKind = ManualKind
+	manualName = ManualName &
+	longName = LongName &
+	marketingName = MarketingName? &
+	state = SpecState? &
+	url = Url? &
+	license = License? &
+	source = Source?
+	
+;
 
 /*
  * Common stuff
@@ -210,6 +224,16 @@ DocLicense:
 	'doc_license' ':'
 	INDENT (
 		('name' ':' name=STRING) &
+		id=UdbId? &
+		url=Url? &
+		textUrl=TextUrl?
+	) DEDENT
+;
+
+License:
+	'license' ':'
+	INDENT (
+		('name' ':' name=STRING) & 
 		id=UdbId? &
 		url=Url? &
 		textUrl=TextUrl?
@@ -837,6 +861,29 @@ enum RegisterFileEnum:
 	F = 'F' |
 	V = 'V'
 ;
+
+/*
+ * Manual stuff (see manual_schema.json)
+ */
+
+SpecState: 'state' ':' state=stateEnum;
+
+enum stateEnum:
+	DEVELOPMENT = 'development' |
+	FROZEN = 'frozen' |
+	PUBLICREVIEW = 'public-review' |
+	RATIFICATIONREADY = 'ratification-ready' |
+	RATIFIED = 'ratified' |
+	NONSTANDARDRELEASED = 'nonstandard-released' 
+;
+
+MarketingName: 'marketing_name' ':' marketingName=STRING;
+
+ManualName: 'name' ':' name=STRING;
+
+ManualKind: 'kind' ':' kind="manual";
+
+
 
 
 Condition: placeholder=STRING;
