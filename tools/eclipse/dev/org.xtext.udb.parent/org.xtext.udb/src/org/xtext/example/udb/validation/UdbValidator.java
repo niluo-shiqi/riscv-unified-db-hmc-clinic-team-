@@ -972,25 +972,6 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 
-	
-	// Check that URLs follow the URI format
-	@Check
-	public void checkUrlFormat(Url url) {
-		String urlString = url.getUrl();
-		if (!urlString.matches(urlRegex)) {
-			error("URL not in URI format", UdbPackage.eINSTANCE.getUrl_Url());
-		}
-	}
-
-	// Check that emails follow email format
-	@Check
-	public void checkEmailFormat(Email email) {
-		String emailString = email.getEmail();
-		if (!emailString.matches(emailRegex)) {
-			error("Email not in formatted correctly", UdbPackage.eINSTANCE.getEmail_Email());
-		}
-	}
-
 	/*
 	 * Manual Validation -- rules found in manual_schema.json
 	 */
@@ -1124,6 +1105,28 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 
+
+	/*
+	 *  Validate general fields (e.g. url, email, etc.)
+	 */
+
+	// Check that URLs follow the URI format
+	@Check
+	public void checkUrlFormat(Url url) {
+		String urlString = url.getUrl();
+		if (!urlString.matches(urlRegex)) {
+			error("URL not in URI format", UdbPackage.eINSTANCE.getUrl_Url());
+		}
+	}
+
+	// Check that emails follow email format
+	@Check
+	public void checkEmailFormat(Email email) {
+		String emailString = email.getEmail();
+		if (!emailString.matches(emailRegex)) {
+			error("Email not in formatted correctly", UdbPackage.eINSTANCE.getEmail_Email());
+		}
+	}
 
 
 	/*
