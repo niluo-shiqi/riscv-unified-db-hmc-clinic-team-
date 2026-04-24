@@ -7,6 +7,7 @@ import org.xtext.example.udb.udb.UdbPackage;
 import org.xtext.example.udb.treetop.TreetopParser;
 import org.xtext.example.udb.treetop.ValidationError;
 
+import org.xtext.example.udb.udb.Base;
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
 import org.xtext.example.udb.udb.StringArray;
@@ -17,10 +18,6 @@ import org.xtext.example.udb.udb.DocLicense;
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrAddress;
-import org.xtext.example.udb.udb.CsrAffectedByList;
-import org.xtext.example.udb.udb.CsrAffectedBySingle;
-import org.xtext.example.udb.udb.CsrAffectedByValue;
-import org.xtext.example.udb.udb.CsrFieldAffectedBy;
 import org.xtext.example.udb.udb.CsrAffectedByList;
 import org.xtext.example.udb.udb.CsrAffectedBySingle;
 import org.xtext.example.udb.udb.CsrAffectedByValue;
@@ -57,6 +54,15 @@ import org.xtext.example.udb.udb.InstOperation;
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
+
+// Profile imports
+import org.xtext.example.udb.udb.ProfModel;
+import org.xtext.example.udb.udb.ProfInherits;
+import org.xtext.example.udb.udb.ProfRelease;
+import org.xtext.example.udb.udb.ProfExtInheritsString;
+import org.xtext.example.udb.udb.ProfExtArrayElement;
+import org.xtext.example.udb.udb.ProfExtVersionReqString;
+import org.xtext.example.udb.udb.ProfExtRemoveString;
 
 //Inst Opcode imports
 import org.xtext.example.udb.udb.InstOpcodeModel;
@@ -120,7 +126,7 @@ import org.xtext.example.udb.udb.XLenCondition;
  */
 public class UdbValidator extends AbstractUdbValidator {
 
-	// Regex's found in schema_defs.json
+	// Regex's found throughout schemas (mostly in schema_defs.json)
 	String rviVersionRegex = "^[0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?$";
 	String csrFieldRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+$";
     String csrFieldBitsRegex = "^[a-z][a-z0-9_.]+\\.[A-Z0-9]+\\[[0-9]+(:[0-9]+)?\\]$";
@@ -145,7 +151,9 @@ public class UdbValidator extends AbstractUdbValidator {
     String manualVersionManualRegex = "^manual/.*\\.yaml#$";
     String manualVersionVersionRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
     String manualVersionExtensionVersion = "^[0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?$";
-    
+    String profInheritsRegex = "^profile/.*#$";
+    String profReleaseRegex = "^profile_release.*#$";
+    String profInheritsExtRegex = "^profile/.*#/extensions$";
     
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
@@ -579,7 +587,72 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 
 
-
+	/*
+	 * Profile Validation -- rules found in profile_schema.json
+	 */
+	@Check
+	public void checkProfSchema(ProfModel prof) {
+		String schema = prof.getSchema().getSchema();
+		if (!schema.equals("profile_schema.json#")) {
+			error("Schema incompatible with kind", prof.getSchema(), 
+					UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+    }
+	
+	@Check
+	public void checkProfInherits(ProfInherits inherits) {
+		String inherit = inherits.getInherits();
+		if (!inherit.matches(profInheritsRegex)) {
+			error("Invalid path for inheritance",
+					UdbPackage.eINSTANCE.getProfInherits_Inherits());
+		}
+	}
+	
+	@Check
+	public void checkProfReleaseRef(ProfRelease release) {
+		String ref = release.getReleaseAddress();
+		if (!ref.matches(profReleaseRegex)) {
+			error("Invalid release address",
+					UdbPackage.eINSTANCE.getProfRelease_ReleaseAddress());
+		}
+	}
+	
+	@Check
+	public void checkProfExtensionsInherits(ProfExtInheritsString inherits) {
+		String inherit = inherits.getExtAddress();
+		if (!inherit.matches(profInheritsExtRegex)) {
+			error("Invalid path to inherited extension",
+					UdbPackage.eINSTANCE.getProfExtInheritsString_ExtAddress());
+		}
+	}
+	
+	@Check
+	public void checkProfExtensionsRemove(ProfExtRemoveString remove) {
+		String name = remove.getExtName();
+		if (!name.matches(extensionNameRegex)) {
+			error("Invalid extension name",
+					UdbPackage.eINSTANCE.getProfExtRemoveString_ExtName());
+		}
+	}
+	
+	@Check
+	public void checkProfExtensionNames(ProfExtArrayElement extension) {
+		String name = extension.getName();
+		if (!name.matches("[A-Z][a-z0-9]*")) {
+			error("Invalid extension name",
+					UdbPackage.eINSTANCE.getProfExtArrayElement_Name());
+		}
+	}
+	
+	@Check
+	public void checkProfVersionRequirements(ProfExtVersionReqString versionReq) {
+		String req = versionReq.getVersionReq();
+		if (!req.matches(requirementStringRegex)) {
+			error("Invalid version requirement",
+					UdbPackage.eINSTANCE.getProfExtVersionReqString_VersionReq());
+		}
+	}
+	
 	/*
 	 * Interrupt Code Validation -- rules found in interrupt_code_schema.json
 	 */
@@ -1124,6 +1197,16 @@ public class UdbValidator extends AbstractUdbValidator {
 		String emailString = email.getEmail();
 		if (!emailString.matches(emailRegex)) {
 			error("Email not in formatted correctly", UdbPackage.eINSTANCE.getEmail_Email());
+		}
+	}
+	
+	@Check
+	public void checkBase(Base base) {
+		int baseNum = base.getBase();
+
+		if (baseNum != 64 && baseNum != 32) {
+			error("Base must be 32 for RV32I or 64 for RV64I", 
+					UdbPackage.eINSTANCE.getBase_Base());
 		}
 	}
 

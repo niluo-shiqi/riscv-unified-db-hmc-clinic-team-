@@ -8,6 +8,7 @@ Model
 	: CsrModel
 	| InstModel
 	| ExtModel
+	| ProfModel
 	| InterruptCodeModel
 	| ExceptionCodeModel
 	| InstOpcodeModel
@@ -78,26 +79,27 @@ ExtModel:
 	certNormativeRules = CertNormativeRules?
 ;
 
-//ProfModel:
-//	schema = Schema // must be "profile_schema.json#"
-//	profKind = ProfKind
-//	profName = ProfName &
-//	longName = LongName &
-//	description = Description? &
-//	inherits = ProfInherits? &
-//	parentOf = ProfParentOf? &
-//	childOf = ProfChildOf? &
-//	certNormativeRules = CertNormativeRules? &
-//	requirements = Requirements? &
-//	marketingName = ProfMarketingName &
-//	mode = ProfMode? &
-//	release = ProfRelease? &
-//	introduction = ProfIntroduction? &
-//	recommendations = ProfRecommendations? &
-//	extraNotes = ProfExtraNotes? &
-//	extensions = ProfExtensions? &
-//	source = ProfSource?
-//;
+ProfModel:
+	schema = Schema // must be "profile_schema.json#"
+	profKind = ProfKind
+	profName = ProfName &
+	longName = LongName &
+	base = Base &
+	description = Description? &
+	inherits = ProfInherits? &
+	parentOf = ProfParentOf? &
+	childOf = ProfChildOf? &
+	certNormativeRules = CertNormativeRules? &
+	requirements = Requirements? &
+	marketingName = ProfMarketingName? &
+	mode = ProfMode? &
+	release = ProfRelease? &
+	introduction = Introduction? &
+	recommendations = ProfRecommendations? &
+	extraNotes = ProfExtraNotes? &
+	extensions = ProfExtensions? &
+	source = Source?
+;
 
 InterruptCodeModel:
 	schema = Schema // must be "interript_code_schema.json#"
@@ -197,8 +199,8 @@ ProfFamModel:
  */
 Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
-Description: 'description' ':' description=DescriptionType;
-DescriptionType: (value=STRING) | MultilineString;
+Base: "base" ":" base=INT;
+Description: 'description' ':' description=StringType;
 Requirements: "requirements" ":" 
 	INDENT 
 		requirements=Condition 
@@ -219,7 +221,7 @@ TextUrl: 'text_url' ':' textUrl=STRING;
 Email: 'email' ':' email=STRING;
 ProcessorKind: 'processor_kind' ':' 
 	processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
-Introduction: 'introduction' ':' introduction=STRING;
+Introduction: 'introduction' ':' introduction=StringType;
 Company:
 	'company' ':' 
 	INDENT (
@@ -608,7 +610,7 @@ ExtVersionContributorName:
 /*
  * Register File Stuff (see register_file_schema.json)
  */
- RegisterKind: 'kind' ':' kind="register_file";
+RegisterKind: 'kind' ':' kind="register_file";
 RegisterName: 'name' ':' name=STRING;
 RegisterClass: 'register_class' ':' registerClass=STRING;
 RegisterDefinedBy: 'definedBy' ':' definedBy=Condition;
@@ -737,93 +739,126 @@ enum RegisterRole:
 	ARGUMENT = 'argument' |
 	TEMPORARY = 'temporary'
 ;
+
+
+
 /*
  * Profile stuff (see profile_schema.json)
  */
-//ProfKind: 'kind' ':' kind='profile';
-//ProfName: 'name' ':' name=ID;
-//ProfInherits: '$inherits' ':' inherits=STRING;
-//ProfParentOf: '$parent_of' ':' parent_of=STRING;
-//ProfChildOf: '$child_of' ':' child_of=STRING;
-//ProfMarketingName: 'marketing_name' ':' marketing_name=STRING;
-//ProfMode: 'mode' ':' mode=('M' | 'S' | 'U' | 'Unpriv');
-//ProfRelease:
-//	'release' ':' '{' '$ref' ':' releaseAddress=STRING '}'
-//;
-//ProfIntroduction: 'introduction' ':' introduction=STRING;
-//ProfRecommendations:
-//	'recommendations' ':'
-//	INDENT
-//		recommendations += ProfRecommendationsArrayElement+
-//	DEDENT
-//;
-//ProfRecommendationsArrayElement:
-//	'-' 'text' ':' text=STRING
-//;
-//ProfExtraNotes:
-//	'extra_notes:' ':'
-//	INDENT
-//		extra_notes += ProfExtraNotesArrayElement+
-//	DEDENT
-//;
-//ProfExtraNotesArrayElement:
-//	'-' 'presence' ':' presence=STRING
-//	INDENT
-//		'text' ':' text=STRING
-//	DEDENT
-//;
-//ProfExtensions:
-//	'extensions' ':'
-//	INDENT
-//		('$inherits' ':' ProfExtInherits)
-//		(extensions += ProfExtArrayElement+)
-//	DEDENT
-//;
-//ProfExtInherits:
-//	(inhString=ProfExtInheritsString | inhArray=ProfExtInheritsArray)
-//;
-//ProfExtInheritsString:
-//	inherits=STRING
-//;
-//ProfExtInheritsArray:
-//	inherits += ProfExtensionsInheritsArrayElement+
-//;
-//ProfExtensionsInheritsArrayElement:
-//	'-' extAddress=ProfExtInheritsString
-//;
-//// TODO: make sure this works...
-//ProfExtArrayElement:
-//	extension=STRING ':' // TODO: validator
-//	INDENT
-//		'presence' ':' presence=ProfExtPresence
-//		'version' ':' version=ProfExtVersion
-//		'note' ':' note=STRING
-//	DEDENT
-//;
-//
-//enum ProfExtPresence:
-//	ProfExtPresenceElement |
-//	ProfExtPresenceOptElement
-//;
-//
-//enum ProfExtPresenceElement:
-//	mandatory='mandatory' | 
-//	optional='optional'
-//;
-//ProfExtPresenceOptElement:
-//	'optional' ':' optional=ProfOptionalEnum
-//;
-//enum ProfOptionalEnum:
-//	expansion='expansion'|
-//	localized='localized'|
-//	development='development'
-//;
-//
-//ProfExtVersion:
-//	'{' '$ref' ':' versionAddress=STRING '}' //  TODO: validator
-//;
-//
-//ProfSource: '$source' ':' source=STRING;
+ProfKind: 'kind' ':' kind='profile';
+ProfName: 'name' ':' name=STRING;
+ProfInherits: '$inherits' ':' inherits=STRING;
+ProfParentOf: '$parent_of' ':' parent_of=STRING;
+ProfChildOf: '$child_of' ':' child_of=STRING;
+ProfMarketingName: 'marketing_name' ':' marketing_name=STRING;
+ProfMode: 'mode' ':' mode=('M' | 'S' | 'U' | 'Unpriv');
+ProfRelease:
+	'release' ':' '{' '$ref' ':' releaseAddress=STRING '}'
+;
+ProfRecommendations:
+	'recommendations' ':'
+	INDENT
+		recommendations += ProfRecommendationsArrayElement+
+	DEDENT
+;
+ProfRecommendationsArrayElement:
+	'-' 'text' ':' text=StringType
+;
+ProfExtraNotes:
+	'extra_notes' ':'
+	INDENT
+		extra_notes += ProfExtraNotesArrayElement+
+	DEDENT
+;
+ProfExtraNotesArrayElement:
+	'-' 'presence' ':' presence=("optional" | "mandatory")
+	INDENT
+		'text' ':' text=StringType
+	DEDENT
+;
+ProfExtensions:
+	{ProfExtensions} 'extensions' ':'
+	(INDENT (
+		inherits = ProfExtInherits? &
+		remove = ProfExtRemove? &
+		extensions += ProfExtArray?
+	) DEDENT)?
+;
+ProfExtInherits:
+	'$inherits' ':' 
+		(inheritsString=ProfExtInheritsString
+		| inheritsArray=ProfExtInheritsArray)
+;
+ProfExtInheritsString:
+	extAddress=STRING
+;
+ProfExtInheritsArray:
+	INDENT
+		inherits += ProfExtensionsInheritsArrayElement+
+	DEDENT
+;
+ProfExtensionsInheritsArrayElement:
+	'-' ProfExtInheritsString
+;
+
+ProfExtRemove:
+	'$remove' ':'
+		(removeString = ProfExtRemoveString
+		| removeArray = ProfExtRemoveArray)
+;
+ProfExtRemoveString:
+	extName=STRING
+;
+ProfExtRemoveArray:
+	INDENT
+		extensions += ProfExtRemoveArrayElement+
+	DEDENT
+;
+
+ProfExtRemoveArrayElement:
+	'-' ProfExtRemoveString
+;
+
+ProfExtArray:
+	extension += ProfExtArrayElement+
+;
+ProfExtArrayElement:
+	name=STRING ':'
+	INDENT (
+		'presence' ':' presence=ProfExtPresence &
+		'version' ':' versionReqs=ProfExtVersionRequirements &  // TODO: should this be optional? it's required in the schema but a lot of profiles don't have this field
+		('note' ':' note=StringType)?
+	) DEDENT
+;
+
+ProfExtPresence
+	: ProfExtPresenceElement 
+	| ProfExtPresenceOptElement
+;
+ProfExtPresenceElement: element=('mandatory' | 'optional');
+ProfExtPresenceOptElement:
+	INDENT
+		'optional' ':' optional=('expansion' | 'localized' | 'development')
+	DEDENT
+;
+
+ProfExtVersionRequirements
+	: extVersionReqString = ProfExtVersionReqString
+	| extVersonReqArray = ProfExtVersionReqArray
+;
+
+ProfExtVersionReqString: versionReq = STRING;
+ProfExtVersionReqArray:
+	INDENT
+		versionReqs += ProfExtVersionReqArrayElement+
+	DEDENT
+;
+ProfExtVersionReqArrayElement:
+	'-' ProfExtVersionReqString
+;
+
+
+
 
 /*
  * Interrupt Code stuff (see interrupt_code_schema.json)
@@ -923,7 +958,7 @@ ManualKind: 'kind' ':' kind="manual";
  
 ManualVersionKind: 'kind' ':' kind="manual_version";
 ManualVersionName: 'name' ':' name=STRING;
-ManualVersionManual: 'manual' ':' '{' '$ref:' ref=STRING  '}';
+ManualVersionManual: 'manual' ':' '{' '$ref' ':' ref=STRING  '}';
 ManualVersionVersion: 'version' ':' version=STRING;
 MarketingVersion: 'marketing_version' ':' marketingVersion=STRING;
 ManualVersionState: 'state' ':' state=SpecStateEnum;
@@ -1249,6 +1284,8 @@ IntArray: '[' element+=INT (',' element+=INT) + ']';
 
 StringArray: '[' item+=STRING (',' item+=STRING) + ']';
 
+// Single line or multi-line string
+StringType: (value=STRING) | MultilineString;
 MultilineString: '|' value=STRING;
 
 
