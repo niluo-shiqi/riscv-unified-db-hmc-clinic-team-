@@ -152,7 +152,19 @@ public class UdbValidator extends AbstractUdbValidator {
     String refUrlRegex = "^.*/.*\\.yaml#.*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     
-
+    /*
+     * CSR Validation -- rules found in csr_schema.json
+     */
+    
+    // Ensure CSR schema matches csr_schema.json#
+    @Check
+    public void checkCsrSchema(CsrModel csr) {
+		String schema = csr.getSchema().getSchema();
+		if (!schema.equals("csr_schema.json#")) {
+			error("Schema incompatible with kind", csr.getSchema(),
+					UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+    }
     
     // Validate CSR name matches required pattern
 	@Check
