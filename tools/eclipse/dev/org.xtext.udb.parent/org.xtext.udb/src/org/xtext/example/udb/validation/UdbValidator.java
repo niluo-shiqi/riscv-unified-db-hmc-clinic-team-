@@ -73,12 +73,115 @@ public class UdbValidator extends AbstractUdbValidator {
     String ENC_32 = "^[01-]{30}11$";
     String ENC_16 = "^[01-]{14}((00)|(01)|(10))$";
     String legalIDLName="^[a-zA-Z_][a-zA-Z0-9_]*$";
-    
+    String nonIsaNameRegex = "^[A-Za-z][A-Za-z0-9_]*$";
+    String semanticVersionRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
+	String dateRegex = "^\\d{4}-\\d{2}-\\d{2}$";
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-    
+    String uriRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
 	
+    /*
+     * nonISA Validation -- rules found in non_isa_schema.json
+     */
+    @Check
+    public void checkNonIsaSchema(NonIsaModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("non_isa_schema.json#")) {
+			error("Schema incompatible with kind", 
+					UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+    }
+    
+	@Check
+	public void checkNonIsaName(NonIsaName name) {
+	    String value = name.getName();
+	    if (!value.matches(nonIsaNameRegex)) {
+	        error("Invalid non-ISA name. Must start with a letter and contain only letters, numbers, and underscores",
+	        		UdbPackage.eINSTANCE.getNonIsaName_Name());
+	    }
+	}
+	
+	@Check
+	public void checkNonIsaVersion(NonIsaVersion version) {
+		if (version == null) return;
+
+		String versionValue = version.getVersion();
+		if (versionValue == null || versionValue.trim().isEmpty()) {
+			error("Version must not be empty",
+					version,
+					UdbPackage.eINSTANCE.getNonIsaVersion_Version());
+			return;
+		}
+
+		if (!versionValue.matches(semanticVersionRegex)) {
+			error("Version '" + versionValue + "' must follow semantic versioning format " +
+					"(e.g., 1.0.0, 1.2.3-alpha, 2.0.0-rc.1+build.42)",
+					version,
+					UdbPackage.eINSTANCE.getNonIsaVersion_Version());
+		}
+	}
+	
+	@Check
+	public void checkRatificationDate(RatificationDate ratDate) {
+		if (ratDate == null) return;
+
+		String dateValue = ratDate.getRatificationDate();
+		if (dateValue == null || dateValue.trim().isEmpty()) {
+			error("Ratification date must not be empty",
+					ratDate,
+					UdbPackage.eINSTANCE.getRatificationDate_Date());
+			return;
+		}
+
+		if (!dateValue.matches(dateRegex)) {
+			error("Ratification date '" + dateValue + "' must follow ISO 8601 format (YYYY-MM-DD), " +
+					"e.g., 2023-12-31",
+					ratDate,
+					UdbPackage.eINSTANCE.getRatificationDate_Date());
+		}
+	}
+	@Check
+	public void checkSectionsNotEmpty(Sections sections) {
+		if (sections == null) return;
+
+		EList<Section> sectionList = sections.getSections();
+		if (sectionList == null || sectionList.isEmpty()) {
+			error("Specification must have at least one section",
+					sections,
+					UdbPackage.eINSTANCE.getSections_Sections());
+		}
+	}
+	
+	@Check
+	public void checkSection(Section section) {
+		if (section == null) return;
+
+		// Check required fields
+		String title = section.getTitle();
+		if (title == null || title.trim().isEmpty()) {
+			error("Section title is required",
+					section,
+					UdbPackage.eINSTANCE.getSection_Title());
+		}
+
+		String content = section.getContent();
+		if (content == null || content.trim().isEmpty()) {
+			error("Section content is required",
+					section,
+					UdbPackage.eINSTANCE.getSection_Content());
+		}
+
+		// Check optional level field
+		int level = section.getLevel();
+		if (level != 0) { // 0 is default/unset
+			if (level < 1 || level > 6) {
+				error("Section level must be between 1 and 6 (inclusive); got " + level,
+						section,
+						UdbPackage.eINSTANCE.getSection_Level());
+			}
+		}
+	}
     
     /*
      * CSR Validation -- rules found in csr_schema.json
