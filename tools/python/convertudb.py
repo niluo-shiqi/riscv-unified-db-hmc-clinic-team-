@@ -75,6 +75,7 @@ STRING_FIELDS = [
 HAS_STRINGS = [
     "opcode",
     "release",
+    "not",
 ]
 
 # Fields that are yaml arrays of strings
@@ -125,10 +126,16 @@ def add_quotes(s):
     return s
 
 def add_nested_quotes(s):
-    nested_field, nested_value = s[1:-1].strip().split(":", 1)
-    nested_value = nested_value.strip()
-    nested_value = add_quotes(nested_value)
-    return f"{{ {nested_field}: {nested_value} }}"
+    try:
+        nested_field, nested_value = s[1:-1].strip().split(":", 1)
+        nested_value = nested_value.strip()
+        nested_value = add_quotes(nested_value)
+        return f"{{ {nested_field}: {nested_value} }}"
+    
+    # 'not' has ambiguity, this handles when 'not' doesn't
+    # have any strings that need to be quoted
+    except ValueError:
+        return s
 
 def convert_udb_to_yaml(udb_file):
     """Conversion from YAML to UDB involves removing quotes around string values"""
