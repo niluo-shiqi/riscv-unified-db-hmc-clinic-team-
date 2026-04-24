@@ -25,6 +25,7 @@ STRING_FIELDS = [
 
     # CSR fields
     "alias",
+    "requires",
 
     # Instruction fields
     "assembly",
@@ -40,6 +41,14 @@ STRING_FIELDS = [
     "branch",
     "company",
 
+    # Register file fields
+    "register_class",
+    "arch_read()",
+    "arch_write(value)",
+
+    # Manual fields
+    "marketing_name",
+
     # IDL fields
     "sw_read()",
     "reset_value()",
@@ -51,10 +60,15 @@ STRING_FIELDS = [
     # Conditions
     "reason",
     "equal",
+
+    # TODO: requires not
+    # TODO: profile stuff
 ]
 
 # Fields that are yaml arrays of strings
 YAML_ARRAY_STRING_FIELDS = [
+    "doc_links",
+
     # CSR fields
     "items", # for alias
 
@@ -75,6 +89,7 @@ YAML_LIST_STRING_FIELDS = [
 # Fields that are arrays of strings (i.e., denoted with square brackets)
 ARRAY_STRING_FIELDS = [
     "affectedBy",
+    "abi_mnemonics",
 ]
 
 
