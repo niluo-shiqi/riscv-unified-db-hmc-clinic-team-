@@ -10,14 +10,10 @@ import org.xtext.example.udb.treetop.ValidationError;
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
 import org.xtext.example.udb.udb.StringArray;
+import org.xtext.example.udb.udb.Company;
+import org.xtext.example.udb.udb.DocLicense;
 
-//import org.xtext.example.udb.udb.ExtRequirement;
-//import org.xtext.example.udb.udb.ExtArrayList;
-//import org.xtext.example.udb.udb.ParamFieldsList;
-//import org.xtext.example.udb.udb.ParamArrayList;
-//import org.xtext.example.udb.udb.ParamOneOf;
-//import org.xtext.example.udb.udb.XLenCondition;
-
+// Csr imports
 import org.xtext.example.udb.udb.CsrModel;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.CsrAddress;
@@ -42,6 +38,7 @@ import org.xtext.example.udb.udb.CsrFieldSWWriteFunc;
 import org.xtext.example.udb.udb.CsrFieldLegalFunc;
 import org.xtext.example.udb.udb.CsrFieldTypeFunc;
 
+// Inst imports
 import org.xtext.example.udb.udb.InstModel;
 import org.xtext.example.udb.udb.InstName;
 import org.xtext.example.udb.udb.InstHints;
@@ -50,31 +47,35 @@ import org.xtext.example.udb.udb.InstOldEncoding;
 import org.xtext.example.udb.udb.InstEncoding;
 import org.xtext.example.udb.udb.InstEncodingMatch;
 import org.xtext.example.udb.udb.InstHintElement;
-import org.xtext.example.udb.udb.InstOpcodeEntry;
-import org.xtext.example.udb.udb.InstOpcodeInherits;
 import org.xtext.example.udb.udb.InstRvPairEncoding;
 import org.xtext.example.udb.udb.InstEncodingTwoKeyVar;
 import org.xtext.example.udb.udb.InstEncodingSevenKeyVar;
 import org.xtext.example.udb.udb.InstEncodingVariables;
 import org.xtext.example.udb.udb.InstOperation;
 
-import org.xtext.example.udb.udb.InstOpcodeModel;
-import org.xtext.example.udb.udb.InstOpcodeData;
-
+// Extension imports
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
-import org.xtext.example.udb.udb.ExtRequirement;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 
+//Inst Opcode imports
+import org.xtext.example.udb.udb.InstOpcodeModel;
+import org.xtext.example.udb.udb.InstOpcodeData;
+import org.xtext.example.udb.udb.InstOpcodeEntry;
+import org.xtext.example.udb.udb.InstOpcodeInherits;
+
+// Interrupt Code imports
 import org.xtext.example.udb.udb.InterruptCodeModel;
 import org.xtext.example.udb.udb.IntrptCodeName;
 
+// Exception Code imports
 import org.xtext.example.udb.udb.ExceptionCodeModel;
-import org.xtext.example.udb.udb.ExtArrayList;
+
+// Inst Var Type imports
 import org.xtext.example.udb.udb.InstVarTypeModel;
 import org.xtext.example.udb.udb.VarTypeEnum;
 
-import org.xtext.example.udb.udb.XLenCondition;
+// Register imports
 import org.xtext.example.udb.udb.ExtensionRequirement;
 import org.xtext.example.udb.udb.RegisterModel;
 import org.xtext.example.udb.udb.RegisterName;
@@ -85,23 +86,33 @@ import org.xtext.example.udb.udb.RequiresEntry;
 import org.xtext.example.udb.udb.RequiresNot;
 import org.xtext.example.udb.udb.RegisterAbiMnemonics;
 import org.xtext.example.udb.udb.RegisterClass;
-
 import org.xtext.example.udb.udb.RegisterEntry;
 import org.xtext.example.udb.udb.RegisterLength;
 import org.xtext.example.udb.udb.RegisterLengthInt;
 import org.xtext.example.udb.udb.RegisterLengthType;
+import org.xtext.example.udb.udb.RegVersionRequirementString;
 
+// Manual imports
 import org.xtext.example.udb.udb.ManualModel;
 
+// Manual Version imports
 import org.xtext.example.udb.udb.ManualVersionManual;
 import org.xtext.example.udb.udb.ManualVersionModel;
 import org.xtext.example.udb.udb.ManualVersionVersion;
-
-import org.xtext.example.udb.udb.ParamArrayList;
-import org.xtext.example.udb.udb.ParamFieldsList;
-import org.xtext.example.udb.udb.ParamOneOf;
-import org.xtext.example.udb.udb.RegVersionRequirementString;
 import org.xtext.example.udb.udb.ExtensionElement;
+
+//Profile Family imports
+import org.xtext.example.udb.udb.ProfFamModel;
+
+// Conditions imports
+import org.xtext.example.udb.udb.ExtRequirement;
+import org.xtext.example.udb.udb.ExtArrayList;
+import org.xtext.example.udb.udb.ParamFieldsList;
+import org.xtext.example.udb.udb.ParamArrayList;
+import org.xtext.example.udb.udb.ParamOneOf;
+import org.xtext.example.udb.udb.XLenCondition;
+
+
 /**
  * This class contains custom validation rules.
  *
@@ -141,24 +152,7 @@ public class UdbValidator extends AbstractUdbValidator {
     String refUrlRegex = "^.*/.*\\.yaml#.*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     
-    
-    
 
-
-
-    /*
-     * CSR Validation -- rules found in csr_schema.json
-     */
-    
-    // Ensure CSR schema matches csr_schema.json#
-    @Check
-    public void checkCsrSchema(CsrModel csr) {
-		String schema = csr.getSchema().getSchema();
-		if (!schema.equals("csr_schema.json#")) {
-			error("Schema incompatible with kind", csr.getSchema(),
-					UdbPackage.eINSTANCE.getSchema_Schema());
-		}
-    }
     
     // Validate CSR name matches required pattern
 	@Check
@@ -876,7 +870,11 @@ public class UdbValidator extends AbstractUdbValidator {
 			seen.add(role);
 		}
 	}
-
+	
+	/*
+	 * Validate extension name regex in requires entry
+	 * Spec: extension name
+	 */
 	@Check
 	public void checkRequiresEntry(RequiresEntry entry) {
 		try {
@@ -1026,6 +1024,18 @@ public class UdbValidator extends AbstractUdbValidator {
 	        error("Version must be a numeric version string (e.g. 1, 1.2, 1.2.3, or 1.2.3-pre)", element, UdbPackage.eINSTANCE.getExtensionElement_Version());
 	    }
 	}
+	
+	/*
+	 * Profile Family Validation -- rules found in profile_family_schema.json
+	 */
+    @Check
+    public void checkProfileFamilySchema(ProfFamModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("profile_family_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), 
+					UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+    }
 
 	/*
 	 * Conditions Validation

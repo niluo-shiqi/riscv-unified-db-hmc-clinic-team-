@@ -15,6 +15,7 @@ Model:
 	| RegisterModel
 	| ManualModel
 	| ManualVersionModel
+	| ProfFamModel
 ;
 
 
@@ -68,7 +69,7 @@ ExtModel:
 	longName = LongName &
 	description = Description &
 	rviJiraIssue = ExtRviJiraIssue? &
-	company = ExtCompany? &
+	company = Company? &
 	docLicense = DocLicense? &
 	type = ExtType &
 	requirements = Requirements? &
@@ -175,6 +176,22 @@ ManualVersionModel:
 	volumes = ManualVersionVolumes &
 	source = Source?
 ;
+
+ProfFamModel:
+	schema = Schema
+	profFamKind = PFKind
+	& processorKind = ProcessorKind? 
+	& profFamName = PFName 
+	& longName = LongName 
+	& marketingName = PFMarketingName? 
+	& introduction = Introduction? 
+	& description = Description? 
+	& namingScheme = PFNamingScheme? 
+	& company = Company? 
+	& docLicense = DocLicense? 
+	& source = Source? 
+;
+
 /*
  * Common stuff
  */
@@ -203,6 +220,13 @@ Email: 'email' ':' email=STRING;
 ProcessorKind: 'processor_kind' ':' 
 	processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
 Introduction: 'introduction' ':' introduction=STRING;
+Company:
+	'company' ':' 
+	INDENT (
+		('name' ':' name=STRING) &
+		 url=Url?
+	) DEDENT 
+;
 
 // IDL gets passed off to ruby in the validator
 Idl: '|' idl=STRING;
@@ -285,7 +309,7 @@ CsrFields:
 ;
 
 CsrFieldDef:
-	name=ID ':'
+	name=STRING ':'
 	INDENT (
 		displayName = CsrFieldDisplayName? &
 		longName = LongName? &
@@ -301,6 +325,7 @@ CsrFieldDef:
 		certNormativeRules = CertNormativeRules?
 	) DEDENT
 ;
+
 
 CsrFieldDisplayName: 'name' ':' fieldName=STRING ;
 
@@ -415,7 +440,7 @@ InstOpcodeEntry:
 ;
 
 InstOpcodeField: 
-	name=ID ':'
+	name=STRING ':'
 	INDENT
 		(opcodeProperties += InstOpcodeProps)+
 	DEDENT
@@ -423,7 +448,7 @@ InstOpcodeField:
 ;
 
 InstOpcodeProps:
-	'display_name' ':' displayName=ID
+	'display_name' ':' displayName=STRING
 	| 'value' ':' value=Number
 ;
 
@@ -504,13 +529,7 @@ ExtKind: 'kind' ':' kind="extension";
 ExtName: 'name' ':' name=STRING;
 ExtType: 'type' ':' perms=('unprivileged' | 'privileged');
 ExtRviJiraIssue: 'rvi_jira_issue' ':' issue=STRING;
-ExtCompany:
-	'company' ':'
-	INDENT (
-		('name' ':' name=STRING) &
-		 url=Url?
-	) DEDENT
-;
+
 
 // versions grammar (see ext_schema.json)
 ExtVersions:
@@ -982,8 +1001,25 @@ IsaManualTree: 'isa_manual_tree' ':' tree=STRING;
 
 UsesIsaManual: 'uses_isa_manual' ':' uses=Boolean;
 
+/* 
+ * Profile_Family stuff (see profile_family_schema.json) 
+ */
+ 
+PFKind:
+	'kind' ':' kind='profile_family' 
+;
 
+PFName:
+	'name' ':' name=STRING
+;
 
+PFMarketingName:
+	'marketing_name' ':' marketingName=STRING
+;
+
+PFNamingScheme:
+	'naming_scheme' ':' namingScheme=STRING
+;
 
 
 

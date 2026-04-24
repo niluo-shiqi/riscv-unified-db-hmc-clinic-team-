@@ -11,6 +11,7 @@ import org.xtext.example.udb.udb.InstVarTypeName;
 import org.xtext.example.udb.udb.IntrptCodeName;
 import org.xtext.example.udb.udb.ManualName;
 import org.xtext.example.udb.udb.ManualVersionName;
+import org.xtext.example.udb.udb.PFName;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.RegisterName;
 
@@ -82,7 +83,12 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 		}
 		return null;
 	}
-	
+	public QualifiedName qualifiedName(PFName pfName) {
+		if (pfName != null && pfName.getName() != null) {
+			return QualifiedName.create(pfName.getName());
+		}
+		return null;
+	}
 
 	
 
