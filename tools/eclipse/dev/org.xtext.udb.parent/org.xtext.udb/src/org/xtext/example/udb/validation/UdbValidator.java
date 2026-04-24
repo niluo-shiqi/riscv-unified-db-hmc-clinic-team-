@@ -11,8 +11,6 @@ import org.xtext.example.udb.udb.Base;
 import org.xtext.example.udb.udb.Url;
 import org.xtext.example.udb.udb.Email;
 import org.xtext.example.udb.udb.StringArray;
-import org.xtext.example.udb.udb.Company;
-import org.xtext.example.udb.udb.DocLicense;
 
 // Csr imports
 import org.xtext.example.udb.udb.CsrModel;
