@@ -118,6 +118,15 @@ import org.xtext.example.udb.udb.ParamArrayList;
 import org.xtext.example.udb.udb.ParamOneOf;
 import org.xtext.example.udb.udb.XLenCondition;
 
+//Config imports
+import org.xtext.example.udb.udb.ConfigModel;
+//import org.xtext.example.udb.udb.ConfigParam;
+import org.xtext.example.udb.udb.FullConfigurationType;
+import org.xtext.example.udb.udb.ImplementedExtensionElement;
+import org.xtext.example.udb.udb.PartialConfigurationType;
+import org.xtext.example.udb.udb.UnconfigurationType;
+
+
 
 /**
  * This class contains custom validation rules.
@@ -1174,6 +1183,81 @@ public class UdbValidator extends AbstractUdbValidator {
 		if (xlenValue != 32 && xlenValue != 64) {
 			error("xlen must be 32 or 64.",
 					UdbPackage.eINSTANCE.getXLenCondition_Xlen());
+		}
+	}
+
+    /*
+	 * Config Validation -- rules found in config_schema.json
+	 */
+    
+    @Check
+    public void checkConfigSchema(ConfigModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("config_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(),
+					UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+    }
+    
+    @Check
+	public void checkFullConfigurationType(FullConfigurationType config) {
+		String type = config.getType();
+		if (!type.equals("fully_configured")) {
+			error("Type must be 'fully_configured' for Full Configuration",
+					config,
+					UdbPackage.eINSTANCE.getFullConfiguration_Type());
+		}
+	}
+    @Check
+   	public void checkFullConfigurationType(PartialConfigurationType config) {
+   		String type = config.getType();
+   		if (!type.equals("partially_configured")) {
+   			error("Type must be 'partially_configured' for Partial Configuration",
+   					config,
+   					UdbPackage.eINSTANCE.getPartialConfiguration_Type());
+   		}
+   	}
+    @Check
+   	public void checkFullConfigurationType(UnconfigurationType config) {
+   		String type = config.getType();
+   		if (!type.equals("unconfigured")) {
+   			error("Type must be 'unconfigured' for Unconfiguration",
+   					config,
+   					UdbPackage.eINSTANCE.getUnconfiguration_Type());
+   		}
+   	}
+	@Check
+	public void checkImplementedExtensionElement(ImplementedExtensionElement element) {
+		if (element == null) return;
+
+		String name = element.getName();
+		String version = element.getVersion();
+
+		if (name == null || name.trim().isEmpty()) {
+			error("Extension name is required",
+					element,
+					UdbPackage.eINSTANCE.getImplementedExtensionElement_Name());
+		}
+
+		if (version == null || version.trim().isEmpty()) {
+			error("Extension version is required",
+					element,
+					UdbPackage.eINSTANCE.getImplementedExtensionElement_Version());
+		}
+
+		// Validate name format
+		if (name != null && !name.matches(extensionNameRegex)) {
+			error("Invalid extension name '" + name + "': must be a single letter (A-W or Y) " +
+					"OR a letter (S, X, or Z) followed by lowercase letters/numbers",
+					element,
+					UdbPackage.eINSTANCE.getImplementedExtensionElement_Name());
+		}
+
+		// Validate version format
+		if (version != null && !version.matches(rviVersionRegex)) {
+			error("Invalid version '" + version + "': must match pattern [0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?",
+					element,
+					UdbPackage.eINSTANCE.getImplementedExtensionElement_Version());
 		}
 	}
 
