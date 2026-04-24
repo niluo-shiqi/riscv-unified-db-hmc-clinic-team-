@@ -17,6 +17,7 @@ Model
 	| ManualModel
 	| ManualVersionModel
 	| ProfFamModel
+	| ConfigModel
 ;
 
 
@@ -1055,7 +1056,162 @@ PFNamingScheme:
 	'naming_scheme' ':' namingScheme=STRING
 ;
 
+/*
+ * Config stuff (see config_schema.json)
+ */
+ConfigModel:
+	FullConfiguration | PartialConfiguration | Unconfiguration
+	
+;
+/*
+ * Full Config
+ */
+FullConfiguration:
+	schema = Schema // must be "config_schema.json#"
+	kind = ConfigKind
+	type = FullConfigurationType
+	name = ConfigName &
+	description = Description &
+	archOverlay = ArchOverlay? &
+	source = Source? &
+	params = ConfigParams &
+	implementedExtensions = ImplementedExtensions
+;
 
+FullConfigurationType: 'type' ':' type="fully_configured";
+
+ImplementedExtensions:
+	'implemented_extensions' ':'
+	INDENT
+		extensions += ImplementedExtensionElement+
+	DEDENT
+;
+ImplementedExtensionElement:
+	'-' '[' name=STRING ',' version=STRING ']'
+;
+
+
+/*
+ * Partial Config
+ */
+PartialConfiguration:
+	schema = Schema // must be "config_schema.json#"
+	kind = ConfigKind
+	type = PartialConfigurationType
+	name = ConfigName &
+	description = Description &
+	archOverlay = ArchOverlay? &
+	source = Source? &
+	params = ConfigParams? &
+	mandatoryExtensions = MandatoryExtensions &
+	nonMandatoryExtensions = NonMandatoryExtensions? &
+	prohibitedExtensions = ProhibitedExtensions? &
+	implementedExtensions = ImplementedExtensionsNull? &
+	additionalExtensions = AdditionalExtensions? &
+	requirements = Requirements?
+;
+
+PartialConfigurationType: 'type' ':' type="partially_configured";
+MandatoryExtensions:
+	'mandatory_extensions' ':'
+	INDENT
+		extensions += ConfigExtensionRequirement+
+	DEDENT
+;
+
+NonMandatoryExtensions:
+	'non_mandatory_extensions' ':'
+	INDENT
+		extensions += ConfigExtensionRequirement+
+	DEDENT
+;
+
+ProhibitedExtensions:
+	'prohibited_extensions' ':'
+	INDENT
+		extensions += ConfigExtensionRequirement+
+	DEDENT
+	
+;
+
+ImplementedExtensionsNull:
+	'implemented_extensions' ':' ext='null'
+;
+
+ConfigExtensionRequirement:
+	'-' 'name' ':' name=STRING
+	(
+		INDENT
+			version=ExtensionVersion?
+		DEDENT
+	)?
+;
+
+ExtensionVersion:
+	'version' ':' version=STRING
+;
+AdditionalExtensions: 'additional_extensions' ':' additionalExtensions=Boolean;
+/*
+ * Unconfig
+ */
+Unconfiguration:
+	schema = Schema // must be "config_schema.json#"
+	kind = ConfigKind
+	type = UnconfigurationType
+	name = ConfigName &
+	description = Description &
+	archOverlay = ArchOverlay? &
+	source = Source?
+;
+
+UnconfigurationType: 'type' ':' type="unconfigured";
+
+// shared config rules
+ConfigKind: 'kind' ':' kind="architecture_configuration";
+
+ConfigName:'name' ':' name=STRING;
+
+ArchOverlay: 'arch_overlay' ':' archOverlay=STRING;
+
+ConfigParams: 
+	'params' ':' params=STRING
+//	INDENT
+//		params += ConfigParam*
+//	DEDENT
+;
+//ConfigParam: key=STRING ':' value=ConfigParamValue;
+//
+//ConfigParamValue:
+//	stringValue=STRING |
+//	intValue=INT |
+//	boolValue=Boolean |
+//	arrayValue=ConfigParamArray 
+//	
+//;
+//
+//ConfigParamArray:
+//	InlineArray | BulletedArray
+//;
+//
+//InlineArray:
+//	'[' 
+//		values+=ConfigParamArrayElement (',' values+=ConfigParamArrayElement)*
+//	']'
+//;
+//
+//BulletedArray:
+//	INDENT
+//		values+=ConfigParamArrayElement+
+//	DEDENT
+//;
+//
+//ConfigParamArrayElement:
+//	('-')? (
+//		stringValue=STRING |
+//		intValue=INT |
+//		boolValue=Boolean 
+//	)
+//;
 
 
 
