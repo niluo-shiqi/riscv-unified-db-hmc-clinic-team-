@@ -143,7 +143,7 @@ public class UdbValidator extends AbstractUdbValidator {
     String csrAffectedByRegex = "^(RV64)|([A-WY]|(Z[a-z]+)|(S[a-z]+))$";
     String extensionNameRegex = "^(([A-WY])|([SXZ][a-z0-9]+))$";
     String instNameRegex= "[a-z0-9.]+";
-    String instHintsRegex = "^\\$ref:\\s*inst/.+\\.yaml#.*$";
+    String instHintsRegex = "^inst/.+\\.yaml#.*$";
     String instInheritTypeRegex="^.+\\.yaml#(/.*)?$";
     String instOpcodeInheritTypeRegex="inst_opcode/[^/]+\\.yaml#/data";
     String instChildOfRegex="common/inst_variable_types\\.yaml#/[a-zA-Z0-9_]+";

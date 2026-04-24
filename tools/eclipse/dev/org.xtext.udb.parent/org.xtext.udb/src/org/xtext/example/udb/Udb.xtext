@@ -413,7 +413,7 @@ InstHints:
 		hints += InstHintElement+
 	DEDENT
 ;
-InstHintElement: '-' '{' hint = STRING '}';
+InstHintElement: '-' '{' '$ref' ':' hint = STRING '}';
 
 InstAccessDetail: 'access_detail' ':' accessDetail=STRING;
 InstOperation: 'operation()' ':' operation=Idl;
