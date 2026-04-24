@@ -72,6 +72,27 @@ ExtModel:
 	certNormativeRules = CertNormativeRules?
 ;
 
+//ProfModel:
+//	schema = Schema // must be "profile_schema.json#"
+//	profKind = ProfKind
+//	profName = ProfName &
+//	longName = LongName &
+//	description = Description? &
+//	inherits = ProfInherits? &
+//	parentOf = ProfParentOf? &
+//	childOf = ProfChildOf? &
+//	certNormativeRules = CertNormativeRules? &
+//	requirements = Requirements? &
+//	marketingName = ProfMarketingName &
+//	mode = ProfMode? &
+//	release = ProfRelease? &
+//	introduction = ProfIntroduction? &
+//	recommendations = ProfRecommendations? &
+//	extraNotes = ProfExtraNotes? &
+//	extensions = ProfExtensions? &
+//	source = ProfSource?
+//;
+
 InterruptCodeModel:
 	schema = Schema // must be "interript_code_schema.json#"
 	intrptCodeKind = IntrptCodeKind
@@ -274,7 +295,6 @@ CsrAffectedByValue:
 ;
 
 CsrAffectedBySingle:
-    ref=[ExtModel|STRING]
     ref=[ExtModel|STRING]
 ;
 
@@ -514,7 +534,93 @@ ExtVersionContributorName:
 	"name" ":" name=STRING
 ;
 
-
+/*
+ * Profile stuff (see profile_schema.json)
+ */
+//ProfKind: 'kind' ':' kind='profile';
+//ProfName: 'name' ':' name=ID;
+//ProfInherits: '$inherits' ':' inherits=STRING;
+//ProfParentOf: '$parent_of' ':' parent_of=STRING;
+//ProfChildOf: '$child_of' ':' child_of=STRING;
+//ProfMarketingName: 'marketing_name' ':' marketing_name=STRING;
+//ProfMode: 'mode' ':' mode=('M' | 'S' | 'U' | 'Unpriv');
+//ProfRelease:
+//	'release' ':' '{' '$ref' ':' releaseAddress=STRING '}'
+//;
+//ProfIntroduction: 'introduction' ':' introduction=STRING;
+//ProfRecommendations:
+//	'recommendations' ':'
+//	INDENT
+//		recommendations += ProfRecommendationsArrayElement+
+//	DEDENT
+//;
+//ProfRecommendationsArrayElement:
+//	'-' 'text' ':' text=STRING
+//;
+//ProfExtraNotes:
+//	'extra_notes:' ':'
+//	INDENT
+//		extra_notes += ProfExtraNotesArrayElement+
+//	DEDENT
+//;
+//ProfExtraNotesArrayElement:
+//	'-' 'presence' ':' presence=STRING
+//	INDENT
+//		'text' ':' text=STRING
+//	DEDENT
+//;
+//ProfExtensions:
+//	'extensions' ':'
+//	INDENT
+//		('$inherits' ':' ProfExtInherits)
+//		(extensions += ProfExtArrayElement+)
+//	DEDENT
+//;
+//ProfExtInherits:
+//	(inhString=ProfExtInheritsString | inhArray=ProfExtInheritsArray)
+//;
+//ProfExtInheritsString:
+//	inherits=STRING
+//;
+//ProfExtInheritsArray:
+//	inherits += ProfExtensionsInheritsArrayElement+
+//;
+//ProfExtensionsInheritsArrayElement:
+//	'-' extAddress=ProfExtInheritsString
+//;
+//// TODO: make sure this works...
+//ProfExtArrayElement:
+//	extension=STRING ':' // TODO: validator
+//	INDENT
+//		'presence' ':' presence=ProfExtPresence
+//		'version' ':' version=ProfExtVersion
+//		'note' ':' note=STRING
+//	DEDENT
+//;
+//
+//enum ProfExtPresence:
+//	ProfExtPresenceElement |
+//	ProfExtPresenceOptElement
+//;
+//
+//enum ProfExtPresenceElement:
+//	mandatory='mandatory' | 
+//	optional='optional'
+//;
+//ProfExtPresenceOptElement:
+//	'optional' ':' optional=ProfOptionalEnum
+//;
+//enum ProfOptionalEnum:
+//	expansion='expansion'|
+//	localized='localized'|
+//	development='development'
+//;
+//
+//ProfExtVersion:
+//	'{' '$ref' ':' versionAddress=STRING '}' //  TODO: validator
+//;
+//
+//ProfSource: '$source' ':' source=STRING;
 
 /*
  * Interrupt Code stuff (see interrupt_code_schema.json)

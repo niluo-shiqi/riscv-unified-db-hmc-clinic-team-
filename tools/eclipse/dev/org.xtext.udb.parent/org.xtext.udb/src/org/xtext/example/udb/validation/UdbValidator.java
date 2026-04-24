@@ -657,39 +657,6 @@ public class UdbValidator extends AbstractUdbValidator {
 	    }
 	}
 	
-
-
-	/*
-	 *  Validate general fields (e.g. url, email, etc.)
-	 */
-	
-	// Check that URLs follow the URI format
-	@Check
-	public void checkRegisterReferenceFields(InstVarTypeModel model) {
-		if (model.getInstVarTypeType() == null) return;
-
-	    boolean isRegisterReference = 
-	        model.getInstVarTypeType().getType() == VarTypeEnum.REGISTER_REFERENCE;
-
-	    if (isRegisterReference) {
-	        // Fields REQUIRED for register_reference
-	        if (model.getRegisterFile() == null)
-	            error("register_file is required for register_reference type",
-	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
-	        if (model.getAccess() == null)
-	            error("access is required for register_reference type",
-	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
-	    } else {
-	        // Fields NOT ALLOWED when type is not register_reference
-	        if (model.getRegisterFile() != null)
-	            error("register_file is only valid when type is 'register_reference'",
-	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__REGISTER_FILE);
-	        if (model.getAccess() != null)
-	            error("access is only valid when type is 'register_reference'",
-	                  UdbPackage.Literals.INST_VAR_TYPE_MODEL__ACCESS);
-	    }
-	}
-	
 	// Check that URLs follow the URI format
 	@Check
 	public void checkUrlFormat(Url url) {
