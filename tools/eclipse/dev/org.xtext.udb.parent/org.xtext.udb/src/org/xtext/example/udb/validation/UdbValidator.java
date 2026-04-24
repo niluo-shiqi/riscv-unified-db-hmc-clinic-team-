@@ -187,7 +187,6 @@ public class UdbValidator extends AbstractUdbValidator {
 	}
 
 	// Virtual address must be between 0 and 12 bits
-	// TODO: it doesn't say that in the schema?
 	@Check
 	public void checkCsrVirtualAddressVal(CsrVirtualAddress vaddress) {
 		int val = vaddress.getVirtualAddress().getValue();

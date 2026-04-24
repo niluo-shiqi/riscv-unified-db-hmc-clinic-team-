@@ -6,17 +6,17 @@ import re
 
 # String fields that should always have quotes around them
 QUOTED_FIELDS = [
-    "$schema",
     "version",
 ]
 
-# String fields that don't have quotes around them in YAML
+# String fields that don't have to have quotes around them in YAML
 STRING_FIELDS = [
     # General fields
+    "$schema",
     "name",
     "long_name",
     "description",
-    "$source",  # TODO: check if this already has quotes
+    "$source",
     "id",
     "url",
     "text_url",
@@ -31,12 +31,14 @@ STRING_FIELDS = [
     "operation_ast",
     "access_detail",
     "match",
-    "$child_of",  # TODO: check
+    "$child_of",
+    "display_name",
+    "parent_of",
 
     # Extension fields
     "rvi_jira_issue",
     "branch",
-    "company"
+    "company",
 
     # IDL fields
     "sw_read()",
@@ -45,6 +47,10 @@ STRING_FIELDS = [
     "legal?(csr_value)",
     "type()",
     "operation()",
+
+    # Conditions
+    "reason",
+    "equal",
 ]
 
 # Fields that are yaml arrays of strings
@@ -53,17 +59,30 @@ YAML_ARRAY_STRING_FIELDS = [
     "items", # for alias
 
     # Instruction fields
-    "$inherits"
-    "hints",
+    "$inherits",
+    "hints",  # needs to be handled differently (done with inHintArray variable)
     
     # Extension fields
     "changes",
+]
+
+# Fields that are arrays of strings, but without the '-' prefixing every element
+YAML_LIST_STRING_FIELDS = [
+    "fields",
+    "opcodes",
 ]
 
 # Fields that are arrays of strings (i.e., denoted with square brackets)
 ARRAY_STRING_FIELDS = [
     "affectedBy",
 ]
+
+
+def add_quotes(s):
+    """Add quotes to string s if it doesn't already have them"""
+    if not (s.startswith('"') and s.endswith('"')):
+        return f'"{s}"' if s else s
+    return s
 
 
 def convert_udb_to_yaml(udb_file):
@@ -97,6 +116,9 @@ def convert_udb_to_yaml(udb_file):
                     # Remove '\' from escaped quotes
                     value = value.replace('\\"', '"')
 
+                    # Remove '\' from escaped backslashes
+                    value = value.replace('\\\\', '\\')
+
                     output_lines.append(f"{field}:{value}")
 
             # Line doesn't have ":"
@@ -122,9 +144,11 @@ def convert_yaml_to_udb(yaml_file):
 
     output_lines = []
     inMultiLineString = False   # to keep track if we're currently processing a multi-line string
-    inYamlStringArray = False       # to keep track if we're currently processing an array of strings
+    inYamlStringArray = False   # to keep track if we're currently processing an array of strings
+    inYamlStringList = False    # to keep track if we're currently processing a list of strings
     inHintsArray = False        # to keep track if we're currently processing the hints array, which has special formatting
     for i, line in enumerate(lines):
+
         # Don't process comments or empty lines
         if line.startswith("#") or line.strip() == "":
             output_lines.append(line)
@@ -134,7 +158,10 @@ def convert_yaml_to_udb(yaml_file):
             if inMultiLineString:
                 lineIndentation = len(re.search(r'^\s*', line).group())
 
-                if (lineIndentation > indentation) or line.strip() == "":
+                if (lineIndentation > multiline_indentation) or line.strip() == "":
+                    # escape backslashes
+                    line = line.replace('\\', '\\\\')
+
                     # escape quotes
                     line = line.replace('"', '\\"')
                     
@@ -149,10 +176,10 @@ def convert_yaml_to_udb(yaml_file):
                 # multi-line string has ended, so add a closing quote
                 else:
                     inMultiLineString = False
-                    line = (" " * indentation) + "\"\n" + line
+                    output_lines.append(" " * multiline_indentation + "\"\n")
             
             # Check if the line is part of an array of strings
-            elif inYamlStringArray:
+            if inYamlStringArray:
                 if line.strip().startswith("-"):
                     # escape quotes
                     line = line.replace('"', '\\"')
@@ -169,6 +196,18 @@ def convert_yaml_to_udb(yaml_file):
                     continue
                 else:
                     inYamlStringArray = False
+            
+            # Check if line is part of the fields section of csr
+            if inYamlStringList:
+                lineIndentation = len(re.search(r'^\s*', line).group())
+                if (lineIndentation == csrfields_indentation) or line.strip() == "":
+                    field_name = line.strip().split(":", 1)[0]
+                    
+                    output_lines.append(" " * csrfields_indentation +f'"{field_name}":\n')
+                    continue
+                elif lineIndentation < csrfields_indentation:
+                    inYamlStringList = False
+
 
             try:
                 field, value = line.split(":", 1)
@@ -180,36 +219,56 @@ def convert_yaml_to_udb(yaml_file):
 
                     # Get indentation level to determine 
                     # when the multi-line string ends
-                    indentation = len(re.search(r'^\s*', field).group())
+                    multiline_indentation = len(re.search(r'^\s*', field).group())
 
-                    output_lines.append(f"{field}: {value} \"\n")
+                    output_lines.append(f"{field}: {value} \"")
+
+                    # Edge case for when a multiline string is empty and at the end of the file
+                    if i == len(lines) - 1:
+                        output_lines[-1] += "\""
+
+                    output_lines[-1] += "\n"
+
                     continue
                 
-                # Add quotes around string values
-                if field.strip() in STRING_FIELDS:
-                    value = f'"{value}"' if value else value
+                # Pre-process field string before checking if it's value needs quotes
+                clean_field = field.strip()
+                if clean_field.startswith('-'):
+                    clean_field = clean_field[1:].strip()
+                
+                # Add quotes around string values if not already quoted
+                if clean_field in STRING_FIELDS:
+                    value = add_quotes(value)
 
                 # Add quotes around quoted fields if they don't already have quotes
-                elif field.strip() in QUOTED_FIELDS:
-                    if not (value.startswith('"') and value.endswith('"')):
-                        value = f'"{value}"' if value else value
+                elif clean_field in QUOTED_FIELDS:
+                    value = add_quotes(value)
 
-                elif field.strip() in YAML_ARRAY_STRING_FIELDS:
+                elif clean_field in YAML_ARRAY_STRING_FIELDS:
                     inYamlStringArray = True
                     inHintsArray = field.strip() == "hints"
+
+                elif clean_field in YAML_LIST_STRING_FIELDS and value == "":
+                    inYamlStringList = True
+                    csrfields_indentation = len(re.search(r'^\s*', lines[i+1]).group())
                 
-                elif field.strip() in ARRAY_STRING_FIELDS:
+                elif clean_field in ARRAY_STRING_FIELDS:
                     # Add quotes around each element in the array
                     elements = [elem.strip() for elem in value.strip("[]").split(",")]
-                    quoted_elements = [f'"{elem}"' for elem in elements]
+                    quoted_elements = [add_quotes(elem) for elem in elements]
                     value = f"[{', '.join(quoted_elements)}]"
 
                 # Opcode itself isn't a string, but it contains a string that needs quotes
-                elif field.strip() == "opcode":
+                elif clean_field == "opcode":
                     nested_field, nested_value = value[1:-1].strip().split(":", 1)
                     nested_value = nested_value.strip()
-                    nested_value = f'"{nested_value}"'
+                    nested_value = add_quotes(nested_value)
                     value = f"{{ {nested_field}: {nested_value} }}"
+
+                # equal could be either an int, boolean, or a string
+                elif clean_field == "equal":
+                    if not (value.isnumeric() or (value.lower() in ("true", "false"))):
+                        value = add_quotes(value)
                 
                 output_lines.append(f"{field}: {value}\n")
 
