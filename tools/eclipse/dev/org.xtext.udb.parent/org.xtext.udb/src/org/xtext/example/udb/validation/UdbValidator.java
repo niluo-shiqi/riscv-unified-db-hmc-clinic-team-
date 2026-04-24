@@ -63,16 +63,18 @@ import org.xtext.example.udb.udb.InstOpcodeData;
 
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
+import org.xtext.example.udb.udb.ExtRequirement;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
 
 import org.xtext.example.udb.udb.InterruptCodeModel;
 import org.xtext.example.udb.udb.IntrptCodeName;
 
 import org.xtext.example.udb.udb.ExceptionCodeModel;
-
+import org.xtext.example.udb.udb.ExtArrayList;
 import org.xtext.example.udb.udb.InstVarTypeModel;
 import org.xtext.example.udb.udb.VarTypeEnum;
-import org.xtext.example.udb.udb.VersionRequirementString;
+
+import org.xtext.example.udb.udb.XLenCondition;
 import org.xtext.example.udb.udb.ExtensionRequirement;
 import org.xtext.example.udb.udb.RegisterModel;
 import org.xtext.example.udb.udb.RegisterName;
@@ -90,6 +92,16 @@ import org.xtext.example.udb.udb.RegisterLengthInt;
 import org.xtext.example.udb.udb.RegisterLengthType;
 
 import org.xtext.example.udb.udb.ManualModel;
+
+import org.xtext.example.udb.udb.ManualVersionManual;
+import org.xtext.example.udb.udb.ManualVersionModel;
+import org.xtext.example.udb.udb.ManualVersionVersion;
+
+import org.xtext.example.udb.udb.ParamArrayList;
+import org.xtext.example.udb.udb.ParamFieldsList;
+import org.xtext.example.udb.udb.ParamOneOf;
+import org.xtext.example.udb.udb.RegVersionRequirementString;
+import org.xtext.example.udb.udb.ExtensionElement;
 /**
  * This class contains custom validation rules.
  *
@@ -119,8 +131,11 @@ public class UdbValidator extends AbstractUdbValidator {
     String registerNameRegex="^[A-Za-z][A-Za-z0-9_.-]*$";
     String registerAliasRegex="^[A-Za-z][A-Za-z0-9_.-]*$";
     String requirementStringRegex="^((>=)|(>)|(~>)|(<)|(<=)|(=))?\\s*[0-9]+(\\.[0-9]+(\\.[0-9]+(-[a-fA-F0-9]+)?)?)?$";
-
-
+    String manualVersionManualRegex = "^manual/.*\\.yaml#$";
+    String manualVersionVersionRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
+    String manualVersionExtensionVersion = "^[0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?$";
+    
+    
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String refUrlRegex = "^.*/.*\\.yaml#.*$";
@@ -931,19 +946,19 @@ public class UdbValidator extends AbstractUdbValidator {
 	 * Spec: pattern: "^((>=)|(>)|(~>)|(<)|(<=)|(=))?\s*[0-9]+(\.[0-9]+(\.[0-9]+(-[a-fA-F0-9]+)?)?)?$"
 	 */
 	@Check
-	public void checkVersionRequirementFormat(VersionRequirementString versionReq) {
+	public void checkVersionRequirementFormat(RegVersionRequirementString versionReq) {
 		String version = versionReq.getVersion();
 		
 		if (version == null || version.isEmpty()) {
 			error("Version requirement must not be empty",
-					UdbPackage.eINSTANCE.getVersionRequirementString_Version());
+					UdbPackage.eINSTANCE.getRegVersionRequirementString_Version());
 			return;
 		}
 
 		
 		if (!version.matches(requirementStringRegex)) {
 			error("Version requirement '" + version + "' must match format: [operator] major[.minor[.patch[-prerelease]]]",
-					UdbPackage.eINSTANCE.getVersionRequirementString_Version());
+					UdbPackage.eINSTANCE.getRegVersionRequirementString_Version());
 		}
 	}
 
@@ -976,81 +991,116 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("Schema incompatible with kind", UdbPackage.eINSTANCE.getSchema_Schema());
 		}
     }
+	
+    /*
+     * Manual Version Validation -- rules found in manual_version_schema.json
+     */
+	@Check
+	public void checkManualVersionSchema(ManualVersionModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("manual_version_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+	}
+
+	@Check
+	public void checkManualVersionManualString(ManualVersionManual manual) {
+	    String value = manual.getRef();
+	    if (!value.matches(manualVersionManualRegex)) {
+	        error("Manual ref format must follow 'manual/[name].yaml#' format", manual, UdbPackage.eINSTANCE.getManualVersionManual_Ref());
+	    }
+	}
+	
+	@Check
+	public void checkManualVersionVersionString(ManualVersionVersion version) {
+	    String value = version.getVersion();
+	    if (!value.matches(manualVersionVersionRegex)) {
+	        error("Version must follow semantic versioning format (e.g. 1.2.3, 1.0.0-alpha.1, 2.3.4+build.42)", version, UdbPackage.eINSTANCE.getManualVersionVersion_Version());
+	    }
+	}
+	
+	@Check
+	public void checkManualVersionExtensionVersion(ExtensionElement element) {
+	    String value = element.getVersion();
+	    if (!value.matches(manualVersionExtensionVersion)) {
+	        error("Version must be a numeric version string (e.g. 1, 1.2, 1.2.3, or 1.2.3-pre)", element, UdbPackage.eINSTANCE.getExtensionElement_Version());
+	    }
+	}
 
 	/*
 	 * Conditions Validation
 	 */
-//	@Check
-//	public void checkExtReqName(ExtRequirement extReq) {
-//		String extName = extReq.getName();
-//		if (!extName.matches(extensionNameRegex)) {
-//			error("Invalid extension name.",
-//					UdbPackage.eINSTANCE.getExtRequirement_Name());
-//		}
-//	}
-//
-//	@Check
-//	public void checkExtArraySize(ExtArrayList array) {
-//		int arraySize = array.getExtArray().size();
-//		if (arraySize < 2) {
-//			error("Minimum of two list items required.",
-//					UdbPackage.eINSTANCE.getExtArrayList_ExtArray());
-//		}
-//	}
-//
-//	@Check 
-//	public void checkExtVersion(ExtRequirement requirement) {
-//		String version = requirement.getVersion().getVerReqs().getVersionReq();
-//		if (!(version.matches(versionRequirementsRegex))){
-//			error("Invalid version format.",
-//					UdbPackage.eINSTANCE.getExtRequirement_Version());
-//		}
-//	}
-//
-//	@Check
-//	public void checkParamName(ParamFieldsList name) {
-//		String paramName = name.getName();
-//		if (!paramName.matches(paramNameRegex)) {
-//			error("Invalid parameter name.",
-//					UdbPackage.eINSTANCE.getParamFieldsList_Name());
-//		}
-//	}
-//
-//	@Check
-//	public void checkParamFieldsSize(ParamFieldsList fields) {
-//		int fieldsSize = fields.getParamFieldsList().size();
-//		if (!(fieldsSize > 0 && fieldsSize < 3)) {
-//			error("Must include 2-3 properties.",
-//					UdbPackage.eINSTANCE.getParamFieldsList_ParamFieldsList());
-//		}
-//	}
-//
-//	@Check
-//	public void checkParamOneOfSize(ParamOneOf oneOf) {
-//		int oneOfSize = oneOf.getOneOf().size();
-//		if (oneOfSize < 2) {
-//			error("Minimum of two list items required.",
-//					UdbPackage.eINSTANCE.getParamOneOf_OneOf());
-//		}
-//	}
-//
-//	@Check
-//	public void checkParamArraySize(ParamArrayList array) {
-//		int arraySize = array.getParamArray().size();
-//		if (arraySize < 2) {
-//			error("Minimum of two list items required.",
-//					UdbPackage.eINSTANCE.getParamArrayList_ParamArray());
-//		}
-//	}
-//
-//	@Check
-//	public void checkXLenValue(XLenCondition xlen) {
-//		int xlenValue = xlen.getXlen();
-//		if (xlenValue != 32 && xlenValue != 64) {
-//			error("xlen must be 32 or 64.",
-//					UdbPackage.eINSTANCE.getXLenCondition_Xlen());
-//		}
-//	}
+	@Check
+	public void checkExtReqName(ExtRequirement extReq) {
+		String extName = extReq.getName();
+		if (!extName.matches(extensionNameRegex)) {
+			error("Invalid extension name.",
+					UdbPackage.eINSTANCE.getExtRequirement_Name());
+		}
+	}
+
+	@Check
+	public void checkExtArraySize(ExtArrayList array) {
+		int arraySize = array.getExtArray().size();
+		if (arraySize < 2) {
+			error("Minimum of two list items required.",
+					UdbPackage.eINSTANCE.getExtArrayList_ExtArray());
+		}
+	}
+
+	@Check 
+	public void checkExtVersion(ExtRequirement requirement) {
+		String version = requirement.getVersion().getVerReqs().getVersionReq();
+		if (!(version.matches(versionRequirementsRegex))){
+			error("Invalid version format.",
+					UdbPackage.eINSTANCE.getExtRequirement_Version());
+		}
+	}
+
+	@Check
+	public void checkParamName(ParamFieldsList name) {
+		String paramName = name.getName();
+		if (!paramName.matches(paramNameRegex)) {
+			error("Invalid parameter name.",
+					UdbPackage.eINSTANCE.getParamFieldsList_Name());
+		}
+	}
+
+	@Check
+	public void checkParamFieldsSize(ParamFieldsList fields) {
+		int fieldsSize = fields.getParamFieldsList().size();
+		if (!(fieldsSize > 0 && fieldsSize < 3)) {
+			error("Must include 2-3 properties.",
+					UdbPackage.eINSTANCE.getParamFieldsList_ParamFieldsList());
+		}
+	}
+
+	@Check
+	public void checkParamOneOfSize(ParamOneOf oneOf) {
+		int oneOfSize = oneOf.getOneOf().size();
+		if (oneOfSize < 2) {
+			error("Minimum of two list items required.",
+					UdbPackage.eINSTANCE.getParamOneOf_OneOf());
+		}
+	}
+
+	@Check
+	public void checkParamArraySize(ParamArrayList array) {
+		int arraySize = array.getParamArray().size();
+		if (arraySize < 2) {
+			error("Minimum of two list items required.",
+					UdbPackage.eINSTANCE.getParamArrayList_ParamArray());
+		}
+	}
+
+	@Check
+	public void checkXLenValue(XLenCondition xlen) {
+		int xlenValue = xlen.getXlen();
+		if (xlenValue != 32 && xlenValue != 64) {
+			error("xlen must be 32 or 64.",
+					UdbPackage.eINSTANCE.getXLenCondition_Xlen());
+		}
+	}
 
 
 

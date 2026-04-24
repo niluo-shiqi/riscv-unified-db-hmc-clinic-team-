@@ -4,8 +4,8 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
-Model
-	: CsrModel
+Model: 
+	CsrModel
 	| InstModel
 	| ExtModel
 	| InterruptCodeModel
@@ -14,6 +14,7 @@ Model
 	| InstVarTypeModel
 	| RegisterModel
 	| ManualModel
+	| ManualVersionModel
 ;
 
 
@@ -149,7 +150,7 @@ RegisterModel:
 ;
 
 ManualModel:
-	schema = Schema // must be "mmr_schema.json#"
+	schema = Schema // must be "manual_schema.json#"
 	manualKind = ManualKind
 	manualName = ManualName &
 	longName = LongName &
@@ -158,9 +159,22 @@ ManualModel:
 	url = Url? &
 	license = License? &
 	source = Source?
-	
 ;
-
+ManualVersionModel:
+	schema = Schema // must be "manual_version_schema.json#"
+	manualVersionKind = ManualVersionKind
+	manualVersionName = ManualVersionName &
+	longName = LongName &
+	manual = ManualVersionManual &
+	version = ManualVersionVersion &
+	marketingVersion = MarketingVersion &
+	state = ManualVersionState &
+	url = Url? &
+	usesIsaManual = UsesIsaManual? &
+	isaManualTree = IsaManualTree? &
+	volumes = ManualVersionVolumes &
+	source = Source?
+;
 /*
  * Common stuff
  */
@@ -649,18 +663,18 @@ RequiresEntry:
 
 ExtensionRequirement:
 	'name' ':' name=STRING 
-	(INDENT? 'version' ':' version=VersionRequirements DEDENT?)?
+	(INDENT? 'version' ':' version=RegisterVersionRequirements DEDENT?)?
 ;
 
-VersionRequirements:
-	versionSingle=VersionRequirementString | versionArray=VersionRequirementArray
+RegisterVersionRequirements:
+	versionSingle=RegVersionRequirementString | versionArray=RegVersionRequirementArray
 ;
 
-VersionRequirementArray:
-	'[' versions+=VersionRequirementString (',' versions+=VersionRequirementString)* ']'
+RegVersionRequirementArray:
+	'[' versions+=RegVersionRequirementString (',' versions+=RegVersionRequirementString)* ']'
 ;
 
-VersionRequirementString:
+RegVersionRequirementString:
 	version=STRING
 ;
 
@@ -885,211 +899,300 @@ ManualKind: 'kind' ':' kind="manual";
 
 
 
+/*
+ * Manual Version stuff (see manual_version_schema.json)
+ */
+ 
+ManualVersionKind: 'kind' ':' kind="manual_version";
+ManualVersionName: 'name' ':' name=STRING;
+ManualVersionManual: 'manual' ':' '{' '$ref:' ref=STRING  '}';
+ManualVersionVersion: 'version' ':' version=STRING;
+MarketingVersion: 'marketing_version' ':' marketingVersion=STRING;
+ManualVersionState: 'state' ':' state=SpecStateEnum;
 
-Condition: placeholder=STRING;
+enum SpecStateEnum:
+	DEVELOPMENT = 'development' |
+	FROZEN = 'frozen' |
+	PUBLIC_REVIEW = 'public-review' |
+	RATIFICATION_READY = 'ratification-ready' |
+	RATIFIED = 'ratified' |
+	NONSTANDARD_RELEASED = 'nonstandard-released'
+;
+
+ManualVersionVolumes: 
+	'volumes' ':' 
+	INDENT
+		volumes+=VolumesArr+
+	DEDENT
+;
+
+VolumesArr:
+	'-' 'title' ':' title=STRING
+	INDENT (
+		('description' ':' desc=STRING) &
+		('chapters' ':' 
+			INDENT
+			(chapters+=ChapterElement+)
+			DEDENT)? &
+		('authors' ':' 
+			INDENT
+			(authors+=AuthorElement+)
+			DEDENT) &
+		('extensions' ':'
+			INDENT
+			(extension+=ExtensionElement+)
+			DEDENT)? &
+		('changes' ':'
+			INDENT
+			(change+=ChangeString+)
+			DEDENT)?
+		
+	)DEDENT
+;
+
+ChangeString:
+	'-' changeString=STRING
+;
+
+ExtensionElement:
+	'-' '{' 'name' ':' name=STRING ',' 'version' ':' version=STRING '}'
+;
+
+AuthorElement:
+	'-' 'name' ':' name=STRING
+	INDENT(
+		('email' ':' email=STRING)? &
+		('organization' ':' 
+			INDENT
+			(org=OrgInfo)
+			DEDENT
+		)?
+	)DEDENT
+;
+
+OrgInfo:
+	'name' ':' name=STRING &
+	'url' ':' url=STRING
+;
+
+ChapterElement:	 '-' element=STRING;
+
+
+IsaManualTree: 'isa_manual_tree' ':' tree=STRING;
+
+UsesIsaManual: 'uses_isa_manual' ':' uses=Boolean;
+
+
+
+
+
+
+
+
+//Condition: placeholder=STRING;
 /*
  * Conditions
  * TODO: currently breaks syntax errors
  */
-//Condition: YAMLCondition | IDLCondition | ConditionArray;
-//
-//ConditionArray: ConditionArrayList | ConditionNot;
-//
-//ConditionArrayList:
-//	( 'allOf' ':'
-//	| 'anyOf' ':'
-//	| 'oneOf' ':'
-//	| 'noneOf' ':') &
-//	(INDENT
-//		condArray+=ConditionElement+
-//	DEDENT)
-//;
-//
-//// Mandates only one element for 'not'
-//ConditionNot: 
-//	'not' ':'
-//	INDENT
-//		condArray=ConditionElement
-//	DEDENT
-//;
-//
-//ConditionElement: '-' cond=Condition;
-//
-//YAMLCondition: 
-//	ExtensionCondition | XLenCondition | ParamCondition | YAMLArray | YAMLIfThen
-//;
-//
-//YAMLArray: YAMLArrayList | YAMLNot;
-//
-//YAMLArrayList:
-//	( 'allOf' ':'
-//	| 'anyOf' ':'
-//	| 'oneOf' ':'
-//	| 'noneOf' ':') &
-//	(INDENT
-//		yamlArray+=YAMLElement+
-//	DEDENT)
-//;
-//
-//// Mandates only one element for 'not'
-//YAMLNot:
-//	'not' ':'
-//	INDENT
-//		yamlArray=YAMLElement
-//	DEDENT
-//;
-//
-//YAMLElement: '-' yamlArrayElement=YAMLCondition;
-//
-//YAMLIfThen:
-//	('if' ':' 
-//	INDENT
-//		ifCond=YAMLCondition 
-//	DEDENT) &
-//	('then' ':'
-//	INDENT
-//		thenCond=YAMLCondition
-//	DEDENT)
-//;
-//
-//IDLCondition:
-//	'idl()' ':' idl=Idl
-//;
-//
-//ExtensionCondition:
-//	'extension' ':'
-//	INDENT
-//		extCond=Extension
-//	DEDENT
-//;
-//
-//Extension:
-//	 requirement=ExtRequirement
-//	| array=ExtArray
-//	| ifThen=ExtIfThen
-//;
-//
-//ExtRequirement:
-//	'name' ':' name=STRING &
-//	(version=ExtVersion)?
-//;
-//
-//ExtVersion: IndentVersion | NoIndentVersion;
-//IndentVersion: 
-//	INDENT
-//		'version' ':' verReqs=VersionRequirements
-//	DEDENT
-//;
-//NoIndentVersion: 'version' ':' verReqs=VersionRequirements;
-//
-//VersionRequirements:
-//	versionReq=STRING 
-//;
-//
-//ExtArray: ExtArrayList | ExtNot;
-//
-//ExtArrayList:
-//	( 'allOf' ':'
-//	| 'anyOf' ':'
-//	| 'oneOf' ':'
-//	| 'noneOf' ':') &
-//	(INDENT
-//		extArray+=ExtArrayElement+ 
-//	DEDENT)
-//;
-//
-//// Mandates only one element for 'not'
-//ExtNot: 
-//	'not' ':' 
-//	INDENT
-//		extNotArray=ExtArrayElement
-//	DEDENT
-//;
-//
-//ExtArrayElement: '-' extConds=Extension;
-//
-//ExtIfThen: 
-//	('if' ':' 
-//	INDENT
-//		ifCond=Condition 
-//	DEDENT) &
-//	('then' ':'
-//	INDENT
-//		thenCond=ExtensionCondition
-//	DEDENT)
-//;
-//
-//
-//ParamCondition:
-//	'param' ':'
-//	INDENT
-//		param=Param 
-//	DEDENT
-//;
-//
-//Param: ParamFieldsList | ParamArray;
-//
-//ParamArray: ParamArrayList | ParamNot;
-//
-//ParamArrayList:
-//	( 'allOf' ':' 
-//	| 'anyOf' ':' 
-//	| 'oneOf' ':' 
-//	| 'noneOf' ':') &
-//	(INDENT
-//		paramArray+=ParamArrayElement+
-//	DEDENT)
-//;
-//
-//// Mandates only one element for 'not'
-//ParamNot: 
-//	'not' ':'
-//	INDENT
-//		paramArray=ParamArrayElement
-//	DEDENT
-//;
-//
-//ParamArrayElement: '-' paramElement=Param;
-//
-//ParamFieldsList:
-//	'name' ':' name=STRING &
-//	(INDENT
-//		paramFieldsList+=ParamFields+
-//	DEDENT)?
-//;
-//
-//ParamFields: 
-//	(ParamIndex |
-//	ParamSize |
-//	ParamEqual |
-//	ParamOneOf |
-//	ParamNotEqual |
-//	ParamGreaterThan |
-//	ParamLessThan |
-//	ParamGreaterEqual | 
-//	ParamLessEqual |
-//	ParamIncludes |
-//	ParamReason)
-//;
-//
-//ParamIndex: 'index' ':' index=INT;
-//ParamSize: 'size' ':' size=Boolean;
-//ParamEqual: 'equal' ':' (equalInt=INT | equalBool=Boolean | equalStr=STRING);
-//ParamOneOf: 
-//	'oneOf' ':' 
-//	INDENT
-//		oneOf+=ParamOneOfElement+
-//	DEDENT;
-//ParamOneOfElement: '-' (paramInt=INT|paramStr=ID); 
-//ParamNotEqual: 'notEqual' ':' (notEqualInt=INT | notEqualStr=ID | notEqualBool=Boolean);
-//ParamGreaterThan: 'greaterThan' ':' greaterThan=INT;
-//ParamLessThan: 'lessThan' ':' lessThan=INT;
-//ParamGreaterEqual: 'greaterThanOrEqual' ':' greaterEqual=INT;
-//ParamLessEqual: 'lessThanOrEqual' ':' lessEqual=INT;
-//ParamIncludes: 'includes' ':' (includeInt=INT | includeStr=ID);
-//ParamReason: 'reason' ':' reason=STRING;
-//
-//XLenCondition: 'xlen' ':' xlen=INT;
+Condition: YAMLCondition | IDLCondition | ConditionArray;
+
+ConditionArray: ConditionArrayList | ConditionNot;
+
+ConditionArrayList:
+	( 'allOf' ':'
+	| 'anyOf' ':'
+	| 'oneOf' ':'
+	| 'noneOf' ':') &
+	(INDENT
+		condArray+=ConditionElement+
+	DEDENT)
+;
+
+// Mandates only one element for 'not'
+ConditionNot: 
+	'not' ':'
+	INDENT
+		condArray=ConditionElement
+	DEDENT
+;
+
+ConditionElement: '-' cond=Condition;
+
+YAMLCondition: 
+	ExtensionCondition | XLenCondition | ParamCondition | YAMLArray | YAMLIfThen
+;
+
+YAMLArray: YAMLArrayList | YAMLNot;
+
+YAMLArrayList:
+	( 'allOf' ':'
+	| 'anyOf' ':'
+	| 'oneOf' ':'
+	| 'noneOf' ':') &
+	(INDENT
+		yamlArray+=YAMLElement+
+	DEDENT)
+;
+
+// Mandates only one element for 'not'
+YAMLNot:
+	'not' ':'
+	INDENT
+		yamlArray=YAMLElement
+	DEDENT
+;
+
+YAMLElement: '-' yamlArrayElement=YAMLCondition;
+
+YAMLIfThen:
+	('if' ':' 
+	INDENT
+		ifCond=YAMLCondition 
+	DEDENT) &
+	('then' ':'
+	INDENT
+		thenCond=YAMLCondition
+	DEDENT)
+;
+
+IDLCondition:
+	'idl()' ':' idl=Idl
+;
+
+ExtensionCondition:
+	'extension' ':'
+	INDENT
+		extCond=Extension
+	DEDENT
+;
+
+Extension:
+	 requirement=ExtRequirement
+	| array=ExtArray
+	| ifThen=ExtIfThen
+;
+
+ExtRequirement:
+	'name' ':' name=STRING &
+	(version=ExtVersion)?
+;
+
+ExtVersion: IndentVersion | NoIndentVersion;
+IndentVersion: 
+	INDENT
+		'version' ':' verReqs=VersionRequirements
+	DEDENT
+;
+NoIndentVersion: 'version' ':' verReqs=VersionRequirements;
+
+VersionRequirements:
+	versionReq=STRING 
+;
+
+ExtArray: ExtArrayList | ExtNot;
+
+ExtArrayList:
+	( 'allOf' ':'
+	| 'anyOf' ':'
+	| 'oneOf' ':'
+	| 'noneOf' ':') &
+	(INDENT
+		extArray+=ExtArrayElement+ 
+	DEDENT)
+;
+
+// Mandates only one element for 'not'
+ExtNot: 
+	'not' ':' 
+	INDENT
+		extNotArray=ExtArrayElement
+	DEDENT
+;
+
+ExtArrayElement: '-' extConds=Extension;
+
+ExtIfThen: 
+	('if' ':' 
+	INDENT
+		ifCond=Condition 
+	DEDENT) &
+	('then' ':'
+	INDENT
+		thenCond=ExtensionCondition
+	DEDENT)
+;
+
+
+ParamCondition:
+	'param' ':'
+	INDENT
+		param=Param 
+	DEDENT
+;
+
+Param: ParamFieldsList | ParamArray;
+
+ParamArray: ParamArrayList | ParamNot;
+
+ParamArrayList:
+	( 'allOf' ':' 
+	| 'anyOf' ':' 
+	| 'oneOf' ':' 
+	| 'noneOf' ':') &
+	(INDENT
+		paramArray+=ParamArrayElement+
+	DEDENT)
+;
+
+// Mandates only one element for 'not'
+ParamNot: 
+	'not' ':'
+	INDENT
+		paramArray=ParamArrayElement
+	DEDENT
+;
+
+ParamArrayElement: '-' paramElement=Param;
+
+ParamFieldsList:
+	'name' ':' name=STRING &
+	(INDENT
+		paramFieldsList+=ParamFields+
+	DEDENT)?
+;
+
+ParamFields: 
+	(ParamIndex |
+	ParamSize |
+	ParamEqual |
+	ParamOneOf |
+	ParamNotEqual |
+	ParamGreaterThan |
+	ParamLessThan |
+	ParamGreaterEqual | 
+	ParamLessEqual |
+	ParamIncludes |
+	ParamReason)
+;
+
+ParamIndex: 'index' ':' index=INT;
+ParamSize: 'size' ':' size=Boolean;
+ParamEqual: 'equal' ':' (equalInt=INT | equalBool=Boolean | equalStr=STRING);
+ParamOneOf: 
+	'oneOf' ':' 
+	INDENT
+		oneOf+=ParamOneOfElement+
+	DEDENT;
+ParamOneOfElement: '-' (paramInt=INT|paramStr=ID); 
+ParamNotEqual: 'notEqual' ':' (notEqualInt=INT | notEqualStr=ID | notEqualBool=Boolean);
+ParamGreaterThan: 'greaterThan' ':' greaterThan=INT;
+ParamLessThan: 'lessThan' ':' lessThan=INT;
+ParamGreaterEqual: 'greaterThanOrEqual' ':' greaterEqual=INT;
+ParamLessEqual: 'lessThanOrEqual' ':' lessEqual=INT;
+ParamIncludes: 'includes' ':' (includeInt=INT | includeStr=ID);
+ParamReason: 'reason' ':' reason=STRING;
+
+XLenCondition: 'xlen' ':' xlen=INT;
 
 
 
