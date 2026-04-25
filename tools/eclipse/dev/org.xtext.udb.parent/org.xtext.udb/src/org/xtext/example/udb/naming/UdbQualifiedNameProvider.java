@@ -5,6 +5,7 @@ import org.eclipse.xtext.naming.QualifiedName;
 import org.eclipse.emf.ecore.EObject;
 import org.xtext.example.udb.udb.CsrName;
 import org.xtext.example.udb.udb.ECName;
+import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.InstName;
 import org.xtext.example.udb.udb.InstOpcodeName;
 import org.xtext.example.udb.udb.InstVarTypeName;
@@ -23,7 +24,9 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 		}
 		return null;
 	}
+	
 
+	
 	public QualifiedName qualifiedName(InstName instName) {
 		if (instName != null && instName.getName() != null) {
 			return QualifiedName.create(instName.getName());
@@ -32,7 +35,13 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 	}
 	
 
-
+	public QualifiedName qualifiedName(ExtModel extModel) {
+	    if (extModel != null && extModel.getExtName() != null) {
+	        return QualifiedName.create(extModel.getExtName().getName());
+	    }
+	    return null;
+	}
+	
 	public QualifiedName qualifiedName(ExtName extName) {
 		if (extName != null && extName.getName() != null) {
 			return QualifiedName.create(extName.getName());
