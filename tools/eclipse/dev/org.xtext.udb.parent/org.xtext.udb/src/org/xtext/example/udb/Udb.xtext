@@ -1276,12 +1276,12 @@ Reference:
 ;
 NonIsaRatificationDate: "ratification_date" ":" date=STRING;
 
-Condition: placeholder=STRING;
+//Condition: placeholder=STRING;
 /*
  * Conditions
  * TODO: currently breaks syntax errors
  */
-//Condition: YAMLCondition | IDLCondition | ConditionArray;
+Condition: YAMLCondition | IDLCondition | ConditionArray;
 
 ConditionArray: ConditionArrayList | ConditionNot;
 
