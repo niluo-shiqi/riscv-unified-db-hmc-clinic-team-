@@ -23,36 +23,39 @@ class UdbParsingTest {
 	@Test
 	def void parsesValidCSR() {
 		val result = parseHelper.parse('''
-			$schema: "csr_schema.json#"
-			kind: csr
-			name: "vcsr"
-			long_name: "Vector Control and Status Register"
-			address: 0x00F
-			writable: true
-			priv_mode: U
-			length: MXLEN
-			description: "Contains aliases to vxrm and vxsat CSRs"
-			fields: 
-			  "VXRM":
-			    location: 2-1
-			    description: "See vxrm."
-			    type: RW-RH
-			    alias: "vxrm.VALUE[1:0]"
-			    sw_write(csr_value): | "
-			      CSR[vxrm].VALUE = csr_value.VXRM;
-			      return csr_value.VXRM;
-			    "
-			    reset_value: UNDEFINED_LEGAL
-			  "VXSAT":
-			    location: 0
-			    description: "See vxsat."
-			    type: RW-RH
-			    alias: "vxsat.VALUE[0]"
-			    sw_write(csr_value): | "
-			      CSR[vxsat].VALUE = csr_value.VXSAT;
-			      return csr_value.VXSAT;
-			    "
-			    reset_value: UNDEFINED_LEGAL
+		$schema: "csr_schema.json#"
+		kind: csr
+		name: "vcsr"
+		long_name: "Vector Control and Status Register"
+		address: 0x00F
+		writable: true
+		priv_mode: U
+		length: MXLEN
+		description: "Contains aliases to vxrm and vxsat CSRs"
+		definedBy: 
+		  'extension: 
+		    name: "V"'
+		fields: 
+		  "VXRM":
+		    location: 2-1
+		    description: "See vxrm."
+		    type: RW-RH
+		    alias: "vxrm.VALUE[1:0]"
+		    sw_write(csr_value): | "
+		      CSR[vxrm].VALUE = csr_value.VXRM;
+		      return csr_value.VXRM;
+		    "
+		    reset_value: UNDEFINED_LEGAL
+		  "VXSAT":
+		    location: 0
+		    description: "See vxsat."
+		    type: RW-RH
+		    alias: "vxsat.VALUE[0]"
+		    sw_write(csr_value): | "
+		      CSR[vxsat].VALUE = csr_value.VXSAT;
+		      return csr_value.VXSAT;
+		    "
+		    reset_value: UNDEFINED_LEGAL
 		''')
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
