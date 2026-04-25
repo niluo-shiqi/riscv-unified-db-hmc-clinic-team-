@@ -8,14 +8,15 @@ function wsPath(...p: string[]) {
   return path.join(root, ...p);
 }
 
-async function waitFor<T>(probe: () => T | null | undefined | false, ms = 8000, step = 50) {
+async function waitFor<T>(probe: () => T | null | undefined | false, ms = 16000, step = 50, minWait = 8000) {
+  await new Promise(r => setTimeout(r, minWait));
   const start = Date.now();
   while (Date.now() - start < ms) {
     const v = probe();
     if (v !== null && v !== undefined && v !== false) return v;
     await new Promise(r => setTimeout(r, step));
   }
-  return undefined;
+  return probe();
 }
 
 // Smoke test, test if language server starts up correctly and
@@ -42,7 +43,7 @@ suite('UDB LS – smoke', () => {
 
 	const diags = await waitFor(() => {
 	  const d = vscode.languages.getDiagnostics(doc.uri);
-	  return d;  // Return array regardless of length
+	  return d.length > 0 ? d : false;
 	}, 8000);
 
 	if (!diags) {
@@ -74,7 +75,7 @@ suite('UDB LS – smoke', () => {
 	  
 	  const diags = await waitFor(() => {
 	    const d = vscode.languages.getDiagnostics(doc.uri);
-	    return d;  // Return array regardless of length
+	    return d.length > 0 ? d : false;
 	  }, 8000);
 
 	  if (!diags) {
@@ -106,7 +107,7 @@ suite('UDB LS – smoke', () => {
 	
 	const diags = await waitFor(() => {
 	  const d = vscode.languages.getDiagnostics(doc.uri);
-	  return d;  // Return array regardless of length
+	  return d.length > 0 ? d : false;
 	}, 8000);
 
 	if (!diags) {
