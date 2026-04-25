@@ -52,6 +52,7 @@ import org.xtext.example.udb.udb.InstOperation;
 import org.xtext.example.udb.udb.ExtModel;
 import org.xtext.example.udb.udb.ExtName;
 import org.xtext.example.udb.udb.ExtVersionArrayElement;
+import org.xtext.example.udb.udb.ExtVersionRatificationDate;
 
 // Profile imports
 import org.xtext.example.udb.udb.ProfModel;
@@ -95,6 +96,8 @@ import org.xtext.example.udb.udb.RegisterLength;
 import org.xtext.example.udb.udb.RegisterLengthInt;
 import org.xtext.example.udb.udb.RegisterLengthType;
 import org.xtext.example.udb.udb.RegVersionRequirementString;
+import org.xtext.example.udb.udb.RegisterArchRead;
+import org.xtext.example.udb.udb.RegisterArchWrite;
 
 // Manual imports
 import org.xtext.example.udb.udb.ManualModel;
@@ -170,7 +173,13 @@ public class UdbValidator extends AbstractUdbValidator {
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String refUrlRegex = "^.*/.*\\.yaml#.*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-    String dateRegex = "^\\d{4}-\\d{2}-\\d{2}$";
+    String yearMonthDayRegex = "^\\d{4}-\\d{2}-\\d{2}$";
+    String yearMonthRegex = "^\\d{4}-\\d{2}$";
+    
+    
+
+    
+
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
@@ -596,7 +605,15 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 	}
-
+	
+    @Check
+    public void checkExtVerDate(ExtVersionRatificationDate date) {
+		String shortDate = date.getDate();
+		if (!shortDate.matches(yearMonthRegex)) {
+			error("Ratification Date must be year-month",
+					UdbPackage.eINSTANCE.getExtVersionRatificationDate_Date());
+		}
+    }
 
 	/*
 	 * Profile Validation -- rules found in profile_schema.json
@@ -1290,14 +1307,7 @@ public class UdbValidator extends AbstractUdbValidator {
 		}
 	}
 	
-	@Check
-	public void checkRatificationDate(NonIsaRatificationDate date) {
-		String dateString = date.getDate();
-		if (!dateString.matches(dateRegex)) {
-			error("Invalid date",
-					UdbPackage.eINSTANCE.getNonIsaRatificationDate_Date());
-		}
-	}
+
 	
 	@Check
 	public void checkSection(Section section) {
@@ -1328,6 +1338,15 @@ public class UdbValidator extends AbstractUdbValidator {
 			}
 		}
 	}
+	
+    @Check
+    public void checkNonIsaDate(NonIsaRatificationDate date) {
+		String longDate = date.getDate();
+		if (!longDate.matches(yearMonthDayRegex)) {
+			error("Ratification Date must be year-month-day",
+					UdbPackage.eINSTANCE.getNonIsaRatificationDate_Date());
+		}
+    }
 
 
 	/*
@@ -1456,6 +1475,33 @@ public class UdbValidator extends AbstractUdbValidator {
 		if (idlError != null) {
 			error(idlError,
 					UdbPackage.eINSTANCE.getInstOperation_Operation());
+		}
+	}
+	
+	// Register file IDL checks
+	@Check
+	public void checkRegisterArchRead(RegisterArchRead arch) {
+		String idl = arch.getArchRead().getIdl();
+		
+		// TODO: check that this is the right root node
+		String idlError = checkIdl(idl, "function_body");
+
+		if (idlError != null) {
+			error(idlError,
+					UdbPackage.eINSTANCE.getRegisterArchRead_ArchRead());
+		}
+	}
+
+	@Check
+	public void checkRegisterArchWrite(RegisterArchWrite arch) {
+		String idl = arch.getArchWrite().getIdl();
+		
+		// TODO: check that this is the right root node
+		String idlError = checkIdl(idl, "function_body");
+
+		if (idlError != null) {
+			error(idlError,
+					UdbPackage.eINSTANCE.getRegisterArchWrite_ArchWrite());
 		}
 	}
 
