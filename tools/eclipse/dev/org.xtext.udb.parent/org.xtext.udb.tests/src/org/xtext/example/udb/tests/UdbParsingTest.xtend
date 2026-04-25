@@ -32,25 +32,27 @@ class UdbParsingTest {
 			priv_mode: U
 			length: MXLEN
 			description: "Contains aliases to vxrm and vxsat CSRs"
-			fields:
-				VXRM:
-					location: 2-1
-					description: "See vxrm."
-					type: RW-RH
-					alias: "vxrm.VALUE[1:0]"
-					sw_write(csr_value): | "
-					  CSR[vxrm].VALUE = csr_value.VXRM;
-					  return csr_value.VXRM;"
-					reset_value: UNDEFINED_LEGAL
-				VXSAT:
-					location: 0
-					description: "See vxsat."
-					type: RW-RH
-					alias: "vxsat.VALUE[0]"
-					sw_write(csr_value): | "
-					  CSR[vxsat].VALUE = csr_value.VXSAT;
-					  return csr_value.VXSAT;"
-					reset_value: UNDEFINED_LEGAL
+			fields: 
+			  "VXRM":
+			    location: 2-1
+			    description: "See vxrm."
+			    type: RW-RH
+			    alias: "vxrm.VALUE[1:0]"
+			    sw_write(csr_value): | "
+			      CSR[vxrm].VALUE = csr_value.VXRM;
+			      return csr_value.VXRM;
+			    "
+			    reset_value: UNDEFINED_LEGAL
+			  "VXSAT":
+			    location: 0
+			    description: "See vxsat."
+			    type: RW-RH
+			    alias: "vxsat.VALUE[0]"
+			    sw_write(csr_value): | "
+			      CSR[vxsat].VALUE = csr_value.VXSAT;
+			      return csr_value.VXSAT;
+			    "
+			    reset_value: UNDEFINED_LEGAL
 		''')
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
@@ -136,11 +138,11 @@ class UdbParsingTest {
 		versions:
 		  - version: "1.0.0"
 		    state: ratified
-		    ratification_date: 2021-11
+		    ratification_date: "2021-11"
 		description: | "
 		  General support for data-parallel execution."
-		requirements: '
-		  extension:
+		requirements:
+		  'extension:
 		    allOf:
 		      - name: Zve64d
 		      - name: Zvl128b'
