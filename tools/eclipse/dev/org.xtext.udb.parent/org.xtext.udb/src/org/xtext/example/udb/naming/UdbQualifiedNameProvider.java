@@ -98,7 +98,4 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 		}
 		return null;
 	}
-
-	
-
 }

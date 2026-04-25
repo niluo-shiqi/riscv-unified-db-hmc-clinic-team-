@@ -1504,5 +1504,4 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getRegisterArchWrite_ArchWrite());
 		}
 	}
-
 }
