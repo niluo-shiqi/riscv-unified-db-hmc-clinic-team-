@@ -32,10 +32,10 @@ class UdbParsingTest {
 		priv_mode: U
 		length: MXLEN
 		description: "Contains aliases to vxrm and vxsat CSRs"
-		definedBy: 
-		  'extension: 
+		definedBy:
+		  'extension:
 		    name: "V"'
-		fields: 
+		fields:
 		  "VXRM":
 		    location: 2-1
 		    description: "See vxrm."

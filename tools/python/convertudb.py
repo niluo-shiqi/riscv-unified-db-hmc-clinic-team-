@@ -7,6 +7,7 @@ Script to convert .udb files to .yml files and vice versa.
 NOTE: doesn't handle in-line comments, assumes that all comments exist
       on their own line (TODO: add support for in-line comments)
 """
+
 import re
 import sys
 
@@ -236,16 +237,16 @@ def convert_yaml_to_udb(yaml_file):
 
     # to keep track if we're currently processing a multi-line string
     inMultiLineString = False
-    
+
     # to keep track if we're currently processing an array of strings
     inYamlStringArray = False
-    
+
     # if we're in a YAML array that consists of arrays of strings
     inYamlArrayOfStringArrays = False
-    
+
     # to keep track if we're currently processing a list of strings
     inYamlStringList = False
-    
+
     # to keep track if we're currently processing an array that isn't
     #    a list of strings, but has strings in the elements
     inArrayHasStrings = False
@@ -253,9 +254,9 @@ def convert_yaml_to_udb(yaml_file):
     # when we are in a param condition
     inParamCondition = False
 
-    # 'extensions' is handled differently in this case            
+    # 'extensions' is handled differently in this case
     inManualVolumes = False
-    
+
     # when we're an 'extensions' field that's in a 'volumes' field
     inManualVolumesExtensions = False
 
@@ -505,7 +506,6 @@ def convert_yaml_to_udb(yaml_file):
             except ValueError:
                 # When the line doesn't contain a ":"
                 output_lines.append(line)
-
 
     output_file = yaml_file.rsplit(".", 1)[0] + ".udb"
     with open(output_file, "w") as file:

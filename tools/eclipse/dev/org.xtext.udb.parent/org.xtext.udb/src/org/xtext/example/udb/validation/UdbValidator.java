@@ -176,13 +176,13 @@ public class UdbValidator extends AbstractUdbValidator {
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     String yearMonthDayRegex = "^\\d{4}-\\d{2}-\\d{2}$";
     String yearMonthRegex = "^\\d{4}-\\d{2}$";
-   
+
 
 
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
-    
+
     // Ensure CSR schema matches csr_schema.json#
     @Check
     public void checkCsrSchema(CsrModel csr) {
@@ -1089,7 +1089,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkManualVersionSchema(ManualVersionModel model) {
 		String schema = model.getSchema().getSchema();
 		if (!schema.equals("manual_version_schema.json#")) {
-			error("Schema incompatible with kind", model.getSchema(), 
+			error("Schema incompatible with kind", model.getSchema(),
 					UdbPackage.eINSTANCE.getSchema_Schema());
 		}
 	}
@@ -1098,7 +1098,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	public void checkManualVersionManualString(ManualVersionManual manual) {
 	    String value = manual.getRef();
 	    if (!value.matches(manualVersionManualRegex)) {
-	        error("Manual ref format must follow 'manual/[name].yaml#' format", manual, 
+	        error("Manual ref format must follow 'manual/[name].yaml#' format", manual,
 	        		UdbPackage.eINSTANCE.getManualVersionManual_Ref());
 	    }
 	}
@@ -1128,7 +1128,7 @@ public class UdbValidator extends AbstractUdbValidator {
     public void checkProfileFamilySchema(ProfFamModel model) {
 		String schema = model.getSchema().getSchema();
 		if (!schema.equals("profile_family_schema.json#")) {
-			error("Schema incompatible with kind", model.getSchema(), 
+			error("Schema incompatible with kind", model.getSchema(),
 					UdbPackage.eINSTANCE.getSchema_Schema());
 		}
     }
