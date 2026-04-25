@@ -43,7 +43,7 @@ suite('UDB LS – smoke', () => {
 
 	const diags = await waitFor(() => {
 	  const d = vscode.languages.getDiagnostics(doc.uri);
-	  return d;  // Return array regardless of length
+	  return d.length > 0 ? d : false;
 	}, 8000);
 
 	if (!diags) {
@@ -75,7 +75,7 @@ suite('UDB LS – smoke', () => {
 	  
 	  const diags = await waitFor(() => {
 	    const d = vscode.languages.getDiagnostics(doc.uri);
-	    return d;  // Return array regardless of length
+	    return d.length > 0 ? d : false;
 	  }, 8000);
 
 	  if (!diags) {
@@ -107,7 +107,7 @@ suite('UDB LS – smoke', () => {
 	
 	const diags = await waitFor(() => {
 	  const d = vscode.languages.getDiagnostics(doc.uri);
-	  return d;  // Return array regardless of length
+	  return d.length > 0 ? d : false;
 	}, 8000);
 
 	if (!diags) {
