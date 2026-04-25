@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Harvey Mudd Clinic Team
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
 #!/bin/bash
 set -euo pipefail
 
