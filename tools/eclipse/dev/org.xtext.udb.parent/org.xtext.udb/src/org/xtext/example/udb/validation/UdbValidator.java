@@ -1321,7 +1321,7 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getSection_Title());
 		}
 
-		String content = section.getContent();
+		String content = section.getContent().getValue();
 		if (content == null || content.trim().isEmpty()) {
 			error("Section content is required",
 					section,

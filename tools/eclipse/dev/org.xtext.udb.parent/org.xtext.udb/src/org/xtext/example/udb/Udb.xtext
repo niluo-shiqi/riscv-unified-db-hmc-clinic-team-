@@ -317,7 +317,7 @@ CsrIntType: intVal=INT;
 CsrParmType: parmName=('MXLEN'|'SXLEN'|'VSXLEN'|'XLEN');
 
 // extension that must be implemented for this CSR to exist
-CsrRequires:'requires' ':' requires=STRING;
+CsrRequires: 'requires' ':' requires=STRING;
 
 // grammar for csr_field
 CsrFields:
@@ -439,7 +439,7 @@ InstFormat: 'format' ':'
 	INDENT (
 		'$inherits' ':' inherits=InstInheritType &
 		'opcodes' ':' opcodes=InstOpcodeType
-	)DEDENT
+	) DEDENT
 ;
 InstInheritType:
 	INDENT
@@ -651,7 +651,7 @@ RegisterEntry:
 	'-' 'name' ':' name=STRING
 	INDENT(
 		abiMnemonics = RegisterAbiMnemonics? &
-		description = RegisterDescription? &
+		description = Description? &
 		when = RegisterWhen? &
 		archRead = RegisterArchRead? &
 		archWrite = RegisterArchWrite? &
@@ -662,11 +662,6 @@ RegisterEntry:
 ;
 
 RegisterAbiMnemonics:'abi_mnemonics' ':' '[' mnemonics+=STRING (',' mnemonics+=STRING)* ']';
-
-
-RegisterDescription:
-	'description' ':' description=STRING
-;
 
 RegisterWhen:
 	'when' ':' (
@@ -946,6 +941,8 @@ enum RegisterFileEnum:
 	V = 'V'
 ;
 
+
+
 /*
  * Manual stuff (see manual_schema.json)
  */
@@ -1017,7 +1014,7 @@ VolumesArr:
 			(change+=ChangeString+)
 			DEDENT)?
 		
-	)DEDENT
+	) DEDENT
 ;
 
 ChangeString:
@@ -1051,6 +1048,8 @@ ChapterElement:	 '-' element=STRING;
 IsaManualTree: 'isa_manual_tree' ':' tree=STRING;
 
 UsesIsaManual: 'uses_isa_manual' ':' uses=Boolean;
+
+
 
 /* 
  * Profile_Family stuff (see profile_family_schema.json) 
@@ -1189,6 +1188,8 @@ ConfigName:'name' ':' name=STRING;
 
 ArchOverlay: 'arch_overlay' ':' archOverlay=STRING;
 
+// NOTE: The config schema has not implemented this field, so we
+// 		 leave it as a string for now (TODO)
 ConfigParams: 
 	'params' ':' params=STRING
 //	INDENT
@@ -1229,8 +1230,10 @@ ConfigParams:
 //	)
 //;
 
+
+
 /*
- * Non ISA stuff stuff (see "non_isa_schema.json#")
+ * Non ISA stuff (see "non_isa_schema.json#")
  */
 Sections:
 	'sections' ':'
@@ -1256,9 +1259,11 @@ NonIsaVersion:
 ;
 Section:
 	'-' 'title' ':' title=STRING
-	('level' ':' level=INT)?
-	'content' ':' content=STRING
-	('when()' ':' when=Idl)?
+	INDENT (
+		('level' ':' level=INT)? &
+		'content' ':' content=StringType &
+		('when()' ':' when=Idl)?
+	DEDENT)
 ;
 References:
 	'references' ':'
@@ -1276,12 +1281,12 @@ Reference:
 ;
 NonIsaRatificationDate: "ratification_date" ":" date=STRING;
 
-//Condition: placeholder=STRING;
+Condition: placeholder=STRING;
 /*
  * Conditions
  * TODO: currently breaks syntax errors
  */
-Condition: YAMLCondition | IDLCondition | ConditionArray;
+//Condition: YAMLCondition | IDLCondition | ConditionArray;
 
 ConditionArray: ConditionArrayList | ConditionNot;
 
