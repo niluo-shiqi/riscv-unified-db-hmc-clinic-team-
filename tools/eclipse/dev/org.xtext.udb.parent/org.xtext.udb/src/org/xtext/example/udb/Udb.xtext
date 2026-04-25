@@ -18,6 +18,8 @@ Model
 	| ManualVersionModel
 	| ProfFamModel
 	| ConfigModel
+	| NonIsaModel
+	
 ;
 
 
@@ -193,6 +195,20 @@ ProfFamModel:
 	& company = Company? 
 	& docLicense = DocLicense? 
 	& source = Source? 
+;
+
+NonIsaModel:
+	schema=Schema
+	kind=NonIsaKind
+	name=NonIsaName &
+	longName=LongName? &
+	version=NonIsaVersion? &
+	ratificationDate=NonIsaRatificationDate? &
+	description=Description &
+	sections=Sections &
+	references=References? &
+	authors=Authors? &
+	license=License?
 ;
 
 /*
@@ -1213,7 +1229,52 @@ ConfigParams:
 //	)
 //;
 
+/*
+ * Non ISA stuff stuff (see "non_isa_schema.json#")
+ */
+Sections:
+	'sections' ':'
+	INDENT
+		sections+=Section+
+	DEDENT
+;
+Authors:
+	'authors' ':'
+	INDENT
+		authors+=AuthorElement+
+	DEDENT
+;
+NonIsaKind:
+	'kind' ':' kind="non-isa_specification"
+;
 
+NonIsaName:
+	'name' ':' name=STRING
+;
+NonIsaVersion:
+	'version' ':' version=STRING
+;
+Section:
+	'-' 'title' ':' title=STRING
+	('level' ':' level=INT)?
+	'content' ':' content=STRING
+	('when()' ':' when=Idl)?
+;
+References:
+	'references' ':'
+	INDENT
+		references+=Reference+
+	DEDENT
+;
+Reference:
+	'-' 'title' ':' title=STRING
+	INDENT
+	'url' ':' url=STRING
+	('description' ':' description=STRING)?
+	DEDENT
+	
+;
+NonIsaRatificationDate: "ratification_date" ":" date=STRING;
 
 //Condition: placeholder=STRING;
 /*

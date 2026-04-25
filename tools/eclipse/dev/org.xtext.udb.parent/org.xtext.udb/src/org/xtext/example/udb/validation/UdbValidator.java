@@ -105,7 +105,7 @@ import org.xtext.example.udb.udb.ManualVersionModel;
 import org.xtext.example.udb.udb.ManualVersionVersion;
 import org.xtext.example.udb.udb.ExtensionElement;
 
-//Profile Family imports
+// Profile Family imports
 import org.xtext.example.udb.udb.ProfFamModel;
 
 // Conditions imports
@@ -124,8 +124,12 @@ import org.xtext.example.udb.udb.ImplementedExtensionElement;
 import org.xtext.example.udb.udb.PartialConfigurationType;
 import org.xtext.example.udb.udb.UnconfigurationType;
 
-
-
+// Non ISA imports
+import org.xtext.example.udb.udb.NonIsaModel;
+import org.xtext.example.udb.udb.NonIsaName;
+import org.xtext.example.udb.udb.NonIsaRatificationDate;
+import org.xtext.example.udb.udb.NonIsaVersion;
+import org.xtext.example.udb.udb.Section;
 /**
  * This class contains custom validation rules.
  *
@@ -156,17 +160,17 @@ public class UdbValidator extends AbstractUdbValidator {
     String registerAliasRegex="^[A-Za-z][A-Za-z0-9_.-]*$";
     String requirementStringRegex="^((>=)|(>)|(~>)|(<)|(<=)|(=))?\\s*[0-9]+(\\.[0-9]+(\\.[0-9]+(-[a-fA-F0-9]+)?)?)?$";
     String manualVersionManualRegex = "^manual/.*\\.yaml#$";
-    String manualVersionVersionRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
+    String semanticVersionRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
     String manualVersionExtensionVersion = "^[0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?$";
     String profInheritsRegex = "^profile/.*#$";
     String profReleaseRegex = "^profile_release.*#$";
     String profInheritsExtRegex = "^profile/.*#/extensions$";
-    
+    String nonISANameRegex = "^[A-Za-z][A-Za-z0-9_]*$";
     // Extra regex's for validation
     String urlRegex = "^https?:\\/\\/[^\\s/$.?#].[^\\s]*$";
     String refUrlRegex = "^.*/.*\\.yaml#.*$";
     String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-    
+    String dateRegex = "^\\d{4}-\\d{2}-\\d{2}$";
     /*
      * CSR Validation -- rules found in csr_schema.json
      */
@@ -1084,7 +1088,7 @@ public class UdbValidator extends AbstractUdbValidator {
 	@Check
 	public void checkManualVersionVersionString(ManualVersionVersion version) {
 	    String value = version.getVersion();
-	    if (!value.matches(manualVersionVersionRegex)) {
+	    if (!value.matches(semanticVersionRegex)) {
 	        error("Version must follow semantic versioning format (e.g. 1.2.3, 1.0.0-alpha.1, 2.3.4+build.42)", version, UdbPackage.eINSTANCE.getManualVersionVersion_Version());
 	    }
 	}
@@ -1256,6 +1260,72 @@ public class UdbValidator extends AbstractUdbValidator {
 			error("Invalid version '" + version + "': must match pattern [0-9]+(\\.[0-9]+(\\.[0-9]+(-pre)?)?)?",
 					element,
 					UdbPackage.eINSTANCE.getImplementedExtensionElement_Version());
+		}
+	}
+    /*
+	 * Non ISA Validation -- rules found in config_schema.json
+	 */
+	@Check
+	public void checkNonISASchema(NonIsaModel model) {
+		String schema = model.getSchema().getSchema();
+		if (!schema.equals("non_isa_schema.json#")) {
+			error("Schema incompatible with kind", model.getSchema(), UdbPackage.eINSTANCE.getSchema_Schema());
+		}
+	}
+	
+	@Check
+	public void checkNonISAName(NonIsaName nonisaname) {
+		String name = nonisaname.getName();
+		if (!name.matches(nonISANameRegex)) {
+			error("Invalid Non-ISA name",
+					UdbPackage.eINSTANCE.getNonIsaName_Name());
+		}
+	}
+	@Check
+	public void checkNonISAVersion(NonIsaVersion isaVer) {
+		String name = isaVer.getVersion();
+		if (!name.matches(semanticVersionRegex)) {
+			error("Invalid Non-ISA version",
+					UdbPackage.eINSTANCE.getNonIsaVersion_Version());
+		}
+	}
+	
+	@Check
+	public void checkRatificationDate(NonIsaRatificationDate date) {
+		String dateString = date.getDate();
+		if (!dateString.matches(dateRegex)) {
+			error("Invalid date",
+					UdbPackage.eINSTANCE.getNonIsaRatificationDate_Date());
+		}
+	}
+	
+	@Check
+	public void checkSection(Section section) {
+		if (section == null) return;
+
+		// Check required fields
+		String title = section.getTitle();
+		if (title == null || title.trim().isEmpty()) {
+			error("Section title is required",
+					section,
+					UdbPackage.eINSTANCE.getSection_Title());
+		}
+
+		String content = section.getContent();
+		if (content == null || content.trim().isEmpty()) {
+			error("Section content is required",
+					section,
+					UdbPackage.eINSTANCE.getSection_Content());
+		}
+
+		// Check optional level field
+		int level = section.getLevel();
+		if (level != 0) { // 0 is default/unset
+			if (level < 1 || level > 6) {
+				error("Section level must be between 1 and 6 (inclusive); got " + level,
+						section,
+						UdbPackage.eINSTANCE.getSection_Level());
+			}
 		}
 	}
 
