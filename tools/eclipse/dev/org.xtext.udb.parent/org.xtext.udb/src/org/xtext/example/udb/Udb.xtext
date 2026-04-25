@@ -434,7 +434,7 @@ InstHintElement: '-' '{' '$ref' ':' hint = STRING '}';
 InstAccessDetail: 'access_detail' ':' accessDetail=STRING;
 InstOperation: 'operation()' ':' operation=Idl;
 InstDataIndependentTiming: 'data_independent_timing' ':' dataIndependentTiming=Boolean;
-InstPseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=Array;
+InstPseudoInstructions: 'pseudoinstructions' ':' pseudoInstructions=StringArray;
 InstFormat: 'format' ':'
 	INDENT (
 		'$inherits' ':' inherits=InstInheritType &
@@ -592,7 +592,7 @@ ExtVersionRepoArrayElement:
 ExtVersionRatificationDate:
 	"ratification_date" ":"
 	date = (
-	  YEAR_MONTH			// when ratification date is known
+	   STRING				// when ratification date is known
 	| "unknown"				// when ratification date is unknown
 	| "null")				// when version isn't ratified
 ;
@@ -901,12 +901,12 @@ Num: 'num' ':' num=INT;
 InstOpcodeKind: 'kind' ':' kind="instruction_opcode";
 InstOpcodeName: 'name' ':' name=STRING;
 InstOpcodeData: 'data' ':'
-	INDENT(
+	INDENT (
 		('display_name' ':' displayName=STRING) &
 		('value' ':' (value=Bin | value=Hex | valueInt=INT)) &
 		('location' ':' (location=Range | locationInt=INT))? &
 		('parent_of' ':' (parentOf=StringArray | parentOfString=STRING))?
-		)DEDENT
+	) DEDENT
 ;
 
 
@@ -1470,13 +1470,13 @@ ParamOneOf:
 	INDENT
 		oneOf+=ParamOneOfElement+
 	DEDENT;
-ParamOneOfElement: '-' (paramInt=INT|paramStr=ID); 
-ParamNotEqual: 'notEqual' ':' (notEqualInt=INT | notEqualStr=ID | notEqualBool=Boolean);
+ParamOneOfElement: '-' (paramInt=INT|paramStr=STRING); 
+ParamNotEqual: 'notEqual' ':' (notEqualInt=INT | notEqualStr=STRING | notEqualBool=Boolean);
 ParamGreaterThan: 'greaterThan' ':' greaterThan=INT;
 ParamLessThan: 'lessThan' ':' lessThan=INT;
 ParamGreaterEqual: 'greaterThanOrEqual' ':' greaterEqual=INT;
 ParamLessEqual: 'lessThanOrEqual' ':' lessEqual=INT;
-ParamIncludes: 'includes' ':' (includeInt=INT | includeStr=ID);
+ParamIncludes: 'includes' ':' (includeInt=INT | includeStr=STRING);
 ParamReason: 'reason' ':' reason=STRING;
 
 XLenCondition: 'xlen' ':' xlen=INT;
@@ -1494,8 +1494,6 @@ Boolean returns ecore::EBoolean: "true" | "false";
 /*
  * Helpers
  */
-Array: '[' names+=ID (',' names+=ID)+ ']';
-
 IntArray: '[' element+=INT (',' element+=INT) + ']';
 
 
@@ -1527,10 +1525,6 @@ terminal BIN_VALUE returns ecore::EInt:
 /*
  * Terminals
  */
-terminal YEAR_MONTH:
-	(('20')('0'..'9')('0'..'9')'-'
-	  ('0'('1'..'9') | '1'('0'..'2')))
-;
 
 // For whitespace awareness
 terminal INDENT: 'synthetic:INDENT';
@@ -1542,6 +1536,3 @@ terminal SL_COMMENT: '#' !('\n'|'\r')*;
 
 @Override
 terminal WS: ('\r'|'\n'|'\t'|' ')+;
-
-@Override
-terminal ID: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'.')*;
