@@ -19,7 +19,6 @@ Model
 	| ProfFamModel
 	| ConfigModel
 	| NonIsaModel
-	
 ;
 
 
@@ -1263,7 +1262,7 @@ Section:
 		('level' ':' level=INT)? &
 		'content' ':' content=StringType &
 		('when()' ':' when=Idl)?
-	DEDENT)
+	) DEDENT
 ;
 References:
 	'references' ':'

@@ -58,7 +58,7 @@ Workflow {
 			parserGenerator = {
 				options = {
 					backtrack = true
-					skipUnusedRules = false
+					skipUnusedRules = true
 				}
 			}
 		}
