@@ -5,7 +5,7 @@
 
 $schema: "ext_schema.json#"
 kind: extension
-name: A
+name: "A"
 type: unprivileged
 long_name: "Atomic instructions"
 company:
@@ -14,17 +14,13 @@ company:
 versions:
   - version: "2.1.0"
     state: ratified
-    ratification_date: 2019-12
+    ratification_date: "2019-12"
     contributors:
-      - name: Unknown
+      - name: "Unknown"
         email: "unknown@void.segfault"
         company: "Unknown"
-    requirements: 'extension:
-        allOf:
-          - name: Zaamo
-            version: "= 1.0.0"
-          - name: Zalrsc
-            version: "= 1.0.0"'
+    requirements: 
+      "conditions"
 description: "|
 
   The atomic-instruction extension, named `A`, contains

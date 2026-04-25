@@ -57,7 +57,7 @@
     },
     "comment": {
       "patterns": [
-        { "name": "comment.line.double-slash.udb", "match": "//.*$" }
+        { "name": "comment.line.hashtag.udb", "match": "#.*$" }
       ]
     },
     "ident": {

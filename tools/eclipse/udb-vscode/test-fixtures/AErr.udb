@@ -5,7 +5,7 @@
 
 $schema: "ext_schema.json#"
 kind: instruction # mismatch between schema and kind
-name: A
+name: "A"
 type: unprivileged
 long_name: "Atomic instructions"
 company:
