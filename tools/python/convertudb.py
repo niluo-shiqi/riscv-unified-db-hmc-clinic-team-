@@ -1,11 +1,14 @@
+# Copyright (c) HMC Qualcomm Clinic Team (Isabel Godoy, Nina Luo, Brayden Mendoza, Lughnasa Miller, Madeline Seifert, Ben Wiedermann)
+# SPDX-License-Identifier: CC0-1.0
+
 """
 Script to convert .udb files to .yml files and vice versa.
 
 NOTE: doesn't handle in-line comments, assumes that all comments exist
       on their own line (TODO: add support for in-line comments)
 """
-import sys
 import re
+import sys
 
 # String fields that should always have quotes around them
 QUOTED_FIELDS = [
@@ -112,7 +115,7 @@ YAML_ARRAY_HAS_STRINGS = [
 # Fields that are YAML arrays of arrays of strings
 # e.g. elements would look like: - ["A", "B", "C"]
 YAML_ARRAY_ARRAY_STRINGS = [
-    "implemented_extensions"
+    "implemented_extensions",
 ]
 
 # Fields that are arrays of strings, but without the '-' prefixing every element
@@ -146,7 +149,7 @@ ARRAY_OR_STRING_FIELDS = [
 MAYBE_STRING = [
     "equal",
     "notEqual",
-    "includes"
+    "includes",
 ]
 
 KEYWORDS = (STRING_FIELDS + YAML_ARRAY_STRING_FIELDS + HAS_STRINGS + 
@@ -165,12 +168,12 @@ def add_nested_quotes(s):
         nested_value = nested_value.strip()
         nested_value = add_quotes(nested_value)
         return f"{{ {nested_field}: {nested_value} }}"
-    
+
     # 'not' has ambiguity, this handles when 'not' doesn't
     # have any strings that need to be quoted
     except ValueError:
         return s
-    
+
 def add_quotes_to_elements(s):
     elements = [elem.strip() for elem in s.strip("[]").split(",")]
     quoted_elements = [add_quotes(elem) for elem in elements]
@@ -179,7 +182,7 @@ def add_quotes_to_elements(s):
 def convert_udb_to_yaml(udb_file):
     """Conversion from YAML to UDB involves removing quotes around string values"""
 
-    with open(udb_file, "r") as file:
+    with open(udb_file) as file:
         lines = file.readlines()
 
     output_lines = []
@@ -219,7 +222,7 @@ def convert_udb_to_yaml(udb_file):
 
                 # Remove '\' from escaped quotes
                 line = line.replace('\\"', '"')
-                
+
                 output_lines.append(line)
 
     output_file = udb_file.rsplit(".", 1)[0] + ".yaml"
@@ -230,7 +233,7 @@ def convert_udb_to_yaml(udb_file):
 def convert_yaml_to_udb(yaml_file):
     """Conversion from YAML to UDB involves adding quotes around string values"""
 
-    with open(yaml_file, "r") as file:
+    with open(yaml_file) as file:
         lines = file.readlines()
 
     output_lines = []
@@ -262,20 +265,20 @@ def convert_yaml_to_udb(yaml_file):
 
                     # escape quotes
                     line = line.replace('"', '\\"')
-                    
+
                     # edge case for when a multi-line string is at the end of a file
                     if i == len(lines) - 1:
                         line = line + "\"\n"
-                    
+
                     output_lines.append(line)
                     continue
-                
+
                 # when we reach a line that has less indentation, we know the
                 # multi-line string has ended, so add a closing quote
                 else:
                     inMultiLineString = False
                     output_lines.append(" " * multiline_indentation + "\"\n")
-            
+
             # Check if the line is part of a YAML array of strings
             if inYamlStringArray:
                 line_indentation = len(re.search(r'^\s*', line).group())
@@ -310,27 +313,27 @@ def convert_yaml_to_udb(yaml_file):
                     else:
                         # add quotes around the string value
                         value = add_quotes(value.strip())
-                    
+
                     line = f"{prefix}- {value}\n"
                     output_lines.append(line)
-                    
+
                     continue
                 else:
                     inYamlStringArray = False
                     inArrayHasStrings = False
                     inManualVolumesExtensions = False
-            
+
             if inManualVolumes:
                 line_indentation = len(re.search(r'^\s*', line).group())
                 inManualVolumes = line_indentation > manual_volumes_indentation
-            
+
             # Check if the line is part of a YAML array that contains arrays of strings
             if inYamlArrayOfStringArrays:
                 line_indentation = len(re.search(r'^\s*', line).group())
                 if line_indentation > array_indentation:
                     prefix, value = line.split("-", 1)
                     value = add_quotes_to_elements(value.strip())
-                
+
                     line = f"{prefix}- {value}\n"
                     output_lines.append(line)
                     continue
@@ -350,7 +353,7 @@ def convert_yaml_to_udb(yaml_file):
                 # Add quotes around fields in the list
                 elif (line_indentation == field_indentation) or line.strip() == "":
                     field_name = line.strip().split(":", 1)[0]
-                    
+
                     output_lines.append(" " * field_indentation +f'"{field_name}":\n')
                     continue
                 elif line_indentation < field_indentation:
@@ -362,7 +365,7 @@ def convert_yaml_to_udb(yaml_file):
                 if line_indentation < param_indentation:
                     inParamCondition = False
                     continue
-                
+
                 # 'oneOf' for param conditions is a YAML array that might have strings
                 field = line.split(':', 1)[0].strip()
                 if field == "oneOf":
@@ -390,12 +393,12 @@ def convert_yaml_to_udb(yaml_file):
                     output_lines[-1] += "\n"
 
                     continue
-                
+
                 # Pre-process field string before checking if it's value needs quotes
                 clean_field = field.strip()
                 if clean_field.startswith('-'):
                     clean_field = clean_field[1:].strip()
-                
+
                 # 'version' has the most ambiguity, it could be either a plain string,
                 # a yaml array of strings, or a normal array of strings
                 if clean_field == "version":
@@ -424,11 +427,11 @@ def convert_yaml_to_udb(yaml_file):
                     if value == "":
                         array_indentation = len(re.search(r'^\s*', line).group())
                         inYamlStringArray = True
-                    
+
                     # The value is just a string
                     else:
                         value = add_quotes(value)
-                
+
                 # Add quotes around string values if not already quoted
                 elif clean_field in STRING_FIELDS:
                     value = add_quotes(value)
@@ -437,7 +440,7 @@ def convert_yaml_to_udb(yaml_file):
                     # Field is an array of strings
                     if value.startswith('['):
                         value = add_quotes_to_elements(value)
-                    
+
                     # Not an array
                     else:
                         value = add_quotes(value)
@@ -454,7 +457,7 @@ def convert_yaml_to_udb(yaml_file):
                 elif clean_field in YAML_LIST_STRING_FIELDS and value == "":
                     inYamlStringList = True
                     field_indentation = len(re.search(r'^\s*', lines[i+1]).group())
-                
+
                 elif clean_field in ARRAY_STRING_FIELDS:
                     # Add quotes around each element in the array
                     value = add_quotes_to_elements(value)
@@ -467,7 +470,7 @@ def convert_yaml_to_udb(yaml_file):
                 elif clean_field in MAYBE_STRING:
                     if not (value.isnumeric() or (value.lower() in ("true", "false"))):
                         value = add_quotes(value)
-                
+
                 # Add quotes around quoted fields if they don't already have quotes
                 elif clean_field in QUOTED_FIELDS:
                     value = add_quotes(value)

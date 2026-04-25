@@ -24,16 +24,16 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 		}
 		return null;
 	}
-	
 
-	
+
+
 	public QualifiedName qualifiedName(InstName instName) {
 		if (instName != null && instName.getName() != null) {
 			return QualifiedName.create(instName.getName());
 		}
 		return null;
 	}
-	
+
 
 	public QualifiedName qualifiedName(ExtModel extModel) {
 	    if (extModel != null && extModel.getExtName() != null) {
@@ -41,7 +41,7 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 	    }
 	    return null;
 	}
-	
+
 	public QualifiedName qualifiedName(ExtName extName) {
 		if (extName != null && extName.getName() != null) {
 			return QualifiedName.create(extName.getName());
@@ -67,7 +67,7 @@ public class UdbQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
 		}
 		return null;
 	}
-	
+
 	public QualifiedName qualifiedName(InstVarTypeName instvartypeName) {
 		if (instvartypeName != null && instvartypeName.getName() != null) {
 			return QualifiedName.create(instvartypeName.getName());

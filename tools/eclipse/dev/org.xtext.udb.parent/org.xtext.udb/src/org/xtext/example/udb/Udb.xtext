@@ -137,7 +137,6 @@ InstVarTypeModel:
 	instVarTypeType = InstVarTypeType &
 	registerFile = RegisterFile? &
 	access = InstVarTypeAccess?
-	
 ;
 
 RegisterModel:
@@ -151,7 +150,6 @@ RegisterModel:
 	registerLength = RegisterLength &
 	registers = Registers &
 	source = Source?
-	
 ;
 
 ManualModel:
@@ -165,6 +163,7 @@ ManualModel:
 	license = License? &
 	source = Source?
 ;
+
 ManualVersionModel:
 	schema = Schema // must be "manual_version_schema.json#"
 	manualVersionKind = ManualVersionKind &
@@ -184,16 +183,16 @@ ManualVersionModel:
 ProfFamModel:
 	schema = Schema
 	profFamKind = PFKind
-	& processorKind = ProcessorKind? 
-	& profFamName = PFName 
-	& longName = LongName 
-	& marketingName = PFMarketingName? 
-	& introduction = Introduction? 
-	& description = Description? 
-	& namingScheme = PFNamingScheme? 
-	& company = Company? 
-	& docLicense = DocLicense? 
-	& source = Source? 
+	& processorKind = ProcessorKind?
+	& profFamName = PFName
+	& longName = LongName
+	& marketingName = PFMarketingName?
+	& introduction = Introduction?
+	& description = Description?
+	& namingScheme = PFNamingScheme?
+	& company = Company?
+	& docLicense = DocLicense?
+	& source = Source?
 ;
 
 NonIsaModel:
@@ -209,6 +208,8 @@ NonIsaModel:
 	authors=Authors? &
 	license=License?
 ;
+
+
 
 /*
  * Common stuff
@@ -235,15 +236,15 @@ UdbId: 'id' ':' id=STRING;
 Url: 'url' ':' url=STRING;
 TextUrl: 'text_url' ':' textUrl=STRING;
 Email: 'email' ':' email=STRING;
-ProcessorKind: 'processor_kind' ':' 
+ProcessorKind: 'processor_kind' ':'
 	processorKind=('Generic_Unprivileged' | "Microcontroller" | 'Apps_Processor');
 Introduction: 'introduction' ':' introduction=StringType;
 Company:
-	'company' ':' 
+	'company' ':'
 	INDENT (
 		('name' ':' name=STRING) &
 		 url=Url?
-	) DEDENT 
+	) DEDENT
 ;
 
 // IDL gets passed off to ruby in the validator
@@ -289,7 +290,7 @@ DocLicense:
 License:
 	'license' ':'
 	INDENT (
-		('name' ':' name=STRING) & 
+		('name' ':' name=STRING) &
 		id=UdbId? &
 		url=Url? &
 		textUrl=TextUrl?
@@ -306,7 +307,7 @@ CsrName: 'name' ':' name=STRING;
 CsrAddress: 'address' ':' address=Hex;
 CsrWritable: 'writable' ':' writable=Boolean;
 CsrIndirectAddress:'indirect_address' ':' indirectAddress=Hex;
-CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT ;
+CsrIndirectSlot:'indirect_slot' ':' indirectSlot=INT;
 CsrVirtualAddress:'virtual_address' ':' virtualAddress=Hex;
 CsrSwRead:'sw_read()' ':' swRead=Idl;
 CsrPrivMode:'priv_mode' ':' privMode=("M"|"S"|"U"|"VS"|"D");
@@ -345,7 +346,7 @@ CsrFieldDef:
 ;
 
 
-CsrFieldDisplayName: 'name' ':' fieldName=STRING ;
+CsrFieldDisplayName: 'name' ':' fieldName=STRING;
 
 CsrFieldLocationType: staticLoc = CsrStaticLocation | funcLoc = CsrVarLocation;
 CsrStaticLocation: 'location' ':' locValue=CsrFieldLocation;
@@ -407,13 +408,13 @@ InstKind: 'kind' ':' kind="instruction";
 InstName: 'name' ':' name=STRING;
 InstAccess:
 	'access' ':'
-	INDENT(
+	INDENT (
 	('m' ':' m=InstAccessType)? &
 	's' ':' s=InstAccessType &
 	'u' ':' u=InstAccessType &
 	'vs' ':' vs=InstAccessType &
 	'vu' ':' vu=InstAccessType
-	)DEDENT
+	) DEDENT
 ;
 InstAccessType:
 	accessLevel=('always'|'sometimes'|'never')
@@ -442,7 +443,7 @@ InstFormat: 'format' ':'
 ;
 InstInheritType:
 	INDENT
-		('-' reference += STRING)+ 
+		('-' reference += STRING)+
 	DEDENT
 ;
 
@@ -456,12 +457,11 @@ InstOpcodeEntry:
 	| InstOpcodeInherits
 ;
 
-InstOpcodeField: 
+InstOpcodeField:
 	name=STRING ':'
 	INDENT
 		(opcodeProperties += InstOpcodeProps)+
 	DEDENT
-
 ;
 
 InstOpcodeProps:
@@ -484,10 +484,10 @@ InstEncoding:
 
 InstOldEncoding:
 	{InstOldEncoding}
-	INDENT(
+	INDENT (
 	    match=InstEncodingMatch &
 	    variables=InstEncodingVariables?
-  	)DEDENT
+  	) DEDENT
 ;
 InstEncodingMatch:
 	'match' ':' pattern=STRING
@@ -500,14 +500,13 @@ InstEncodingVariables:
 	  DEDENT
 ;
 
-
 InstEncodingSevenKeyVar:
   '-' 'name' ':' name=STRING
   INDENT
     (
       'location' ':' location=Range &
-      ('$child_of' ':' childOf=STRING)? & 
-      ('sign_extend' ':' signExtend=Boolean)? & 
+      ('$child_of' ':' childOf=STRING)? &
+      ('sign_extend' ':' signExtend=Boolean)? &
       ('left_shift' ':' leftShift=INT)? &
       ('alias' ':' alias=STRING)? &
       ('not' ':' not=InstNotRule)?
@@ -523,18 +522,18 @@ InstNotRule:
 
 InstEncodingTwoKeyVar:
 	'-' 'name' ':' name=STRING
-	INDENT(
-		'$inherits' ':' inherits=STRING 
-	)DEDENT
+	INDENT (
+		'$inherits' ':' inherits=STRING
+	) DEDENT
 ;
 
 
 InstRvPairEncoding:
 	{InstRvPairEncoding}
-	INDENT(
+	INDENT (
 	'RV32' ':' rv32=InstOldEncoding
 	'RV64' ':' rv64=InstOldEncoding
-	)DEDENT
+	) DEDENT
 ;
 
 
@@ -557,7 +556,7 @@ ExtVersions:
 ;
 
 ExtVersionArrayElement:
-	'-' "version" ":" version=STRING 
+	'-' "version" ":" version=STRING
 	INDENT (
 		versionState = ExtVersionState &
 		repositories = ExtVersionRepositories? &
@@ -581,7 +580,7 @@ ExtVersionRepositories:
 		repositories += ExtVersionRepoArrayElement+
 	DEDENT
 ;
-ExtVersionRepoArrayElement: 
+ExtVersionRepoArrayElement:
 	'-' url=Url
 	(INDENT
 		"branch" ":" branch=STRING
@@ -591,9 +590,9 @@ ExtVersionRepoArrayElement:
 ExtVersionRatificationDate:
 	"ratification_date" ":"
 	date = (
-	   STRING				// when ratification date is known
-	| "unknown"				// when ratification date is unknown
-	| "null")				// when version isn't ratified
+	   STRING		// when ratification date is known
+	| "unknown"		// when ratification date is unknown
+	| "null")		// when version isn't ratified
 ;
 
 ExtVersionVersionChanges:
@@ -613,9 +612,9 @@ ExtVersionContributors:
 	DEDENT
 ;
 ExtVersionContributorsArrayElement:
-	'-' name=ExtVersionContributorName 
+	'-' name=ExtVersionContributorName
 	(INDENT (
-		("company" ":" company=STRING)? & 
+		("company" ":" company=STRING)? &
 		email=Email?
 	) DEDENT)?
 ;
@@ -634,8 +633,8 @@ RegisterLength: 'register_length' ':' registerLength=RegisterLengthType;
 RegisterLengthType: intVal=RegisterLengthInt | paramName=RegisterLengthEnum;
 
 enum RegisterLengthEnum:
-	mxlen ='MXLEN' | 
-	flen = 'FLEN' | 
+	mxlen ='MXLEN' |
+	flen = 'FLEN' |
 	vlen = 'VLEN'
 ;
 
@@ -648,7 +647,7 @@ Registers:
 ;
 RegisterEntry:
 	'-' 'name' ':' name=STRING
-	INDENT(
+	INDENT (
 		abiMnemonics = RegisterAbiMnemonics? &
 		description = Description? &
 		when = RegisterWhen? &
@@ -657,7 +656,7 @@ RegisterEntry:
 		callerSaved = RegisterCallerSaved? &
 		calleeSaved = RegisterCalleeSaved? &
 		roles = RegisterRoles?
-	)DEDENT
+	) DEDENT
 ;
 
 RegisterAbiMnemonics:'abi_mnemonics' ':' '[' mnemonics+=STRING (',' mnemonics+=STRING)* ']';
@@ -693,7 +692,7 @@ RequiresEntry:
 
 
 ExtensionRequirement:
-	'name' ':' name=STRING 
+	'name' ':' name=STRING
 	(INDENT? 'version' ':' version=RegisterVersionRequirements DEDENT?)?
 ;
 
@@ -796,7 +795,7 @@ ProfExtensions:
 	) DEDENT)?
 ;
 ProfExtInherits:
-	'$inherits' ':' 
+	'$inherits' ':'
 		(inheritsString=ProfExtInheritsString
 		| inheritsArray=ProfExtInheritsArray)
 ;
@@ -837,13 +836,13 @@ ProfExtArrayElement:
 	name=STRING ':'
 	INDENT (
 		'presence' ':' presence=ProfExtPresence &
-		'version' ':' versionReqs=ProfExtVersionRequirements &  // TODO: should this be optional? it's required in the schema but a lot of profiles don't have this field
+		'version' ':' versionReqs=ProfExtVersionRequirements &
 		('note' ':' note=StringType)?
 	) DEDENT
 ;
 
 ProfExtPresence
-	: ProfExtPresenceElement 
+	: ProfExtPresenceElement
 	| ProfExtPresenceOptElement
 ;
 ProfExtPresenceElement: element=('mandatory' | 'optional');
@@ -876,7 +875,7 @@ ProfExtVersionReqArrayElement:
  */
 IntrptCodeKind:'kind' ':' kind="interrupt_code";
 IntrptCodeName:'name' ':' name=STRING;
-IntrptCodeNum:'num' ':' num=INT; 
+IntrptCodeNum:'num' ':' num=INT;
 
 
 
@@ -889,8 +888,8 @@ Num: 'num' ':' num=INT;
 
 
 
-/* 
- * Inst Opcode Code stuff (see inst_opcode_code_schema.json) 
+/*
+ * Inst Opcode Code stuff (see inst_opcode_code_schema.json)
  */
 InstOpcodeKind: 'kind' ':' kind="instruction_opcode";
 InstOpcodeName: 'name' ':' name=STRING;
@@ -954,7 +953,7 @@ enum stateEnum:
 	PUBLICREVIEW = 'public-review' |
 	RATIFICATIONREADY = 'ratification-ready' |
 	RATIFIED = 'ratified' |
-	NONSTANDARDRELEASED = 'nonstandard-released' 
+	NONSTANDARDRELEASED = 'nonstandard-released'
 ;
 
 MarketingName: 'marketing_name' ':' marketingName=STRING;
@@ -968,7 +967,7 @@ ManualKind: 'kind' ':' kind="manual";
 /*
  * Manual Version stuff (see manual_version_schema.json)
  */
- 
+
 ManualVersionKind: 'kind' ':' kind="manual_version";
 ManualVersionName: 'name' ':' name=STRING;
 ManualVersionManual: 'manual' ':' '{' '$ref' ':' ref=STRING  '}';
@@ -985,8 +984,8 @@ enum SpecStateEnum:
 	NONSTANDARD_RELEASED = 'nonstandard-released'
 ;
 
-ManualVersionVolumes: 
-	'volumes' ':' 
+ManualVersionVolumes:
+	'volumes' ':'
 	INDENT
 		volumes+=VolumesArr+
 	DEDENT
@@ -996,11 +995,11 @@ VolumesArr:
 	'-' 'title' ':' title=STRING
 	INDENT (
 		('description' ':' desc=STRING) &
-		('chapters' ':' 
+		('chapters' ':'
 			INDENT
 			(chapters+=ChapterElement+)
 			DEDENT)? &
-		('authors' ':' 
+		('authors' ':'
 			INDENT
 			(authors+=AuthorElement+)
 			DEDENT) &
@@ -1012,7 +1011,7 @@ VolumesArr:
 			INDENT
 			(change+=ChangeString+)
 			DEDENT)?
-		
+
 	) DEDENT
 ;
 
@@ -1026,14 +1025,14 @@ ExtensionElement:
 
 AuthorElement:
 	'-' 'name' ':' name=STRING
-	INDENT(
+	INDENT (
 		('email' ':' email=STRING)? &
-		('organization' ':' 
+		('organization' ':'
 			INDENT
-			(org=OrgInfo)
+				(org=OrgInfo)
 			DEDENT
 		)?
-	)DEDENT
+	) DEDENT
 ;
 
 OrgInfo:
@@ -1050,12 +1049,12 @@ UsesIsaManual: 'uses_isa_manual' ':' uses=Boolean;
 
 
 
-/* 
- * Profile_Family stuff (see profile_family_schema.json) 
+/*
+ * Profile_Family stuff (see profile_family_schema.json)
  */
- 
+
 PFKind:
-	'kind' ':' kind='profile_family' 
+	'kind' ':' kind='profile_family'
 ;
 
 PFName:
@@ -1075,15 +1074,15 @@ PFNamingScheme:
  */
 ConfigModel:
 	FullConfiguration | PartialConfiguration | Unconfiguration
-	
 ;
+
 /*
  * Full Config
  */
 FullConfiguration:
 	schema = Schema // must be "config_schema.json#"
-	kind = ConfigKind
-	type = FullConfigurationType
+	kind = ConfigKind &
+	type = FullConfigurationType &
 	name = ConfigName &
 	description = Description &
 	archOverlay = ArchOverlay? &
@@ -1110,8 +1109,8 @@ ImplementedExtensionElement:
  */
 PartialConfiguration:
 	schema = Schema // must be "config_schema.json#"
-	kind = ConfigKind
-	type = PartialConfigurationType
+	kind = ConfigKind &
+	type = PartialConfigurationType &
 	name = ConfigName &
 	description = Description &
 	archOverlay = ArchOverlay? &
@@ -1145,7 +1144,6 @@ ProhibitedExtensions:
 	INDENT
 		extensions += ConfigExtensionRequirement+
 	DEDENT
-	
 ;
 
 ImplementedExtensionsNull:
@@ -1154,24 +1152,25 @@ ImplementedExtensionsNull:
 
 ConfigExtensionRequirement:
 	'-' 'name' ':' name=STRING
-	(
-		INDENT
-			version=ExtensionVersion?
-		DEDENT
-	)?
+	(INDENT
+		version=ExtensionVersion?
+	DEDENT)?
 ;
 
 ExtensionVersion:
 	'version' ':' version=STRING
 ;
 AdditionalExtensions: 'additional_extensions' ':' additionalExtensions=Boolean;
+
+
+
 /*
  * Unconfig
  */
 Unconfiguration:
 	schema = Schema // must be "config_schema.json#"
-	kind = ConfigKind
-	type = UnconfigurationType
+	kind = ConfigKind &
+	type = UnconfigurationType &
 	name = ConfigName &
 	description = Description &
 	archOverlay = ArchOverlay? &
@@ -1189,7 +1188,7 @@ ArchOverlay: 'arch_overlay' ':' archOverlay=STRING;
 
 // NOTE: The config schema has not implemented this field, so we
 // 		 leave it as a string for now (TODO)
-ConfigParams: 
+ConfigParams:
 	'params' ':' params=STRING
 //	INDENT
 //		params += ConfigParam*
@@ -1201,8 +1200,8 @@ ConfigParams:
 //	stringValue=STRING |
 //	intValue=INT |
 //	boolValue=Boolean |
-//	arrayValue=ConfigParamArray 
-//	
+//	arrayValue=ConfigParamArray
+//
 //;
 //
 //ConfigParamArray:
@@ -1210,7 +1209,7 @@ ConfigParams:
 //;
 //
 //InlineArray:
-//	'[' 
+//	'['
 //		values+=ConfigParamArrayElement (',' values+=ConfigParamArrayElement)*
 //	']'
 //;
@@ -1225,7 +1224,7 @@ ConfigParams:
 //	('-')? (
 //		stringValue=STRING |
 //		intValue=INT |
-//		boolValue=Boolean 
+//		boolValue=Boolean
 //	)
 //;
 
@@ -1276,8 +1275,8 @@ Reference:
 	'url' ':' url=STRING
 	('description' ':' description=STRING)?
 	DEDENT
-	
 ;
+
 NonIsaRatificationDate: "ratification_date" ":" date=STRING;
 
 Condition: placeholder=STRING;
@@ -1300,7 +1299,7 @@ ConditionArrayList:
 ;
 
 // Mandates only one element for 'not'
-ConditionNot: 
+ConditionNot:
 	'not' ':'
 	INDENT
 		condArray=ConditionElement
@@ -1309,7 +1308,7 @@ ConditionNot:
 
 ConditionElement: '-' cond=Condition;
 
-YAMLCondition: 
+YAMLCondition:
 	ExtensionCondition | XLenCondition | ParamCondition | YAMLArray | YAMLIfThen
 ;
 
@@ -1336,9 +1335,9 @@ YAMLNot:
 YAMLElement: '-' yamlArrayElement=YAMLCondition;
 
 YAMLIfThen:
-	('if' ':' 
+	('if' ':'
 	INDENT
-		ifCond=YAMLCondition 
+		ifCond=YAMLCondition
 	DEDENT) &
 	('then' ':'
 	INDENT
@@ -1369,7 +1368,7 @@ ExtRequirement:
 ;
 
 ExtVersion: IndentVersion | NoIndentVersion;
-IndentVersion: 
+IndentVersion:
 	INDENT
 		'version' ':' verReqs=VersionRequirements
 	DEDENT
@@ -1377,7 +1376,7 @@ IndentVersion:
 NoIndentVersion: 'version' ':' verReqs=VersionRequirements;
 
 VersionRequirements:
-	versionReq=STRING 
+	versionReq=STRING
 ;
 
 ExtArray: ExtArrayList | ExtNot;
@@ -1388,13 +1387,13 @@ ExtArrayList:
 	| 'oneOf' ':'
 	| 'noneOf' ':') &
 	(INDENT
-		extArray+=ExtArrayElement+ 
+		extArray+=ExtArrayElement+
 	DEDENT)
 ;
 
 // Mandates only one element for 'not'
-ExtNot: 
-	'not' ':' 
+ExtNot:
+	'not' ':'
 	INDENT
 		extNotArray=ExtArrayElement
 	DEDENT
@@ -1402,10 +1401,10 @@ ExtNot:
 
 ExtArrayElement: '-' extConds=Extension;
 
-ExtIfThen: 
-	('if' ':' 
+ExtIfThen:
+	('if' ':'
 	INDENT
-		ifCond=Condition 
+		ifCond=Condition
 	DEDENT) &
 	('then' ':'
 	INDENT
@@ -1417,7 +1416,7 @@ ExtIfThen:
 ParamCondition:
 	'param' ':'
 	INDENT
-		param=Param 
+		param=Param
 	DEDENT
 ;
 
@@ -1426,9 +1425,9 @@ Param: ParamFieldsList | ParamArray;
 ParamArray: ParamArrayList | ParamNot;
 
 ParamArrayList:
-	( 'allOf' ':' 
-	| 'anyOf' ':' 
-	| 'oneOf' ':' 
+	( 'allOf' ':'
+	| 'anyOf' ':'
+	| 'oneOf' ':'
 	| 'noneOf' ':') &
 	(INDENT
 		paramArray+=ParamArrayElement+
@@ -1436,7 +1435,7 @@ ParamArrayList:
 ;
 
 // Mandates only one element for 'not'
-ParamNot: 
+ParamNot:
 	'not' ':'
 	INDENT
 		paramArray=ParamArrayElement
@@ -1452,7 +1451,7 @@ ParamFieldsList:
 	DEDENT)?
 ;
 
-ParamFields: 
+ParamFields:
 	(ParamIndex |
 	ParamSize |
 	ParamEqual |
@@ -1460,7 +1459,7 @@ ParamFields:
 	ParamNotEqual |
 	ParamGreaterThan |
 	ParamLessThan |
-	ParamGreaterEqual | 
+	ParamGreaterEqual |
 	ParamLessEqual |
 	ParamIncludes |
 	ParamReason)
@@ -1469,12 +1468,12 @@ ParamFields:
 ParamIndex: 'index' ':' index=INT;
 ParamSize: 'size' ':' size=Boolean;
 ParamEqual: 'equal' ':' (equalInt=INT | equalBool=Boolean | equalStr=STRING);
-ParamOneOf: 
-	'oneOf' ':' 
+ParamOneOf:
+	'oneOf' ':'
 	INDENT
 		oneOf+=ParamOneOfElement+
 	DEDENT;
-ParamOneOfElement: '-' (paramInt=INT|paramStr=STRING); 
+ParamOneOfElement: '-' (paramInt=INT|paramStr=STRING);
 ParamNotEqual: 'notEqual' ':' (notEqualInt=INT | notEqualStr=STRING | notEqualBool=Boolean);
 ParamGreaterThan: 'greaterThan' ':' greaterThan=INT;
 ParamLessThan: 'lessThan' ':' lessThan=INT;
