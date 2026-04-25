@@ -10,7 +10,7 @@ long_name: "AND with inverted operand"
 description: "|
   Performs the bitwise logical AND operation between `xs1` and the
   bitwise inversion of `xs2`."
-definedBy: 
+definedBy:
   "extension:
     anyOf:
       - name: Zbb

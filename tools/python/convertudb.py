@@ -29,49 +29,38 @@ STRING_FIELDS = [
     "text_url",
     "email",
     "introduction",
-
     # CSR fields
     "alias",
     "requires",
-
     # Instruction fields
     "assembly",
     "operation_ast",
     "access_detail",
     "match",
     "$child_of",
-
     # Extension fields
     "rvi_jira_issue",
     "branch",
     "ratification_date",
     "company",
-
     # Profile fields
     "text",
     "note",
     "$parent_of",
     "marketing_name",
-
     # Register file fields
     "register_class",
-
     # Manual fields
     "marketing_version",
-
     # Manual version fields
     "title",
     "isa_manual_tree",
-
     # Profile family fields
     "naming_scheme",
-
     # Config fields
     "arch_overlay",
-
     # Non-isa fields
     "content",
-
     # IDL fields
     "sw_read()",
     "reset_value()",
@@ -83,7 +72,6 @@ STRING_FIELDS = [
     "arch_write(value)",
     "when()",
     "idl()",
-
     # Conditions
     "reason",
 ]
@@ -100,13 +88,13 @@ HAS_STRINGS = [
 # Fields that are yaml arrays of strings
 YAML_ARRAY_STRING_FIELDS = [
     "doc_links",
-    "items", # for alias in csr
+    "items",  # for alias in csr
     "changes",
     "chapters",
 ]
 
 # Fields that are yaml arrays of values that contain strings
-# e.g. an element in "hints" looks like 
+# e.g. an element in "hints" looks like
 #    - { $ref: "inst/Zihintntl/c.ntl.p1.yaml#" }
 YAML_ARRAY_HAS_STRINGS = [
     "hints",
@@ -162,11 +150,13 @@ KEYWORDS = (
     + MAYBE_STRING
 )
 
+
 def add_quotes(s):
     """Add quotes to string s if it doesn't already have them"""
     if not (s.startswith('"') and s.endswith('"')):
         return f'"{s}"' if s else s
     return s
+
 
 def add_nested_quotes(s):
     try:
@@ -180,10 +170,12 @@ def add_nested_quotes(s):
     except ValueError:
         return s
 
+
 def add_quotes_to_elements(s):
     elements = [elem.strip() for elem in s.strip("[]").split(",")]
     quoted_elements = [add_quotes(elem) for elem in elements]
     return f"[{', '.join(quoted_elements)}]"
+
 
 def convert_udb_to_yaml(udb_file):
     """Conversion from YAML to UDB involves removing quotes around string values"""
@@ -203,7 +195,7 @@ def convert_udb_to_yaml(udb_file):
 
                 # Pre-process field string before checking if it's in QUOTED_FIELDS
                 clean_field = field.strip()
-                if clean_field.startswith('-'):
+                if clean_field.startswith("-"):
                     clean_field = clean_field[1:].strip()
 
                 # Don't remove quotes for quoted fields
@@ -211,20 +203,20 @@ def convert_udb_to_yaml(udb_file):
                     output_lines.append(line)
                 else:
                     # Remove quotes unless they're escaped
-                    value = re.sub(r'(?<!\\)"', '', value)
+                    value = re.sub(r'(?<!\\)"', "", value)
 
                     # Remove '\' from escaped quotes
                     value = value.replace('\\"', '"')
 
                     # Remove '\' from escaped backslashes
-                    value = value.replace('\\\\', '\\')
+                    value = value.replace("\\\\", "\\")
 
                     output_lines.append(f"{field}:{value}")
 
             # Line doesn't have ":"
             except ValueError:
                 # Remove quotes unless they're escaped
-                line = re.sub(r'(?<!\\)"', '', line)
+                line = re.sub(r'(?<!\\)"', "", line)
 
                 # Remove '\' from escaped quotes
                 line = line.replace('\\"', '"')
@@ -242,16 +234,32 @@ def convert_yaml_to_udb(yaml_file):
     with open(yaml_file) as file:
         lines = file.readlines()
 
+    # to keep track if we're currently processing a multi-line string
+    inMultiLineString = False
+    
+    # to keep track if we're currently processing an array of strings
+    inYamlStringArray = False
+    
+    # if we're in a YAML array that consists of arrays of strings
+    inYamlArrayOfStringArrays = False
+    
+    # to keep track if we're currently processing a list of strings
+    inYamlStringList = False
+    
+    # to keep track if we're currently processing an array that isn't
+    #    a list of strings, but has strings in the elements
+    inArrayHasStrings = False
+
+    # when we are in a param condition
+    inParamCondition = False
+
+    # 'extensions' is handled differently in this case            
+    inManualVolumes = False
+    
+    # when we're an 'extensions' field that's in a 'volumes' field
+    inManualVolumesExtensions = False
+
     output_lines = []
-    inMultiLineString = False           # to keep track if we're currently processing a multi-line string
-    inYamlStringArray = False           # to keep track if we're currently processing an array of strings
-    inYamlArrayOfStringArrays = False   # if we're in a YAML array that consists of arrays of strings
-    inYamlStringList = False            # to keep track if we're currently processing a list of strings
-    inArrayHasStrings = False           # to keep track if we're currently processing an array that isn't
-                                        #    a list of strings, but has strings in the elements
-    inParamCondition = False            # when we are in a param condition
-    inManualVolumes = False             # 'extensions' is handled differently in this case
-    inManualVolumesExtensions = False   # when we're an 'extensions' field that's in a 'volumes' field
     for i, line in enumerate(lines):
         if i == 198:
             breakpoint()
@@ -263,18 +271,18 @@ def convert_yaml_to_udb(yaml_file):
         else:
             # Check if the line is part of a multi-line string
             if inMultiLineString:
-                line_indentation = len(re.search(r'^\s*', line).group())
+                line_indentation = len(re.search(r"^\s*", line).group())
 
                 if (line_indentation > multiline_indentation) or line.strip() == "":
                     # escape backslashes
-                    line = line.replace('\\', '\\\\')
+                    line = line.replace("\\", "\\\\")
 
                     # escape quotes
                     line = line.replace('"', '\\"')
 
                     # edge case for when a multi-line string is at the end of a file
                     if i == len(lines) - 1:
-                        line = line + "\"\n"
+                        line = line + '"\n'
 
                     output_lines.append(line)
                     continue
@@ -283,11 +291,11 @@ def convert_yaml_to_udb(yaml_file):
                 # multi-line string has ended, so add a closing quote
                 else:
                     inMultiLineString = False
-                    output_lines.append(" " * multiline_indentation + "\"\n")
+                    output_lines.append(" " * multiline_indentation + '"\n')
 
             # Check if the line is part of a YAML array of strings
             if inYamlStringArray:
-                line_indentation = len(re.search(r'^\s*', line).group())
+                line_indentation = len(re.search(r"^\s*", line).group())
                 if line_indentation > array_indentation:
                     prefix, value = line.split("-", 1)
 
@@ -307,7 +315,7 @@ def convert_yaml_to_udb(yaml_file):
                         right_field, right_value = right.split(":")
 
                         left_value = add_quotes(left_value.strip())
-                        right_value = right_value[:-1] # exclude the closing brace (})
+                        right_value = right_value[:-1]  # exclude the closing brace (})
                         right_value = add_quotes(right_value.strip())
 
                         value = f"{left_field}: {left_value},{right_field}: {right_value} }}"
@@ -330,12 +338,12 @@ def convert_yaml_to_udb(yaml_file):
                     inManualVolumesExtensions = False
 
             if inManualVolumes:
-                line_indentation = len(re.search(r'^\s*', line).group())
+                line_indentation = len(re.search(r"^\s*", line).group())
                 inManualVolumes = line_indentation > manual_volumes_indentation
 
             # Check if the line is part of a YAML array that contains arrays of strings
             if inYamlArrayOfStringArrays:
-                line_indentation = len(re.search(r'^\s*', line).group())
+                line_indentation = len(re.search(r"^\s*", line).group())
                 if line_indentation > array_indentation:
                     prefix, value = line.split("-", 1)
                     value = add_quotes_to_elements(value.strip())
@@ -349,10 +357,10 @@ def convert_yaml_to_udb(yaml_file):
 
             # Check if line is part of a YAML String list
             if inYamlStringList:
-                line_indentation = len(re.search(r'^\s*', line).group())
+                line_indentation = len(re.search(r"^\s*", line).group())
 
                 # Check that a field isn't already a keyword
-                field = line.split(':', 1)[0].strip()
+                field = line.split(":", 1)[0].strip()
                 if field in KEYWORDS:
                     pass
 
@@ -360,22 +368,22 @@ def convert_yaml_to_udb(yaml_file):
                 elif (line_indentation == field_indentation) or line.strip() == "":
                     field_name = line.strip().split(":", 1)[0]
 
-                    output_lines.append(" " * field_indentation +f'"{field_name}":\n')
+                    output_lines.append(" " * field_indentation + f'"{field_name}":\n')
                     continue
                 elif line_indentation < field_indentation:
                     inYamlStringList = False
 
             if inParamCondition:
-                line_indentation = len(re.search(r'^\s*', line).group())
+                line_indentation = len(re.search(r"^\s*", line).group())
 
                 if line_indentation < param_indentation:
                     inParamCondition = False
                     continue
 
                 # 'oneOf' for param conditions is a YAML array that might have strings
-                field = line.split(':', 1)[0].strip()
+                field = line.split(":", 1)[0].strip()
                 if field == "oneOf":
-                    array_indentation = len(re.search(r'^\s*', line).group())
+                    array_indentation = len(re.search(r"^\s*", line).group())
                     inYamlStringArray = True
 
             try:
@@ -386,15 +394,15 @@ def convert_yaml_to_udb(yaml_file):
                 if value.startswith("|"):
                     inMultiLineString = True
 
-                    # Get indentation level to determine 
+                    # Get indentation level to determine
                     # when the multi-line string ends
-                    multiline_indentation = len(re.search(r'^\s*', field).group())
+                    multiline_indentation = len(re.search(r"^\s*", field).group())
 
-                    output_lines.append(f"{field}: {value} \"")
+                    output_lines.append(f'{field}: {value} "')
 
                     # Edge case for when a multiline string is empty and at the end of the file
                     if i == len(lines) - 1:
-                        output_lines[-1] += "\""
+                        output_lines[-1] += '"'
 
                     output_lines[-1] += "\n"
 
@@ -402,7 +410,7 @@ def convert_yaml_to_udb(yaml_file):
 
                 # Pre-process field string before checking if it's value needs quotes
                 clean_field = field.strip()
-                if clean_field.startswith('-'):
+                if clean_field.startswith("-"):
                     clean_field = clean_field[1:].strip()
 
                 # 'version' has the most ambiguity, it could be either a plain string,
@@ -410,11 +418,11 @@ def convert_yaml_to_udb(yaml_file):
                 if clean_field == "version":
                     # YAML array
                     if value == "":
-                        array_indentation = len(re.search(r'^\s*', line).group())
+                        array_indentation = len(re.search(r"^\s*", line).group())
                         inYamlStringArray = True
 
                     # Array of strings
-                    elif value.startswith('['):
+                    elif value.startswith("["):
                         value = add_quotes_to_elements(value)
 
                     # Plain string
@@ -423,7 +431,7 @@ def convert_yaml_to_udb(yaml_file):
 
                 # 'extensions' handled differently in the 'volumes' field of the manual_verison schema
                 elif clean_field == "extensions" and inManualVolumes:
-                    array_indentation = len(re.search(r'^\s*', line).group())
+                    array_indentation = len(re.search(r"^\s*", line).group())
                     inYamlStringArray = True
                     inManualVolumesExtensions = True
 
@@ -431,7 +439,7 @@ def convert_yaml_to_udb(yaml_file):
                 elif clean_field in YAML_ARRAY_OR_STRING_FIELDS:
                     # The value is a YAML array
                     if value == "":
-                        array_indentation = len(re.search(r'^\s*', line).group())
+                        array_indentation = len(re.search(r"^\s*", line).group())
                         inYamlStringArray = True
 
                     # The value is just a string
@@ -444,7 +452,7 @@ def convert_yaml_to_udb(yaml_file):
 
                 elif clean_field in ARRAY_OR_STRING_FIELDS:
                     # Field is an array of strings
-                    if value.startswith('['):
+                    if value.startswith("["):
                         value = add_quotes_to_elements(value)
 
                     # Not an array
@@ -452,17 +460,17 @@ def convert_yaml_to_udb(yaml_file):
                         value = add_quotes(value)
 
                 elif clean_field in (YAML_ARRAY_STRING_FIELDS + YAML_ARRAY_HAS_STRINGS):
-                    array_indentation = len(re.search(r'^\s*', line).group())
+                    array_indentation = len(re.search(r"^\s*", line).group())
                     inYamlStringArray = True
                     inArrayHasStrings = field.strip() in YAML_ARRAY_HAS_STRINGS
 
                 elif clean_field in YAML_ARRAY_ARRAY_STRINGS:
-                    array_indentation = len(re.search(r'^\s*', line).group())
+                    array_indentation = len(re.search(r"^\s*", line).group())
                     inYamlArrayOfStringArrays = True
 
                 elif clean_field in YAML_LIST_STRING_FIELDS and value == "":
                     inYamlStringList = True
-                    field_indentation = len(re.search(r'^\s*', lines[i+1]).group())
+                    field_indentation = len(re.search(r"^\s*", lines[i + 1]).group())
 
                 elif clean_field in ARRAY_STRING_FIELDS:
                     # Add quotes around each element in the array
@@ -485,12 +493,12 @@ def convert_yaml_to_udb(yaml_file):
                 # ints and strings
                 elif clean_field == "param":
                     inParamCondition = True
-                    param_indentation = len(re.search(r'^\s*', line).group())
+                    param_indentation = len(re.search(r"^\s*", line).group())
 
                 # For 'volumes', 'extensions' is handled different
                 elif clean_field == "volumes":
                     inManualVolumes = True
-                    manual_volumes_indentation = len(re.search(r'^\s*', line).group())
+                    manual_volumes_indentation = len(re.search(r"^\s*", line).group())
 
                 output_lines.append(f"{field}: {value}\n")
 

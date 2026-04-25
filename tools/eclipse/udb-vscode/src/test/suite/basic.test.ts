@@ -72,7 +72,7 @@ suite('UDB LS – smoke', () => {
       edit = new vscode.WorkspaceEdit();
       edit.delete(doc.uri, new vscode.Range(0, 0, 0, 1));
       await vscode.workspace.applyEdit(edit);
-	  
+
 	  const diags = await waitFor(() => {
 	    const d = vscode.languages.getDiagnostics(doc.uri);
 	    return d.length > 0 ? d : false;
@@ -95,7 +95,7 @@ suite('UDB LS – smoke', () => {
 	  doc = await vscode.languages.setTextDocumentLanguage(doc, 'udb');
 	}
 	await vscode.window.showTextDocument(doc);
-	
+
 	// Nudge validation (on-change + on-save), then revert
 	let edit = new vscode.WorkspaceEdit();
 	edit.insert(doc.uri, new vscode.Position(0, 0), ' ');
@@ -104,7 +104,7 @@ suite('UDB LS – smoke', () => {
 	edit = new vscode.WorkspaceEdit();
 	edit.delete(doc.uri, new vscode.Range(0, 0, 0, 1));
 	await vscode.workspace.applyEdit(edit);
-	
+
 	const diags = await waitFor(() => {
 	  const d = vscode.languages.getDiagnostics(doc.uri);
 	  return d.length > 0 ? d : false;
@@ -118,7 +118,7 @@ suite('UDB LS – smoke', () => {
 	assert.ok(Array.isArray(diags), 'expected diagnostics array');
 	assert.ok(diags.length >= 1, 'expected at least one diagnostic for invalid UDB in bad fixture');
   });
-  
+
   test('initialize → diagnostics on open (valid A.udb file)', async () => {
       // Use your new invalid fixture filename here if you renamed it.
       const uri = vscode.Uri.file(wsPath('A.udb'));
@@ -156,12 +156,12 @@ suite('UDB LS – smoke', () => {
 	  // Use your new invalid fixture filename here if you renamed it.
 	  const uri = vscode.Uri.file(wsPath('andn.udb'));
 	  let doc = await vscode.workspace.openTextDocument(uri);
-	// force the language in case association is missing.
+	  // force the language in case association is missing.
 	  if (doc.languageId !== 'udb') {
 	    doc = await vscode.languages.setTextDocumentLanguage(doc, 'udb');
 	  }
 	  await vscode.window.showTextDocument(doc);
-	
+
 	  // Nudge validation (on-change + on-save), then revert
 	  let edit = new vscode.WorkspaceEdit();
 	  edit.insert(doc.uri, new vscode.Position(0, 0), ' ');
@@ -170,7 +170,7 @@ suite('UDB LS – smoke', () => {
 	  edit = new vscode.WorkspaceEdit();
 	  edit.delete(doc.uri, new vscode.Range(0, 0, 0, 1));
 	  await vscode.workspace.applyEdit(edit);
-	
+
 	  const diags = await waitFor(() => {
 	    const d = vscode.languages.getDiagnostics(doc.uri);
 	    return d;  // Return array regardless of length
@@ -189,7 +189,7 @@ suite('UDB LS – smoke', () => {
     // Use your new invalid fixture filename here if you renamed it.
     const uri = vscode.Uri.file(wsPath('vsstatus.udb'));
     let doc = await vscode.workspace.openTextDocument(uri);
-  // force the language in case association is missing.
+  	// force the language in case association is missing.
     if (doc.languageId !== 'udb') {
       doc = await vscode.languages.setTextDocumentLanguage(doc, 'udb');
     }
@@ -237,8 +237,5 @@ suite('UDB LS – smoke', () => {
 
     assert.ok((list.items ?? []).length >= 1, 'expected some completions after "kind "');
   });
-
-  
-
 
 });

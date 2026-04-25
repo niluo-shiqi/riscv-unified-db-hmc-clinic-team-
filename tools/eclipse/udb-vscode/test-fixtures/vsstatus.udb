@@ -155,7 +155,7 @@ fields:
       other than to possibly enable a previously-disabled vector unit."
     type: RW-H
     reset_value: UNDEFINED_LEGAL
-    definedBy: 
+    definedBy:
       '
       extension:
         name: Zvl32b'
@@ -215,7 +215,7 @@ fields:
 
       Other than serving as a record of nested traps as described above, `vsstatus.SPIE` does not affect execution."
     type: RW-H
-    definedBy: 
+    definedBy:
       '
       extension:
         name: S'

@@ -19,7 +19,7 @@ versions:
       - name: "Unknown"
         email: "unknown@void.segfault"
         company: "Unknown"
-    requirements: 
+    requirements:
       'extension:
         allOf:
           - name: Zaamo
