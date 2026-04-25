@@ -152,9 +152,15 @@ MAYBE_STRING = [
     "includes",
 ]
 
-KEYWORDS = (STRING_FIELDS + YAML_ARRAY_STRING_FIELDS + HAS_STRINGS + 
-            YAML_ARRAY_OR_STRING_FIELDS + YAML_LIST_STRING_FIELDS +
-            YAML_ARRAY_HAS_STRINGS + MAYBE_STRING)
+KEYWORDS = (
+    STRING_FIELDS
+    + YAML_ARRAY_STRING_FIELDS
+    + HAS_STRINGS
+    + YAML_ARRAY_OR_STRING_FIELDS
+    + YAML_LIST_STRING_FIELDS
+    + YAML_ARRAY_HAS_STRINGS
+    + MAYBE_STRING
+)
 
 def add_quotes(s):
     """Add quotes to string s if it doesn't already have them"""

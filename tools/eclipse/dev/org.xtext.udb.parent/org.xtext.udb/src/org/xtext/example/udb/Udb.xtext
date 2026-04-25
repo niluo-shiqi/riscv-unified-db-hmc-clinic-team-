@@ -4,7 +4,7 @@ generate udb "http://www.xtext.org/example/udb/Udb"
 
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
-Model 
+Model
 	: CsrModel
 	| InstModel
 	| ExtModel
@@ -218,13 +218,13 @@ Schema: "$schema" ":" schema=STRING;
 LongName: 'long_name' ":" longName=STRING;
 Base: "base" ":" base=INT;
 Description: 'description' ':' description=StringType;
-Requirements: "requirements" ":" 
-	INDENT 
-		requirements=Condition 
+Requirements: "requirements" ":"
+	INDENT
+		requirements=Condition
 	DEDENT
 ;
-DefinedBy: "definedBy" ":" 
-	INDENT 
+DefinedBy: "definedBy" ":"
+	INDENT
 		definedBy=Condition
 	DEDENT
 ;
