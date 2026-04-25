@@ -1310,6 +1310,7 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getNonIsaName_Name());
 		}
 	}
+
 	@Check
 	public void checkNonISAVersion(NonIsaVersion isaVer) {
 		String name = isaVer.getVersion();
@@ -1318,8 +1319,6 @@ public class UdbValidator extends AbstractUdbValidator {
 					UdbPackage.eINSTANCE.getNonIsaVersion_Version());
 		}
 	}
-	
-
 
 	@Check
 	public void checkSection(Section section) {

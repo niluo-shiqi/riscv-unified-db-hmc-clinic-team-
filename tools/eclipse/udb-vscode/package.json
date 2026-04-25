@@ -30,7 +30,6 @@
     ],
     "configurationDefaults": {
       "editor.tokenColorCustomizations": {
-
         "[*Dark*]": {
           "textMateRules": [
             {
@@ -44,19 +43,19 @@
               "scope": "keyword.other.enum.udb",
               "settings": {
                 "foreground": "#c3a6e8"
-                }
+              }
             },
             {
               "scope": "constant.numeric.hex.udb",
               "settings": {
                 "foreground": "#e8c97a"
-                }
+              }
             },
             {
               "scope": "constant.numeric.integer.udb",
               "settings": {
                 "foreground": "#e8c97a"
-                }
+              }
             },
             {
               "scope": "constant.language.boolean.udb",
@@ -85,7 +84,6 @@
             }
           ]
         },
-
         "[*Light*]": {
           "textMateRules": [
             {
