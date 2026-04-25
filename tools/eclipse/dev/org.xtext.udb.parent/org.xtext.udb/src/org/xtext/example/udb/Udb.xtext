@@ -26,7 +26,7 @@ Model
 
 CsrModel:
 	schema = Schema // must be "csr_schema.json#"
-	csrKind = CsrKind
+	csrKind = CsrKind &
 	csrName = CsrName &
 	longName = LongName &
 	description = Description &
@@ -47,7 +47,7 @@ CsrModel:
 
 InstModel:
 	schema = Schema // must be "inst_schema.json#"
-	kind = InstKind
+	kind = InstKind &
 	instName = InstName &
 	longName = LongName &
 	description = Description &
@@ -68,7 +68,7 @@ InstModel:
 
 ExtModel:
 	schema = Schema // must be "ext_schema.json#"
-	extKind = ExtKind
+	extKind = ExtKind &
 	extName = ExtName &
 	longName = LongName &
 	description = Description &
@@ -84,7 +84,7 @@ ExtModel:
 
 ProfModel:
 	schema = Schema // must be "profile_schema.json#"
-	profKind = ProfKind
+	profKind = ProfKind &
 	profName = ProfName &
 	longName = LongName &
 	base = Base &
@@ -106,7 +106,7 @@ ProfModel:
 
 InterruptCodeModel:
 	schema = Schema // must be "interript_code_schema.json#"
-	intrptCodeKind = IntrptCodeKind
+	intrptCodeKind = IntrptCodeKind &
 	intrptCodeName = IntrptCodeName &
 	displayName = DisplayName &
 	intrptNum = IntrptCodeNum &
@@ -116,7 +116,7 @@ InterruptCodeModel:
 
 ExceptionCodeModel:
 	schema = Schema // must be "exception_code_schema.json#"
-	ecKind = ECKind
+	ecKind = ECKind &
 	ecName = ECName &
 	displayName = DisplayName &
 	num = Num &
@@ -126,14 +126,14 @@ ExceptionCodeModel:
 
 InstOpcodeModel:
 	schema = Schema // must be "inst_opcode_schema.json#"
-	instOpcodeKind = InstOpcodeKind
+	instOpcodeKind = InstOpcodeKind &
 	instOpcodeName = InstOpcodeName? &
 	instOpcodedata = InstOpcodeData
 ;
 
 InstVarTypeModel:
 	schema = Schema
-	instVarTypeKind = InstVarTypeKind
+	instVarTypeKind = InstVarTypeKind &
 	instVarTypeName = InstVarTypeName &
 	instVarTypeType = InstVarTypeType &
 	registerFile = RegisterFile? &
@@ -143,7 +143,7 @@ InstVarTypeModel:
 
 RegisterModel:
 	schema = Schema // must be "register_file_schema.json#"
-	regKind = RegisterKind
+	regKind = RegisterKind &
 	regName = RegisterName &
 	longName = LongName &
 	description = Description &
@@ -157,7 +157,7 @@ RegisterModel:
 
 ManualModel:
 	schema = Schema // must be "manual_schema.json#"
-	manualKind = ManualKind
+	manualKind = ManualKind &
 	manualName = ManualName &
 	longName = LongName &
 	marketingName = MarketingName? &
@@ -168,7 +168,7 @@ ManualModel:
 ;
 ManualVersionModel:
 	schema = Schema // must be "manual_version_schema.json#"
-	manualVersionKind = ManualVersionKind
+	manualVersionKind = ManualVersionKind &
 	manualVersionName = ManualVersionName &
 	longName = LongName &
 	manual = ManualVersionManual &
@@ -199,7 +199,7 @@ ProfFamModel:
 
 NonIsaModel:
 	schema=Schema
-	kind=NonIsaKind
+	kind=NonIsaKind &
 	name=NonIsaName &
 	longName=LongName? &
 	version=NonIsaVersion? &
