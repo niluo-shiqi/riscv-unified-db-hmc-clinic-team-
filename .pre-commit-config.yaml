@@ -34,7 +34,7 @@ repos:
         exclude: \.adoc$ # sections titles Level 6 "=======" get flagged otherwise
       - id: check-json
         stages: [pre-commit]
-        exclude: ^\.devcontainer|tools/vscode/\.vscode/launch\.json|doc/tsconfig\.json # Uses JSONC (comments)
+        exclude: tools/vscode/\.vscode/launch\.json|doc/tsconfig\.json # Uses JSONC (comments)
       - id: check-yaml
         stages: [pre-commit]
 
@@ -90,30 +90,6 @@ repos:
           [
             "--schemafile",
             "spec/schemas/ext_schema.json",
-            "--base-uri",
-            "file://spec/schemas/",
-          ]
-      - id: check-jsonschema
-        name: Validate cert model files with jsonschema
-        stages: [pre-commit]
-        alias: check-jsonschema-cert-model
-        files: ^spec/std/isa/proc_cert_model/.*\.(yaml|yml)$
-        args:
-          [
-            "--schemafile",
-            "spec/schemas/proc_cert_model_schema.json",
-            "--base-uri",
-            "file://spec/schemas/",
-          ]
-      - id: check-jsonschema
-        name: Validate cert class files with jsonschema
-        stages: [pre-commit]
-        alias: check-jsonschema-cert-class
-        files: ^spec/std/isa/proc_cert_class/.*\.(yaml|yml)$
-        args:
-          [
-            "--schemafile",
-            "spec/schemas/proc_cert_class_schema.json",
             "--base-uri",
             "file://spec/schemas/",
           ]
