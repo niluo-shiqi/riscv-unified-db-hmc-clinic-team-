@@ -66,8 +66,8 @@
             {
               "scope": "string.quoted.double.udb",
               "settings": {
-                "foreground": "#f0aa7c" 
-              } 
+                "foreground": "#f0aa7c"
+              }
             },
             {
               "scope": "comment.line.double-slash.udb",
