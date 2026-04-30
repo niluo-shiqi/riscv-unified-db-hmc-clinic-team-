@@ -46,7 +46,7 @@ tests:
       - smoke
     test:
       - name: Run sorbet checks
-        run: export XDG_CACHE_HOME=${{ github.workspace }}/.cache && ./do test:sorbet
+        run: ./do test:sorbet
 
   regress-ext-explorer:
     ci_stage: pr
@@ -118,17 +118,19 @@ tests:
       - name: Generate Xqci extension PDF
         run: ./bin/ruby tools/scripts/gen_xqci.rb
 
-  regress-gen-certificate:
-    ci_stage: pr
-    test:
-      - name: Generate extension PDF
-        run: ./do gen:proc_crd_pdf[RVI20-32]
-
   regress-gen-profile:
     ci_stage: pr
     test:
       - name: Generate extension PDF
         run: ./do gen:profile_release_pdf[RVI20]
+
+  regress-profile-strict-cfg:
+    ci_stage: pr
+    tags:
+      - smoke
+    test:
+      - name: Check that profile configs are up to date
+        run: ./bin/chore gen -f profile-cfgs
 
   regress-udb-unit-test:
     ci_stage: pr
@@ -155,8 +157,6 @@ tests:
       - name: Run udb gem ${{ matrix.test }} unit tests
         run: ./bin/ruby tools/ruby-gems/udb/test/test_${{ matrix.test }}.rb
     gh_post:
-      - name: Update ownership of coverage files # TODO: Remove when Docker image uses non-root user
-        run: sudo chown -R $USER:$USER tools/ruby-gems/udb/coverage
       - name: Rename coverage file
         run: mv tools/ruby-gems/udb/coverage/.resultset.json tools/ruby-gems/udb/coverage/${{ matrix.test }}.resultset.json
       - name: Save coverage report
@@ -185,6 +185,7 @@ tests:
 
   regress-cpp-unit:
     ci_stage: pr
+    toolchain_container: true
     tags:
       - unit
     test:
@@ -193,6 +194,7 @@ tests:
 
   regress-riscv-tests-32:
     ci_stage: pr
+    toolchain_container: true
     gh_pre:
       - name: check out riscv-tests
         run: git submodule update --init ext/riscv-tests
@@ -202,6 +204,7 @@ tests:
 
   regress-riscv-tests-64:
     ci_stage: pr
+    toolchain_container: true
     gh_pre:
       - name: check out riscv-tests
         run: git submodule update --init ext/riscv-tests
