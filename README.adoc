@@ -1,92 +1,93 @@
-image::doc/udb.svg[UDB banner]
+# UDB Documentation
 
-image::https://api.reuse.software/badge/github.com/riscv/riscv-unified-db[REUSE status, link="https://api.reuse.software/info/github.com/riscv/riscv-unified-db"]
+## Grammar File
 
+### Location
+`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/Udb.xtext`
 
-[WARNING]
-----
-This project is under rapid development. Expect schemas and APIs to change.
+### Organization
+The grammar file is organized by schema.
 
-The data in the `spec` directory is also a work in progress and may be incorrect.
+### Current Implementation
+- Conditions are currently defined as strings
+- IDL is separate, using Treetop grammar with Ruby dependencies
 
-That said, the following data has been validated against third-party sources:
+---
 
-* Instruction encodings are validated to match riscv-opcodes
-* Instruction names and assembly formats are validated against LLVM.
-----
+## Validator
 
-== Quick links
+### Location
+`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/validation/UdbValidator.java`
 
-* https://riscv.github.io/riscv-unified-db/index.html[The latest UDB-generated **UNOFFICIAL** RISC-V specifications].
-* UDB Documentation
-** xref:doc/schemas.adoc[Schema documentation]
-** xref:doc/idl.adoc[ISA Description Language (IDL)]
-** xref:doc/ruby.adoc[Ruby database interface]
-* How-to/recipes
-** xref:CONTRIBUTING.adoc[Contribution guidelines]
-** xref:doc/data-templates.adoc[Data templates]
-** xref:doc/riscv-opcodes-migration.adoc[`riscv-opcodes` migration]
+### Organization
+The validator file is also organized by schema.
 
-== Overview
+### Schema-Specific Validation
+What validations a schema needs depends on what information the JSON file contains.
 
-The goal of the RISC-V Unified Database (UnifiedDB/UDB) is to hold *all* the information needed to describe RISC-V,
-including a list of extensions, instruction specifications, CSR specifications, and documentation prose. The vision is that anything one would need for RISC-V can be generated from the information in this repository.
+### Structure
+- **Imports by schema** are placed at the top of the file
+- **IDL integration** is placed at the bottom of the file
 
-In addition to storing the data, UnifiedDB also provides many tools that use the data to generate
-artifacts such as specification documents, toolchain inputs, and simulators.
+---
 
-UnifiedDB is an open-source, worldwide project.
-Contributors do not need to be members of https://riscv.org[RISC-V International (RVI)],
-though maintainers discuss strategic direction and coordinate with the RISC-V standard through the
-https://lf-riscv.atlassian.net/wiki/x/iwCsCw?atlOrigin=eyJpIjoiYzU3N2ZiNDViMGRkNGE3ODg0ODVlOWU5YzgzYWM2ODMiLCJwIjoiYyJ9[UnifiedDB Special Interest Group (UDB SIG)] at RVI.
+## Regenerating the Language Server
 
-== Repository structure
+### Prerequisites
+Pull the repository into your local editor.
 
-The following directories contain information relevant to most users of UnifiedDB
+### macOS
 
-* `spec`: Holds all data specification files, along with their schemas
-* `spec/std`: The RISC-V standard
-* `spec/custom`: Non-standard RISC-V extensions
-* `spec/schemas`: Data schemas for the specification content
-* `cfgs`: Configurations used by backends to customize generated outputs
+Run the following commands in your terminal to generate the jar file and Ruby dependencies in the correct location:
 
-Additionally, developers will be interested in the following:
+```bash
+chmod +x tools/scripts/language-server-script/regen-udb-ls.sh
+./tools/scripts/language-server-script/regen-udb-ls.sh
+```
 
-* `backends`: Tools to generate artifacts (documents, simulators, etc.) from UDB data
-* `tools/ruby-gems`: Ruby gem libraries for interacting with UDB / IDL
-* `bin`: Wrapper scripts to run commands within the container environment
+> **Note:** The `chmod` command only needs to be run once per session.
 
-== Getting Started
+### Windows
 
-=== Prerequisites
+Run the following command in your terminal to generate the jar file and Ruby dependencies in the correct location:
 
-UnifiedDB tools are set up to run in a container. Docker (any version) and Podman (any version) are supported.
+```bash
+tools\scripts\language-server-script\regen-udb-ls.bat
+```
 
-=== Devcontainer
+### Expected Output
+After running the script, you should see the following in `/tools/eclipse/udb-vscode/server`:
+- `udb-ls-all.jar`
+- `idlc` folder
+- `vendor` folder
 
-You can also leverage https://containers.dev/[devcontainers] to run the RISC-V Unified Database.
+---
 
-This is especially useful when using Visual Studio Code or GitHub codespaces, as it will setup up your IDE environment for you.
+## Converting Between UDB and YAML
 
-==== VS Code
+### Overview
+UDB is not currently one-to-one with YAML. These differences are mainly due to fields in UDB being defined as strings (to avoid ambiguity problems that would occur if they were defined as unquoted IDs). To resolve these differences and remove friction, a Python conversion script has been created.
 
-To run the devcontainer locally, you will need to have https://docs.docker.com/engine/install[Docker installed].
+### Conversion Script
+**File:** `tools/python/convertudb.py`
 
-With Docker installed, install the https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers[Dev Containers] extension in VS Code.
+### How to Use
 
-You can then run `Dev Containers: Open Folder in Container...` from the Command Palette (Ctrl+Shift+P) and select the folder with this repository.
+1. Download `convertudb.py` and place it in the same directory as the `.yaml` or `.udb` file you wish to convert.
 
-==== GitHub Codespaces
+2. Open your terminal and navigate to that directory:
+   ```bash
+   cd /path/to/file/directory
+   ```
 
-You can start a GitHub Codespace for this repository by clicking the "Code" button and selecting "Open with Codespaces".
+3. Run the conversion script:
+   ```bash
+   python convertudb.py filename.yaml
+   ```
 
-=== Tasks
+### Output
+A new file will be created in the same directory with the same filename but opposite file extension.
 
-[source,bash]
-----
-./bin/regress -h             # get help on running regression tests
-
-./bin/generate -h            # get help on generating content from UDB
-
-./bin/chore -h               # get help on running repository development chores
-----
+**Example:**
+- Input: `vsstatus.yaml`
+- Output: `vsstatus.udb`
