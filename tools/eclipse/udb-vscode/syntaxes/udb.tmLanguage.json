@@ -23,7 +23,7 @@
         },
         {
           "name": "keyword.operator.udb",
-          "match": "sw_write\\(csr_value\\)|sw_read\\(\\)|reset_value\\(\\)|type\\(\\)|legal\\?\\(csr_value\\)|operation\\(\\)|arch_read\\(\\)|arch_write\\(value\\)|when\\(\\)|idl\\(\\)"
+          "match": "\\b(?:sw_write|sw_read|reset_value|type|legal\\?|operation|arch_read|arch_write|when|idl)(?=\\s*\\()"
         }
       ]
     },
