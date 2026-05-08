@@ -204,6 +204,7 @@ rule %r{#{CPP_HART_GEN_DST}/[^/]+/build/Makefile} => [
     "-S#{CPP_HART_GEN_DST}/#{build_name}",
     "-B#{CPP_HART_GEN_DST}/#{build_name}/build",
     "-DCMAKE_CXX_COMPILER=#{$root}/bin/g++",
+    "-DCOVERAGE_COMMAND=#{$root}/bin/gcov",
     "-DCONFIG_LIST=\"#{ENV['CONFIG'].gsub(',', ';')}\"",
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
     "-DCMAKE_BUILD_TYPE=#{cmake_build_type}",
@@ -420,6 +421,7 @@ namespace :test do
     Dir.chdir "#{CPP_HART_GEN_DST}/#{build_name}/build" do
       sh "make -j #{$jobs} test_bits_directed"
       sh "make -j #{$jobs} test_bits_random"
+      sh "make -j #{$jobs} test_regfile"
       sh "ctest -T coverage -T test"
     end
   end
