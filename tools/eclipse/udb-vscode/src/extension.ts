@@ -53,6 +53,10 @@ async function checkJavaInstalled(): Promise<string | null> {
   });
 }
 
+function getLanguageServerPath(ctx: vscode.ExtensionContext): string {
+  return ctx.asAbsolutePath('server/udb-ls-all.jar');
+}
+
 export async function activate(ctx: vscode.ExtensionContext) {
   // Check Java before starting language server
   const javaPath = await checkJavaInstalled();
@@ -61,7 +65,7 @@ export async function activate(ctx: vscode.ExtensionContext) {
   }
 
   const chan = vscode.window.createOutputChannel('UDB Language Server');
-  const jar = ctx.asAbsolutePath('server/udb-ls-all.jar');
+  const jar = getLanguageServerPath(ctx);
 
   const serverOptions = async () => {
     chan.appendLine(`Launching: ${javaPath} -jar ${jar} -stdio`);
