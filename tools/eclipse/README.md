@@ -1,0 +1,93 @@
+# Programmable RISC-V IDE (PRIDE) Developer Guide
+
+## Grammar File
+
+### Location
+`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/Udb.xtext`
+
+### Organization
+The grammar file is organized by schema.
+
+### Current Implementation
+- Conditions are currently defined as strings
+- IDL is separate, using Treetop grammar with Ruby dependencies
+
+---
+
+## Validator
+
+### Location
+`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/validation/UdbValidator.java`
+
+### Organization
+The validator file is also organized by schema.
+
+### Schema-Specific Validation
+What validations a schema needs depends on what information the JSON file contains.
+
+### Structure
+- **Imports by schema** are placed at the top of the file
+- **IDL integration** is placed at the bottom of the file
+
+---
+
+## Regenerating the Language Server
+
+### Prerequisites
+Pull the repository into your local editor.
+
+### macOS
+
+Run the following commands in your terminal to generate the jar file and Ruby dependencies in the correct location:
+
+```bash
+chmod +x tools/scripts/language-server-script/regen-udb-ls.sh
+./tools/scripts/language-server-script/regen-udb-ls.sh
+```
+
+> **Note:** The `chmod` command only needs to be run once per session.
+
+### Windows
+
+Run the following command in your terminal to generate the jar file and Ruby dependencies in the correct location:
+
+```bash
+tools\scripts\language-server-script\regen-udb-ls.bat
+```
+
+### Expected Output
+After running the script, you should see the following in `/tools/eclipse/udb-vscode/server`:
+- `udb-ls-all.jar`
+- `idlc` folder
+- `vendor` folder
+
+---
+
+## Converting Between UDB and YAML
+
+### Overview
+UDB is not currently one-to-one with YAML. These differences are mainly due to fields in UDB being defined as strings (to avoid ambiguity problems that would occur if they were defined as unquoted IDs). To resolve these differences and remove friction, a Python conversion script has been created.
+
+### Conversion Script
+**File:** `tools/python/convertudb.py`
+
+### How to Use
+
+1. Download `convertudb.py` and place it in the same directory as the `.yaml` or `.udb` file you wish to convert.
+
+2. Open your terminal and navigate to that directory:
+   ```bash
+   cd /path/to/file/directory
+   ```
+
+3. Run the conversion script:
+   ```bash
+   python convertudb.py filename.yaml
+   ```
+
+### Output
+A new file will be created in the same directory with the same filename but opposite file extension.
+
+**Example:**
+- Input: `vsstatus.yaml`
+- Output: `vsstatus.udb`
