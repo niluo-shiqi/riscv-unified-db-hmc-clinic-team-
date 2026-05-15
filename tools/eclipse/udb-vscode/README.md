@@ -34,7 +34,7 @@ Some schemas have partial support:
 ### Cross-Referencing
 Navigate across related schema definitions with cross-referencing support — jump to referenced definitions directly from within your editor.
 
-<br> 
+<br>
 
 ## Workflows
 ---
@@ -54,9 +54,6 @@ To modify existing specification files, use same the [convertudb.py](../../pytho
 python convertudb.py [specification].yaml
 ```
 This generates a `.udb` file you can then use to make changes while taking advantage of this extension's features. After making your changes, you can use the same script to convert the `.udb` file back into a `.yaml` file before pushing it to the [RISC-V Unified Database](https://github.com/riscv-software-src/riscv-unified-db) repository.
-
- 
-
 
 <br>
 

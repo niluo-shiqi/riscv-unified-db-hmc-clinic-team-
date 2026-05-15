@@ -32,7 +32,7 @@ async function checkJavaInstalled(): Promise<string | null> {
         // Java found, verify it's version 21+
         const versionOutput = stdout + stderr;
         const versionMatch = versionOutput.match(/version "(\d+)/);
-        
+
         if (versionMatch) {
           const majorVersion = parseInt(versionMatch[1]);
           if (majorVersion < 21) {
@@ -86,6 +86,6 @@ export async function activate(ctx: vscode.ExtensionContext) {
   await client.start();
 }
 
-export async function deactivate() { 
-  if (client) await client.stop(); 
+export async function deactivate() {
+  if (client) await client.stop();
 }

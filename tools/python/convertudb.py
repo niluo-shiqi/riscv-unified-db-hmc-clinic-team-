@@ -260,6 +260,13 @@ def convert_yaml_to_udb(yaml_file):
     # when we're an 'extensions' field that's in a 'volumes' field
     inManualVolumesExtensions = False
 
+    # Loop variables that help with handling whitespace
+    multiline_indentation = 0
+    array_indentation = 0
+    manual_volumes_indentation = 0
+    param_indentation = 0
+    field_indentation = 0
+
     output_lines = []
     for i, line in enumerate(lines):
         if i == 198:
