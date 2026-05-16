@@ -6,4 +6,5 @@ Apr 5 2026[3.0.0]: Second version of the DSL VSCode Extension.  Supports CSR, in
 
 Apr 24 2026[4.0.0] Third version of the DSL VSCode Extension. Now supports schemas: config, csr, exception code, extension, instruction opcode, instruction, instruction variable type, interrupt code, manual, manual version, non isa, profile family, profile, register file.
 
-Apr 28[4.0.]
+May 16 2026[4.0.7]: Fourth version of the DSL VSCode Extension. Fixed cross-platform compatibility: JRuby gem installation on Windows, Windows line ending support in treetop parser, and platform-specific vendor folder loading for macOS and Windows.
+

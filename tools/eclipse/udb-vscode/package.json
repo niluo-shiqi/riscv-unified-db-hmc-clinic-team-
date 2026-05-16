@@ -1,12 +1,13 @@
 {
-  "name": "udb-vscode",
-  "version": "4.0.7",
+  "name": "udb-schema-editor",
+  "displayName": "UDB Schema Editor",
+  "version": "4.0.8",
   "publisher": "HarveyMuddClinicTeam",
   "private": true,
   "engines": {
     "vscode": "^1.109.0"
   },
-  "description": "Added support for instruction, extension, and CSR schemas with cross-referencing across schema definitions.",
+  "description": "",
   "activationEvents": [],
   "contributes": {
     "languages": [
