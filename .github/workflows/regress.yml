@@ -784,6 +784,15 @@ jobs:
       uses: "./.github/actions/mise-setup"
     - name: Check schema versions against published URLs
       run: "./do gen:schemas && ./bin/ruby tools/scripts/check_schema_versions.rb"
+  regress-schema-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone Github Repo Action
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+    - name: Set up mise environment
+      uses: "./.github/actions/mise-setup"
+    - name: Generate schema documentation
+      run: "./bin/chore gen -f schema-docs"
   build-idl-doc:
     runs-on: ubuntu-latest
     if: (github.event_name == 'merge_group') || ((github.event_name == 'push') && (github.ref_name == 'main'))
@@ -888,6 +897,7 @@ jobs:
     - build-instruction-appendix
     - build-profile
     - regress-schema-versions
+    - regress-schema-docs
     - build-idl-doc
     - check-gem-versions
     - regress-smoke-perf

@@ -111,6 +111,7 @@ gen_subcmd_usage() {
   echo "  vscode-idl:    Generate tools/vscode/idl/syntaxes/idl.tmLanguage.json"
   echo "  regress:       Generate .github/workflows/regress.yml"
   echo "  ruby-type-def: Generate Ruby type signatutres"
+  echo "  schema-docs:   Generate schema documentation from JSON Schema files"
   echo "  cfg-headers:   Generate golden cfg header files for regression testing"
   echo "  xqci           Generate Xqci spec used for Golden regressions"
   echo ""
@@ -299,29 +300,26 @@ do_gen_vscode_idl() {
 }
 
 #
-# Lock all Gemfiles with consistent platforms.
+# Generate schema documentation from JSON Schema files
 #
-# The root Gemfile is a union of all per-gem gemspecs and is used as the
-# authoritative dependency resolution context. It must be locked first so that
-# when Bundler locks each per-gem Gemfile (which runs under `bundle exec` from
-# the root context), it resolves transitive dependencies (e.g. activesupport,
-# sorbet) to the same versions as the root. If the per-gem locks ran first,
-# they could resolve to different versions and diverge from the root, causing
-# failures in tools like sorbet that compare the installed gem version against
-# committed RBI files.
-#
-# Args: extra args to pass to each `bundle lock` call (e.g. --update --bundler)
-#
-do_lock_all_gemfiles() {
-  # Always include both x86_64 and aarch64 Linux platforms so lock files are
-  # valid on both architectures.
-  local platforms="--add-platform x86_64-linux --add-platform x86_64-linux-gnu --add-platform aarch64-linux --add-platform aarch64-linux-gnu"
-  # BUNDLE_GEMFILE must be set to match --gemfile so that Bundler writes PATH
-  # remote: entries relative to the correct directory.
-  # Note: `bundle lock` (not `bundle exec bundle lock`) is used deliberately —
-  # `bundle exec` requires an existing lockfile to activate the bundle first,
-  # which breaks when lockfiles are missing or being regenerated from scratch.
-  env BUNDLE_GEMFILE="${UDB_ROOT}"/Gemfile "${UDB_ROOT}"/bin/bundle lock $platforms "$@" --gemfile "${UDB_ROOT}"/Gemfile
+do_gen_schema_docs() {
+  echo "Generating schema documentation"
+  if [ $fail_on_change -eq 1 ]; then
+    # Calculate checksum before generation
+    local sha_before
+    sha_before=$(find "$UDB_ROOT"/doc/docs/schemas -type f -name "*.mdx" -exec sha256sum {} \; 2>/dev/null | sort | sha256sum)
+  fi
+  "$UDB_ROOT/bin/ruby" "$UDB_ROOT/tools/internal-gems/schema_doc_gen/bin/schema-docs-all" \
+    --schema-dir "$UDB_ROOT/spec/schemas" \
+    --output-dir "$UDB_ROOT/doc/docs/schemas" \
+    --generate-index
+  if [ $fail_on_change -eq 1 ]; then
+    local sha_after
+    sha_after=$(find "$UDB_ROOT"/doc/docs/schemas -type f -name "*.mdx" -exec sha256sum {} \; 2>/dev/null | sort | sha256sum)
+    if [ "$sha_before" != "$sha_after" ]; then
+      exit 1
+    fi
+  fi
 }
 
 #
@@ -342,7 +340,6 @@ do_gen_gem_versions() {
   fi
 }
 
-#
 # Auto-increment versions for gems with source changes (with cascade),
 # then sync inter-gem version pins in gemspecs and Gemfile.lock.
 # Args: $1 - base ref (optional; defaults to origin/main)
@@ -367,6 +364,7 @@ do_gen_all() {
   do_ruby_type_def all
   do_gen_profile_cfgs
   do_gen_xqci_golden
+  do_gen_schema_docs
   do_gen_cfg_headers_golden
 }
 
@@ -654,6 +652,10 @@ case "$subcommand" in
         ;;
       regress )
         do_gen_regress
+        exit 0
+        ;;
+      schema-docs )
+        do_gen_schema_docs
         exit 0
         ;;
       profile-cfgs )
