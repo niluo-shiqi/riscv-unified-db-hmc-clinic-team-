@@ -38,9 +38,10 @@ Gem::Specification.new do |s|
   s.add_dependency "tty-option"
   s.add_dependency "tty-progressbar"
   s.add_dependency "tty-table"
-  s.add_dependency "udb", "= 0.1.12"
+  s.add_dependency "udb", "= 0.1.13"
   s.add_dependency "write_xlsx"
 
+  s.add_development_dependency "mocha"
   s.add_development_dependency "sorbet"
   s.add_development_dependency "tapioca", ">= 0.17.10"
 end
