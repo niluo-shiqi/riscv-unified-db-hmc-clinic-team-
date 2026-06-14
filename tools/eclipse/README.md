@@ -1,7 +1,7 @@
 # Programmable RISC-V IDE (PRIDE) Developer Guide
 
 *Authors: Brayden Mendoza (brayjmendoza), Nina Luo (niluo-shiqi)*
-*Last Edited: June 11th, 2026*
+*Last Edited: June 14th, 2026*
 
 ## Overview
 
@@ -11,6 +11,8 @@ With Xtext, we just have to specify a grammar and all of the IDE features will b
 
 So, at a high level, developing PRIDE involves modifying the files in the Xtext project (primarily the grammar file and validator) to create new features. Then, you would then generate a new language server to update support in other IDEs. The rest of this markdown file will go into much greater detail of everything involved in this project.
 
+*TODO: probably add something what files to look at when adding/modifying support for a schema*
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)
@@ -18,10 +20,14 @@ So, at a high level, developing PRIDE involves modifying the files in the Xtext 
   - [Structure](#structure)
   - [Whitespace Awareness](#whitespace-awareness)
 - [The Validator](#the-validator)
+  - [Structure](#structure-1)
+  - [ISA Description Language (IDL) at Runtime](#isa-description-language-idl-at-runtime)
 - [Customizing Xtext Components](#customizing-xtext-components)
   - [Cross-Referencing](#cross-referencing)
   - [Hex and Binary](#hexadecimal-and-binary)
 - [Maven](#maven)
+  - [High Level Structure](#high-level-structure)
+  - [Incorporating IDL at Build Time](#incorporating-idl-at-build-time)
 - [JUnit Testing](#junit-testing)
 - [The Language Server](#the-language-server)
 - [Converting Between YAML and UDB](#converting-between-udb-and-yaml)
@@ -40,22 +46,20 @@ Next, navigate to the [GenerateUdb.mwe2](dev/org.xtext.udb.parent/org.xtext.udb/
  Once everything has generated, you should now be able to use the IDE features in Eclipse! In the project explorer, right click on `org.xtext.example.udb` (the package that contains the MWE2 workflow), and press Run As -> Eclipse Application. This will open a new instance of Eclipse that you can use to test out the features of PRIDE. First, create a new general project, and then create a new file with the `.udb` file extension. Eclipse will then ask you if you would like to convert the project into an Xtext project. Click yes, and you're all set!
 
 ---
+
 ## The Grammar
 
 The grammar is a `.xtext` file that defines allowable syntax. This defined syntax is YAML-like, to match the `.yml` files of RISC-V specifications. Thus, the Xtext grammar serves as a YAML parser for RISC-V specifications.
 
-#### Brief Notes on Current Implementation 
+**NOTE:** In terms of language development, you can think of the grammar as the component that handles syntax.
 
-- Conditions are currently defined as strings (see [note on conditions](#note-on-conditions))
-- IDL is defined separately in a Ruby Treetop grammar, which is ported into the Xtext project with JRuby (see [IDL](#isa-description-language))
+### Location
 
-#### Location
+The grammar file can be found [here](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/Udb.xtext) (`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/Udb.xtext`).
 
-The grammar file is can be found [here](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/Udb.xtext) (`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/Udb.xtext`).
+### Structure
 
-#### Structure
-
-The start of the file begins with the parent rule of the grammar, `Model`, which lists all of the currently supported schemas. Then, we have rules for each of these schemas, which serve as the parent rule for their own respective grammars. Next, there's a chunk of code that contains grammar snippets that are commonly used across multiple schemas. 
+The start of the file begins with the parent rule of the grammar, `Model`, which lists all of the currently supported schemas. Then, we have rules for each of these schemas, which serve as the parent rule for their own respective grammars. Next, there's a chunk of code that contains grammar snippets that are commonly used across multiple schemas.
 
 Then, we have the grammars for each of the schema's, written in the order they are listed in `Model`. This is the bulk of the file. To modify the grammars of existing schemas, you will want to change/add code in this section.
 
@@ -65,52 +69,91 @@ In general, if you would like to add support for a new schema, just follow the e
 
 **IMPORTANT NOTE:** The first two grammar rules of every schema must be Schema and Kind (in that order). Using CSR as an example, you can see that in the definition for `CsrModel`, the first rule is `Schema` and the second is `CsrKind`. This is important as this is what allows the resulting IDE to determine which schema the RISC-V specification should be following. Note that this means that all `.udb` files must start with the `$schema` and `kind` fields (everything else can be unordered).
 
-#### Whitespace Awareness
+### Whitespace Awareness
 
-By default, Xtext grammars are not whitespace aware. So, to make the grammar YAML-like, we added synthetic `INDENT` and `DEDENT` tokens to keep track of indentations. However, to get Xtext to use these tokens to enforce indentations, we modified [UdbTokenSource.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/parser/antlr/UdbTokenSource.java) in the `org.xtext.example.udb.parser.antlr` package. By overriding some functions, we were able to attain whitespace awareness. 
+By default, Xtext grammars are not whitespace aware. So, to make the grammar YAML-like, we added synthetic `INDENT` and `DEDENT` tokens to keep track of indentations. However, to get Xtext to use these tokens to enforce indentations, we modified [UdbTokenSource.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/parser/antlr/UdbTokenSource.java) in the `org.xtext.example.udb.parser.antlr` package. By overriding some functions, we were able to attain whitespace awareness.
 
-#### Note on Conditions
+### Note on Conditions
 
 We do currently have a grammar implemented for conditions (see "conditions" in [schema_def.json](../../spec/schemas/schema_defs.json) for the official definition). However, we have found that this causes issues with syntax errors (see our [GitHub issue](https://github.com/niluo-shiqi/riscv-unified-db-hmc-clinic-team-/issues/4)). Since highlighting syntax errors is a very major and useful IDE feature, we decided to comment out this portion of the grammar. Until a solution has been implemented, we have replaced this grammar to just accept a simple string.
+
+### Note on IDL
+Our Xtext DSL and IDE does support IDL, though it's grammar is defined elsewhere in a Ruby treetop grammar. See [ISA Description Language (IDL)](#isa-description-language-idl) for more details.
 
 ---
 
 ## The Validator
 
-*Note to self: add idl info to this section*
+The validator is a key component of any Xtext project whose purpose is to enforce constraints on the grammar. For example, the `CsrLength` rule accepts integers. However, the CSR schema specifies that if the length is an integer, then it's value must be either 32 or 64. To encode this requirement of the schema, we can create a function in the validator to enforce this constraint in the grammar. If a user were to violate one of these rules, they would see it as a syntax error in the IDE with a custom error message we specify.
+
+**NOTE:** In terms of language development, you can think of the validator as the component that handles semantics.
 
 ### Location
-`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/validation/UdbValidator.java`
 
-### Organization
-The validator file is also organized by schema.
-
-### Schema-Specific Validation
-What validations a schema needs depends on what information the JSON file contains.
+The validator file can be found [here](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/validation/UdbValidator.java) (`tools/eclipse/dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/validation/UdbValidator.java`).
 
 ### Structure
-- **Imports by schema** are placed at the top of the file
-- **IDL integration** is placed at the bottom of the file
+
+Just like the grammar file, the validator is largely organized by schema. At the top of the file, there are a large number of imports. The majority of these correspond to rules in the grammar and are thus organized by schema.
+
+The reset of the file consists of a Java class, which defines the validator. This class contains all of the functions which define the constraints of the grammar as defined in each specification's JSON schema. Also, note that the beginning of this class contains a bunch of regex's that are commonly used throughout the validator. The majority of these were taken directly from [schema_defs.json](../../spec/schemas/schema_defs.json). Just like how the grammar rules were separated by schema, the validator functions are also separated by schema. After the validators for the schemas, we have a section for validating *general* fields, that is, those that are often used across multiple schemas. 
+
+It should be noted that this file also contains a validator for conditions. However, since we currently are not using the conditions grammar (see our [GitHub issue](https://github.com/niluo-shiqi/riscv-unified-db-hmc-clinic-team-/issues/4)), these functions remain unused at runtime.
+
+Finally, at the end of the class we have functions that allow compatibility with IDL. These functions take in an IDL snippet, send it off to ruby, then throws an error if the snippet has syntax errors. This mechanism is described in detail [below](#isa-description-language-idl-at-runtime).
+
+In general, all of the functions in the validator just enforce a rule found in a specification's schema (this includes those found in [schema_defs.json](../../spec/schemas/schema_defs.json)).
+
+### ISA Description Language (IDL) at Runtime
+
+ISA Description Language (IDL) is another domain-specific language that was created to aid with RISC-V specification development. Many schemas have fields whose values are IDL snippets. So, to add support for IDL in PRIDE, IDL has become a subset of the larger UDB DSL we have implemented with Xtext.
+
+IDL was originally implemented with Treetop, a Ruby-based tool that can be used to create DSL's. IDL is currently packaged as a ruby gem found [here](../../tools/ruby-gems/idlc/), known as `idlc`. IDL is defined by as a parser expression grammar and already has features like type-checking. To take advantage of the work that has already been done, we incorporated IDL into PRIDE by using JRuby, which serves as a Ruby interpreter that runs within Java.
+
+The incorporation of IDL into the Xtext project is quite complex. At a high level, first, at build time the IDL Ruby gem is copied into the Xtext project. Then, at runtime, a Ruby environment that allows us to use the `idlc` gem is setup first. Then, IDL snippets are passed into the validator, and JRuby uses the `idlc` gem alongside the IDL code to determine if the input is valid. Finally, if an error is detected, it is returned and shown to the user.
+
+Setting up the Ruby environment makes heavy use of Maven, which will be discussed further [below](#incorporating-idl-at-build-time). This section will delve into using the validator to validate IDL snippets. The validator class instantiates a `TreetopParser` object, which is defined in [TreetopParser.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/treetop/TreetopParser.java), which is found in the `org.xtext.example.udb.treetop` package. This class has a `parse` method. This is the function that the validator uses to hand off IDL snippets to Ruby to determine if there are any errors. `parse` takes in two arguments: the IDL snippet (as a string) and the IDL grammar rule that Ruby should start parsing from. If only one parameter is given, the function will assume that the input string is IDL code and that it should start parsing from the grammar's default root rule. `parse` returns a `ValidationError`, which is defined in [ValidationError.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/treetop/ValidationError.java), which also exists in the `org.xtext.example.udb.treetop` package. In short, this `ValidationError` just formats and creates the error message that the user will see if their specification contains incorrect IDL code.
+
+Determining what the root grammar rule of an IDL snippet should be requires digging through some code. In particular explore, [this directory](../ruby-gems/udb/lib/udb/) (`tools/ruby-gems/udb/lib/udb/`). For the most part, we have found everything we needed in `obj/`. This directory contains a number of Ruby files that correspond to different schemas (for the most part). Let's use CSR as an example. CSR has a `sw_read()` field that takes in IDL. To determine what the root rule should be, I would first go into the [obj/csr.rb](../ruby-gems/udb/lib/udb/obj/csr.rb) file, and find a function called something along the lines of `sw_read_ast` (i.e., the name of the field followed by `ast`). Indeed, on line 518 we can find a function named `sw_read_ast`. Now, I would look for the line that looks like its doing some parsing. Luckily, there is a useful comment on line 524 that tells us the following line will parse. On line 525, we find a call to `idl_compiler.compile_func_body(...)`. This name is descriptive, as it indicates that to parse the IDL snippet that gets parsed into `sw_read()`, we should start from the `function_body` grammar rule. In general, you would want to find a call to `idl_compiler.compile_GRAMMAR_RULE`. Here, `GRAMMAR_RULE` is the root rule we should pass into the `parse` function. Note that in this case, `func_body` isn't one-to-one with the actual grammar rule name (`function_body`). This isn't always the case, but it should still be pretty clear what grammar rule the `idl_compiler` function call is referring to. For a complete list of the possible IDL grammar rules, please see the [IDL grammar file](../ruby-gems/idlc/lib/idlc/idl.treetop) (`tools/ruby-gems/idlc/lib/idlc/idl.treetop`).
+
+In general, all IDL fields must go through the validator. Please do use pre-existing IDL-related validator functions as reference when adding new ones. Each of these functions should all have the same structure.
 
 ---
 
 ## Customizing Xtext Components
 
-Though PRIDE is inherently an IDE project, by using Xtext we are more accurately creating a domain-specific language (DSL). As mentioned previously, given a grammar Xtext will generate IDE features. However, as a framework for DSL's, Xtext does this by generating all of the components that go into a language. These include a lexer, parser, the actual IDE features, and much, much more. 
+Though PRIDE is inherently an IDE project, by using Xtext we are more accurately creating a domain-specific language (DSL). As mentioned previously, given a grammar Xtext will generate IDE features. However, as a framework for DSL's, Xtext does this by generating all of the components that go into a language. These include a lexer, parser, the actual IDE features, and much, much more.
 
 Sometimes, what Xtext generates by default does quite do what we want it to. Luckily, we can customize these generated components (for the most part). In general, customizing Xtext components involves subclassing the class that Xtext generates, overriding necessary functions, and then registering the subclass in `UdbRuntimeModel.java`. The rest of this section details every instance where we've had to do this so far.
 
-#### Cross-Referencing
+### Cross-Referencing
 
 Mention [UdbQualifiedNameProvider.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/naming/UdbQualifiedNameProvider.java) and why we need it and  then registering it in [UdbRuntimeModule.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/UdbRuntimeModule.java)
 
-#### Hexadecimal and Binary
+### Hexadecimal and Binary
 
 At the end of the `.xtext` file, there is a small chunk of code that defines a grammar for representing integers in either hexadecimal or binary. However, defining the grammar alone will not get Xtext to recognize hex and binary as legitimate integers. So, we created [UdbValueConverter.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/UdbValueConverter.java). This file contains a class that subclasses Xtext's generated class that handles value conversion. The subclass then overrides some functions to allow conversion from hexadecimal and binary to integers in decimal form. We then register this class in [UdbRuntimeModule.java](dev/org.xtext.udb.parent/org.xtext.udb/src/org/xtext/example/udb/UdbRuntimeModule.java), so that at runtime hex and binary can be interpreted as actual integers. This proves useful for validation and testing.
 
 ---
 
 ## Maven
+
+Maven is the Java build management tool that is used for this Xtext project. It handles things like configuration files and dependency management, and for the most part is something you'll never have to think about. However, it's good to understand to some degree what Maven is doing in case you need to do something like add a dependency. Indeed, when incorporating IDL into PRIDE, we had to add JRuby as a dependency. To do so required us to modify how Maven builds the project.
+
+### High Level Structure
+
+This Xtext project is built with Maven. Thus, the parent package (`org.xtext.udb.parent`) is a Maven project that consists of several Maven modules. You can think of this parent package as a larger multi-module build that contains all of the packages in the project. Each module contains `MANIFEST.MF`, `build.properties`, and `pom.xml` files that allow Maven to automate the building process. `MANIFEST.MF` defines how Java executes and handles the package while `build.properties` exposes build metadata at runtime. Most importantly, `pom.xml` acts as the single source of truth and tells Maven what the project is, how to build it, and what external libraries it needs. It's not imperative that you deeply understand how Maven works, as these files are largely generated. This information proves most useful when adding additional Maven modules to the Xtext project, which we suspect will not happen often if at all. The remainder of this section will highlight the only time we've had to do this so far: incorporating IDL.
+
+### Incorporating IDL at Build Time
+
+As mentioned previously, IDL is packaged as a Ruby gem. Thus, to make use of this gem in a Java project, we needed to use JRuby, which allows us to run Ruby scripts in a Java project. This involves adding JRuby as a dependency to the project. So, we must turn to Maven and customize how it builds the project.
+
+Since JRuby isn't typically a dependency in Xtext projects, we ultimately found that we had to create a new Maven module to add this dependency. In particular, we created the Maven module `org.xtext.udb.jruby` to act as a wrapper (more specifically, an OSGi wrapper bundle) that exposes JRuby to the rest of the project. This module also contains the file [RubyRuntime.java](dev/org.xtext.udb.parent/org.xtext.udb.jruby/src/org/xtext/udb/jruby/RubyRuntime.java), which runs a Ruby script to setup the Ruby environment that lets us use `idlc`. This script is run at runtime, but for it to run successfully certain things need to happen first (during build time).
+
+The Ruby script assumes that `bundler`, a Ruby package manager, is installed and that it has access to `idlc`. To ensure that these assumptions are met, we can modify the `pom.xml` found in this `org.xtext.udb.jruby` Maven module. In this file, we can specify actions that Maven should perform when building the project. To
+satisfy the script's conditions, we first copy the `.jar` files for a number of dependencies (including JRuby) into the module (more specifically, they are copied into `lib/`). This process is defined in lines 60-115 of the `pom.xml`. Then, we copy the entire `idlc/` directory from `ruby-gems` into the module (see lines 116-140). Java will not access files out of its own project, so we must copy `idlc/` so that we don't run into permission issues. Finally, we use the JRuby `.jar` file we copied earlier to run some Ruby commands that install and configure bundler in a way that allows the Ruby script to run (see lines 142-238).
+
+Now, at build time, Maven will perform the actions detailed above. In fact, the commands that install bundler are why rebuilding/updating the project with Maven takes some time. More importantly, this gives us IDL compatability with PRIDE!
 
 ---
 
@@ -186,4 +229,5 @@ A new file will be created in the same directory with the same filename but oppo
 ---
 
 ## Other Notes & Quirks
-weird stuff like UdbGenerator2, 
+weird stuff like UdbGenerator2,
+mention stuff we haven't used like `org.xtext.udb.ide`, `org.xtext.udb.web`, `org.xtext.udb.ui`, and `org.xtext.udb.ui.tests`
