@@ -46,7 +46,7 @@ fields:
     reset_value: UNDEFINED_LEGAL
 sw_read(): |
   if (implemented?(ExtensionName::C) && CSR[misa].C == 1'b1) {
-    return CSR[sepc].PC & ~64'b1;
+    return CSR[vsepc].PC & ~64'b1;
   } else {
-    return CSR[sepc].PC;
+    return CSR[vsepc].PC;
   }
