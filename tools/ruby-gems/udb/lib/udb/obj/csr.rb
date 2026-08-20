@@ -299,7 +299,7 @@ module Udb
           64
         end
       when "XLEN"
-        if cfg_arch.possible_extensions.map(&:name).include?("M")
+        if cfg_arch.possible_extensions.map(&:name).include?("Sm")
           cfg_arch.mxlen || 64
         elsif cfg_arch.possible_extensions.map(&:name).include?("S")
           if cfg_arch.param_values.key?("SXLEN")
