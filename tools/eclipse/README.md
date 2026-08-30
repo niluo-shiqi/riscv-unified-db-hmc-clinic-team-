@@ -282,5 +282,4 @@ Modifying the script mostly just involves adding a the relevant fields to the ri
 
 ## Other Notes & Quirks
 
-This is the extent of the current state of PRIDE. You'll note that the Xtext project also has some additional packages not mentioned in this documentation. Namely,
-`org.xtext.udb.ide`, `org.xtext.udb.web`, and `org.xtext.udb.ui`. These are packages we did not mess with, but could be used for things like a web editor or further customizing the IDE.
+This is the extent of the current state of PRIDE. You'll note that the Xtext project also has some additional packages not mentioned in this documentation. Namely, `org.xtext.udb.ide`, `org.xtext.udb.web`, and `org.xtext.udb.ui`. These are packages we did not mess with, but could be used for things like a web editor or further customizing the IDE.
