@@ -269,8 +269,6 @@ def convert_yaml_to_udb(yaml_file):
 
     output_lines = []
     for i, line in enumerate(lines):
-        if i == 198:
-            breakpoint()
         # Don't process comments or empty lines
         stripped = line.strip()
         if stripped.startswith("#") or stripped == "":
@@ -530,7 +528,7 @@ if __name__ == "__main__":
 
     if INPUT_FILE.endswith(".udb"):
         convert_udb_to_yaml(INPUT_FILE)
-    elif INPUT_FILE.endswith(".yml") or INPUT_FILE.endswith(".yaml"):
+    elif INPUT_FILE.endswith((".yml", ".yaml")):
         convert_yaml_to_udb(INPUT_FILE)
     else:
         raise ValueError("INPUT must be either a .udb file or a .yaml file.")
