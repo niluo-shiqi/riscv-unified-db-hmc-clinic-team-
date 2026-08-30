@@ -1,17 +1,15 @@
 # Programmable RISC-V IDE (PRIDE) Developer Guide
 
 *Authors: Brayden Mendoza (brayjmendoza), Nina Luo (niluo-shiqi)*
-*Last Edited: June 14th, 2026*
+*Last Edited: August 29th, 2026*
 
 ## Overview
 
-PRIDE is implemented using [Xtext](https://eclipse.dev/Xtext/documentation/), an Eclipse framework used for developing domain-specific languages (DSL). Thus, contributing to this project requires using the Eclipse IDE with Xtext installed.
+PRIDE is implemented using [Xtext](https://eclipse.dev/Xtext/documentation/), an Eclipse framework used for developing domain-specific languages (DSL). Thus, contributing to this project requires using the Eclipse IDE with Xtext installed. Moreover, this project is more accurately a DSL project rather than an IDE project. We have given this DSL the name "UDB", which uses the `.udb` file extension. So, to get access to any features of PRIDE, you must use `.udb` files (and not `.yaml`).
 
 With Xtext, we just have to specify a grammar and all of the IDE features will be generated for us (in particular, syntax highlighting, syntax errors, and cross-referencing). However, we can further customize what Xtext generates with some additional code. It should be noted that Xtext by default only generates IDE features for Eclipse. Luckily, Xtext is compliant with the Language Server Protocol (LSP), meaning that we can very easily generate a language server, which can then be used to support other IDEs (we currently support VSCode with our [UDB Schema Editor extension](https://marketplace.visualstudio.com/items?itemName=HarveyMuddClinicTeam.udb-schema-editor)).
 
 So, at a high level, developing PRIDE involves modifying the files in the Xtext project (primarily the grammar file and validator) to create new features. Then, you would then generate a new language server to update support in other IDEs. The rest of this markdown file will go into much greater detail of everything involved in this project.
-
-*TODO: probably add something what files to look at when adding/modifying support for a schema*
 
 ## Table of Contents
 
@@ -32,6 +30,8 @@ So, at a high level, developing PRIDE involves modifying the files in the Xtext 
   - [Continuous Integration](#continuous-integration)
 - [The Language Server](#the-language-server)
 - [Converting Between YAML and UDB](#converting-between-udb-and-yaml)
+  - [Using the Conversion Script](#using-the-conversion-script)
+  - [Modifying the Conversion Script](#modifying-the-conversion-script)
 - [Other Notes & Quirks](#other-notes--quirks)
 
 ---
@@ -162,13 +162,17 @@ Now, at build time, Maven will perform the actions detailed above. In fact, the 
 
 ## JUnit Testing
 
-One way we've tested our Xtext DSL is with JUnit tests. Currently, all of the testing we've done exists in the file [UdbParsingTest.xtend](dev/org.xtext.udb.parent/org.xtext.udb.tests/src/org/xtext/example/udb/tests/UdbParsingTest.xtend) in the `org.xtext.udb.tests` package. To run these tests, simply right click the file in Eclipse's Project Explorer, and press Run As -> JUnit Test. You may notice that currently, there are very few tests. Thus, the project doesn't have a very good testing coverage. This is because (for better or for worse) we've typically done our testing by running the IDE in an Eclipse Runtime instance and fixing any bugs we find.
+One way we've tested our Xtext DSL is with JUnit tests. In short, all tests for Xtext projects exist in either the `org.xtext.udb.tests` or `org.xtext.udb.tests.ui` packages. In particular, `org.xtext.udb.tests` should contain all grammar-related tests. Thus, these tests can test components like the parser, lexer, validator, etc. These tests run as normal JUnit tests. On the other hand, the `org.xtext.udb.tests.ui` should only contain UI-related tests. These can be used to test things like syntax highlighting, auto-completion, quick fixes, etc. Unlike in `org.xtext.udb.tests`, these tests should be run as JUnit Plug-in tests.
+
+Currently, we've only done testing in the `org.xtext.udb.tests` package. They all exist in the file [UdbParsingTest.xtend](dev/org.xtext.udb.parent/org.xtext.udb.tests/src/org/xtext/example/udb/tests/UdbParsingTest.xtend). To run these tests, simply right click the file in Eclipse's Project Explorer, and press Run As -> JUnit Test. You may notice that currently, there are very few tests. Thus, the project doesn't have a very good testing coverage. This is because (for better or for worse) we've typically done our testing by running the IDE in an Eclipse Runtime instance and fixing any bugs we find.
 
 It should be noted that these JUnit tests are written in Xtend ([documentation here](https://eclipse.dev/Xtext/xtend/documentation/index.html)). This programming language is a dialect of Java which is more flexible and statically-typed. You can think of it as a more modern version of Java.
 
 ### Continuous Integration
 
-All of our JUnit tests have been incorporated into the standard CI stuff -- Nina finish this pls (mention regress.yml and anything else you had to add/change)
+All of our JUnit tests have been incorporated into the standard CI stuff --
+
+**TODO:** finish this seciton, (mention regress.yml and anything else we had to add/change)
 
 ---
 
@@ -210,34 +214,73 @@ After running the script, you should see the following in `/tools/eclipse/udb-vs
 
 ## Converting Between UDB and YAML
 
-UDB is not currently one-to-one with YAML. These differences are mainly due to fields in UDB being defined as strings (to avoid ambiguity problems that would occur if they were defined as unquoted IDs). To resolve these differences and remove friction, a Python conversion script has been created.
+YAML allows string values that are unquoted. However, Xtext requires its strings to be quoted. We've tried to customize Xtext's lexer to allow for unquoted strings, but we ultimately found this to be way too difficult and that it'd cause some problems that'd be unreasonable to attend to. Thus, **UDB is not currently one-to-one with YAML.** That is, you cannot simply change the file extension of a RISC-V specification from `.yaml` to `.udb` to get access to all of the features of PRIDE. To go from YAML to UDB, you must quote any unquoted strings. This process is automated with the Python conversion script [convertudb.py](../python/convertudb.py). This script also go from UDB to YAML by unquoting any strings that are typically unquoted.
 
 ### Conversion Script Location
-**File:** `tools/python/convertudb.py`
+
+The conversion script can be found [here](../python/convertudb.py) (`tools/python/convertudb.py`).
 
 ### Using the Conversion Script
 
-1. Download `convertudb.py` and place it in the same directory as the `.yaml` or `.udb` file you wish to convert.
+*Note: Using this script requires a Python installation*
+
+1. Download [convertudb.py](../python/convertudb.py) and place it in the same directory as the `.yaml` or `.udb` file you wish to convert.
 
 2. Open your terminal and navigate to that directory:
+
    ```bash
    cd /path/to/file/directory
    ```
 
-3. Run the conversion script:
+3. Run the conversion script. To go from YAML to UDB, use the command
+
    ```bash
    python convertudb.py filename.yaml
    ```
 
-### Output
-A new file will be created in the same directory with the same filename but opposite file extension.
+    To go from UDB to YAML, instead run
 
-**Example:**
-- Input: `vsstatus.yaml`
-- Output: `vsstatus.udb`
+    ```bash
+    python convertudb.py filename.udb
+    ```
+
+    Essentially, the `convertudb.py` script takes in either a `.yaml` or `.udb` file as its only argument. If it receives a `.yaml` or `.yml` file, it will convert to `.udb`. If it receives a `.udb` file, it will convert it to `.yaml`.
+
+After running the script, a new file will be created in the same directory with the same filename but opposite file extension. As an example, if the input is `vsstatus.yaml` (or `vsstatus.yml`), the output will be `vsstatus.udb`.
+
+This conversion script allows for two possible workflows for users. See our [user guide](udb-vscode/README.md) for more details.
+
+### Modifying the Conversion Script
+
+As UDB gets updated, the conversion script must also be updated to ensure expected behavior for end users.
+
+Currently, the conversion scripts by keeping track of which fields contain string values in a number of different lists:
+
+- `QUOTED_FIELDS` contains fields whose value is *always* a quoted string
+  - e.g. `version: "1.0.0"`
+- `STRING_FIELDS` contains fields whose value typically contains an unquoted string
+  - e.g. `name: vcsr`
+- `HAS_STRINGS` contains fields that aren't entirely strings, but may have strings inside of them
+  - e.g. `release: { $ref: "releaseAddress" }`
+- `YAML_ARRAY_STRING_FIELDS` contains fields whose values are YAML arrays of unquoted strings
+- `YAML_ARRAY_HAS_STRINGS` contains fields that are YAML arrays with elements that may have strings in them.
+  - e.g. `hints` may have an element that looks like
+`- { $ref: "inst/Zihintntl/c.ntl.p1.yaml#" }`
+- `YAML_ARRAY_ARRAY_STRINGS` are fields that are YAML arrays whose elements are themselves arrays of strings.
+  - e.g. elements would like `- ["A", "B", "C"]`
+- `YAML_LIST_STRING_FIELDS` are fields that are YAML arrays of strings, but without `-` prefixing every element
+- `YAML_ARRAY_OR_STRING_FIELDS` are fields that can be either a YAML array of unquoted strings or just an unquoted string
+- `ARRAY_STRING_FIELDS` are fields that are normal arrays of strings
+  - e.g., `["F", "D", "V"]`
+- `ARRAY_OR_STRING_FIELDS` are fields that can be either a string or an array
+  - e.g., `affectedBy` could be `"F"` or `["F", "D", "V"]`
+- `MAYBE_STRING` are for fields that *could* be an unquoted string. This mostly just happens for conditions.
+
+Modifying the script mostly just involves adding a the relevant fields to the right list.
 
 ---
 
 ## Other Notes & Quirks
-weird stuff like UdbGenerator2,
-mention stuff we haven't used like `org.xtext.udb.ide`, `org.xtext.udb.web`, `org.xtext.udb.ui`, and `org.xtext.udb.ui.tests`
+
+This is the extent of the current state of PRIDE. You'll note that the Xtext project also has some additional packages not mentioned in this documentation. Namely,
+`org.xtext.udb.ide`, `org.xtext.udb.web`, and `org.xtext.udb.ui`. These are packages we did not mess with, but could be used for things like a web editor or further customizing the IDE.
