@@ -114,6 +114,8 @@ gen_subcmd_usage() {
   echo "  schema-docs:   Generate schema documentation from JSON Schema files"
   echo "  cfg-headers:   Generate golden cfg header files for regression testing"
   echo "  xqci           Generate Xqci spec used for Golden regressions"
+  echo "  instruction-appendix: Generate golden instruction appendix adoc for regression testing"
+  echo "  udb-gen:       Generate test case fixtures for udb-gen"
   echo ""
 }
 
@@ -267,7 +269,7 @@ do_gen_regress() {
     sha_before=$(sha256sum "$UDB_ROOT"/.github/workflows/regress.yml)
   fi
   rm -f .github/workflows/regress.yml
-  "$UDB_ROOT/bin/bundle" exec ruby tools/test/gen_regress.rb
+  "$UDB_ROOT/bin/python" tools/test/gen_regress.py
   chmod -wx .github/workflows/regress.yml
   if [ $fail_on_change -eq 1 ]; then
     local sha_after
@@ -355,6 +357,13 @@ do_update_gem_versions() {
 }
 
 #
+# Generate test cases for udb_gen
+#
+do_gen_udb_gen_fixtures() {
+  "$UDB_ROOT/do" chore:udb_gen:update_fixtures
+}
+
+#
 # Generate all development artifacts
 #
 do_gen_all() {
@@ -364,8 +373,10 @@ do_gen_all() {
   do_ruby_type_def all
   do_gen_profile_cfgs
   do_gen_xqci_golden
+  do_gen_instruction_appendix_golden
   do_gen_schema_docs
   do_gen_cfg_headers_golden
+  do_gen_udb_gen_fixtures
 }
 
 #
@@ -423,6 +434,14 @@ do_gen_xqci_golden() {
   # Remove the commit info line from the golden file
   sed -i '/^This document was created using the http:\/\/github\.org\/riscv\/riscv-unified-db\[RISC-V Unified Database\] at commit/d' \
     "tests/data/golden/Xqci@${xqci_version}.adoc"
+}
+
+#
+# Generate golden instruction appendix adoc file
+#
+do_gen_instruction_appendix_golden() {
+  echo "Generating instruction appendix golden adoc"
+  "$UDB_ROOT/do" chore:update_golden_appendix
 }
 
 #
@@ -665,6 +684,14 @@ case "$subcommand" in
         ;;
       xqci )
         do_gen_xqci_golden
+        exit 0
+        ;;
+      instruction-appendix )
+        do_gen_instruction_appendix_golden
+        exit 0
+        ;;
+      udb-gen )
+        do_gen_udb_gen_fixtures
         exit 0
         ;;
       cfg-headers )

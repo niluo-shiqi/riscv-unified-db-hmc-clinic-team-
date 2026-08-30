@@ -12,6 +12,7 @@ implemented_extensions:
   - { name: Smdbltrp, version: "= 1.0" }
   - { name: I, version: "= 2.1" }
   - { name: M, version: "= 2.0" }
+  - { name: Zmmul, version: "= 1.0" }
   - { name: B, version: "= 1.0" }
   - { name: Zbs, version: "= 1.0" }
   - { name: Zbb, version: "= 1.0" }
@@ -176,12 +177,16 @@ params:
   MTVAL_WIDTH: 32
   PMP_GRANULARITY: 12
   NUM_PMP_ENTRIES: 16
+  NUM_USABLE_PMP_ENTRIES: 16
+  PMP_TOR_SUPPORTED: true
+  PMP_NA4_SUPPORTED: false
+  PMP_NAPOT_SUPPORTED: true
   PMA_GRANULARITY: 12
   M_MODE_ENDIANNESS: little
   MISA_CSR_IMPLEMENTED: true
   MCOUNTINHIBIT_IMPLEMENTED: true
   MTVEC_ACCESS: rw
   MTVEC_ILLEGAL_WRITE_BEHAVIOR: retain
-  MTVEC_BASE_ALIGNMENT_DIRECT: 4
-  MTVEC_BASE_ALIGNMENT_VECTORED: 4
+  MTVEC_BASE_ALIGNMENT_DIRECT: 0x4
+  MTVEC_BASE_ALIGNMENT_VECTORED: 0x4
   TIME_CSR_IMPLEMENTED: true

@@ -13,7 +13,7 @@ require "simplecov-cobertura"
 
 SimpleCov.start do
   enable_coverage :branch
-  add_filter "/test/"
+  skip "/test/"
   root IDLC_ROOT.to_s
   coverage_dir (IDLC_ROOT / "coverage").to_s
   formatter SimpleCov::Formatter::MultiFormatter.new([
@@ -40,6 +40,7 @@ require_relative "test_std"
 require_relative "test_strictness_and_unknowns"
 require_relative "test_type_checking_comprehensive"
 require_relative "test_type_checking_data_driven"
+require_relative "test_type_to_idl"
 require_relative "test_values"
 require_relative "test_variables"
 require_relative "test_control_flow"

@@ -7,7 +7,10 @@ import re
 from pathlib import Path
 
 import pytest
-import yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
+
+YAML_SAFE = YAML(typ="safe")
 
 yaml_instructions = {}
 REPO_DIRECTORY = None
@@ -15,12 +18,9 @@ REPO_DIRECTORY = None
 
 def safe_get(data, key, default=""):
     """Safely get a value from a dictionary, return default if not found or error."""
-    try:
-        if isinstance(data, dict):
-            return data.get(key, default)
-        return default
-    except Exception:
-        return default
+    if isinstance(data, dict):
+        return data.get(key, default)
+    return default
 
 
 def get_json_path():
@@ -57,8 +57,7 @@ def load_inherited_variable(var_path, repo_dir):
     """Load variable definition from an inherited YAML file."""
     try:
         path, anchor = var_path.split("#")
-        if anchor.startswith("/"):
-            anchor = anchor[1:]
+        anchor = anchor.removeprefix("/")
 
         full_path = os.path.join(repo_dir, path)
 
@@ -67,7 +66,7 @@ def load_inherited_variable(var_path, repo_dir):
             return None
 
         with open(full_path) as f:
-            data = yaml.safe_load(f)
+            data = YAML_SAFE.load(f)
 
         for key in anchor.split("/"):
             if key in data:
@@ -77,7 +76,7 @@ def load_inherited_variable(var_path, repo_dir):
                 return None
 
         return data
-    except Exception as e:
+    except (OSError, ValueError, TypeError, YAMLError) as e:
         print(f"Error loading inherited variable {var_path}: {e!s}")
         return None
 
@@ -136,7 +135,7 @@ def load_yaml_encoding(instr_name):
         return None, None, None
 
     with open(yaml_file_path) as yf:
-        ydata = yaml.safe_load(yf)
+        ydata = YAML_SAFE.load(yf)
 
     encoding = safe_get(ydata, "encoding", {})
     yaml_match = safe_get(encoding, "match", None)
