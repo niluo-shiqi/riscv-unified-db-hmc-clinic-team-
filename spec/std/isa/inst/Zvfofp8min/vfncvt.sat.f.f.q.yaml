@@ -1,22 +1,21 @@
 # Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
-
 # yaml-language-server: $schema=../../../../schemas/inst_schema.json
-
 $schema: "inst_schema.json#"
 kind: instruction
-name: vfncvtbf16.f.f.w
-long_name: Vector narrowing single-precision to BFloat16 conversion
+name: vfncvt.sat.f.f.q
+long_name: Vector floating-point FP32 saturating conversion to OFP8
 description: |
-  Converts each single-precision floating-point element in vector register vs2 to BFloat16 format, storing results in vector register vd according to mask vm. This is a narrowing conversion that compresses 32-bit single-precision values to 16-bit BFloat16 values.
+  Converts FP32 floating-point elements in vector register vs2 to OFP8
+  elements and stores the results in vector register vd according to mask vm.
+  Infinite results are converted to the maximum-magnitude finite value of the
+  same sign.
 definedBy:
   extension:
-    anyOf:
-      - name: Zvfbfmin
-      - name: Zvfofp8min
+    name: Zvfofp8min
 assembly: vd, vs2, vm
 encoding:
-  match: 010010------11101001-----1010111
+  match: 010010------11011001-----1010111
   variables:
     - name: vm
       location: 25-25

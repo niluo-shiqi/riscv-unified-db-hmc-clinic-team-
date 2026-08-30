@@ -43958,6 +43958,60 @@ Included in::
 
 
 
+[#udb:doc:inst:vfncvt_f_f_q]
+== vfncvt.f.f.q
+
+Synopsis::
+Vector floating-point FP32 conversion to OFP8
+
+Base::
+
+[cols="1,1"]
+|===
+| RV32 | RV64
+
+| &#x2713;
+| &#x2713;
+|===
+
+Assembly::
+vfncvt.f.f.q vd, vs2, vm
+
+Encoding::
+[wavedrom, ,svg,subs='attributes',width="100%"]
+....
+{"reg":[{"bits":7,"name": 0x57,"type":2},{"bits":5,"name": "vd","type":4},{"bits":8,"name": 0xc9,"type":2},{"bits":5,"name": "vs2","type":4},{"bits":1,"name": "vm","type":4},{"bits":6,"name": 0x12,"type":2}]}
+....
+
+Description::
+Converts FP32 floating-point elements in vector register vs2 to OFP8
+elements and stores the results in vector register vd according to mask vm.
+Results are rounded using the dynamic floating-point rounding mode.
+
+
+Decode Variables::
+[width="100%", cols="1,2", options="header"]
+|===
+|Variable Name |Location
+|vm |$encoding[25]
+|vs2 |$encoding[24:20]
+|vd |$encoding[11:7]
+|===
+
+Included in::
+
+
+[width="100%",cols="1,2",options="header"]
+|===
+| Extension | Version
+
+| *Zvfofp8min*
+| any
+|===
+
+
+
+
 [#udb:doc:inst:vfncvt_f_f_w]
 == vfncvt.f.f.w
 
@@ -44270,6 +44324,61 @@ Included in::
 
 
 
+[#udb:doc:inst:vfncvt_sat_f_f_q]
+== vfncvt.sat.f.f.q
+
+Synopsis::
+Vector floating-point FP32 saturating conversion to OFP8
+
+Base::
+
+[cols="1,1"]
+|===
+| RV32 | RV64
+
+| &#x2713;
+| &#x2713;
+|===
+
+Assembly::
+vfncvt.sat.f.f.q vd, vs2, vm
+
+Encoding::
+[wavedrom, ,svg,subs='attributes',width="100%"]
+....
+{"reg":[{"bits":7,"name": 0x57,"type":2},{"bits":5,"name": "vd","type":4},{"bits":8,"name": 0xd9,"type":2},{"bits":5,"name": "vs2","type":4},{"bits":1,"name": "vm","type":4},{"bits":6,"name": 0x12,"type":2}]}
+....
+
+Description::
+Converts FP32 floating-point elements in vector register vs2 to OFP8
+elements and stores the results in vector register vd according to mask vm.
+Infinite results are converted to the maximum-magnitude finite value of the
+same sign.
+
+
+Decode Variables::
+[width="100%", cols="1,2", options="header"]
+|===
+|Variable Name |Location
+|vm |$encoding[25]
+|vs2 |$encoding[24:20]
+|vd |$encoding[11:7]
+|===
+
+Included in::
+
+
+[width="100%",cols="1,2",options="header"]
+|===
+| Extension | Version
+
+| *Zvfofp8min*
+| any
+|===
+
+
+
+
 [#udb:doc:inst:vfncvt_x_f_w]
 == vfncvt.x.f.w
 
@@ -44415,11 +44524,61 @@ Decode Variables::
 Included in::
 
 
+This instruction requires the following:
+
+xref:exts:Zvfbfmin.adoc#udb:doc:ext:Zvfbfmin[Zvfbfmin]
+xref:exts:Zvfofp8min.adoc#udb:doc:ext:Zvfofp8min[Zvfofp8min]
+
+
+[#udb:doc:inst:vfncvtbf16_sat_f_f_w]
+== vfncvtbf16.sat.f.f.w
+
+Synopsis::
+Vector saturating narrowing BFloat16 to OFP8 conversion
+
+Base::
+
+[cols="1,1"]
+|===
+| RV32 | RV64
+
+| &#x2713;
+| &#x2713;
+|===
+
+Assembly::
+vfncvtbf16.sat.f.f.w vd, vs2, vm
+
+Encoding::
+[wavedrom, ,svg,subs='attributes',width="100%"]
+....
+{"reg":[{"bits":7,"name": 0x57,"type":2},{"bits":5,"name": "vd","type":4},{"bits":8,"name": 0xf9,"type":2},{"bits":5,"name": "vs2","type":4},{"bits":1,"name": "vm","type":4},{"bits":6,"name": 0x12,"type":2}]}
+....
+
+Description::
+Converts BFloat16 floating-point elements in vector register vs2 to OFP8
+elements and stores the results in vector register vd according to mask vm.
+Infinite results are converted to the maximum-magnitude finite value of the
+same sign.
+
+
+Decode Variables::
+[width="100%", cols="1,2", options="header"]
+|===
+|Variable Name |Location
+|vm |$encoding[25]
+|vs2 |$encoding[24:20]
+|vd |$encoding[11:7]
+|===
+
+Included in::
+
+
 [width="100%",cols="1,2",options="header"]
 |===
 | Extension | Version
 
-| *Zvfbfmin*
+| *Zvfofp8min*
 | any
 |===
 
@@ -46471,15 +46630,10 @@ Decode Variables::
 Included in::
 
 
-[width="100%",cols="1,2",options="header"]
-|===
-| Extension | Version
+This instruction requires the following:
 
-| *Zvfbfmin*
-| any
-|===
-
-
+xref:exts:Zvfbfmin.adoc#udb:doc:ext:Zvfbfmin[Zvfbfmin]
+xref:exts:Zvfofp8min.adoc#udb:doc:ext:Zvfofp8min[Zvfofp8min]
 
 
 [#udb:doc:inst:vfwmacc_vf]
