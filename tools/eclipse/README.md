@@ -178,9 +178,9 @@ All of our JUnit tests have been incorporated into the standard CI stuff --
 
 ## The Language Server
 
-### Regenerating the Language Server
+Instead of writing a custom plugin for every single editor (like VS Code, Eclipse, or IntelliJ), Xtext allows you to build your language logic once by providing the easy generation of a Xtext Language Server for your written DSL. The generated language server then communicates with the alternative code editors using Microsoft’s Language Server Protocol (LSP). In other words, to use a DSL created with Eclipse Xtext in another IDE (such as VSCode), we generate the language server encapsulating the core features of the DSL and package it within the other IDE's extension wrapper. Let's begin by generating the language server itself, note that every time the DSL gets updated or modified, the language server would need to be regenerated in the same way, which indeed also means that the extension would need to be repackaged with the new language server as well:
 
-*Note: should probably add info on how to modify stuff like syntax highlighting and other ls/vs-code extension related things*
+### Generating/Regenerating the Language Server
 
 ### Prerequisites
 Pull the repository into your local editor.
@@ -209,6 +209,37 @@ After running the script, you should see the following in `/tools/eclipse/udb-vs
 - `udb-ls-all.jar`
 - `idlc` folder
 - `vendor` folder
+
+### Simulating the Extension(Packaged Language Server) in VSCode
+
+The VSCode Extension Wrapper consists of multiple files all within the folder tools/eclipse/udb-vscode. 
+
+### Prerequisites
+Pull the repository into your local VSCode Editor.
+
+Open the folder udb-vscode/ in VSCode (located under the root directory but make sure to not open the entire root directory).
+
+Open a new terminal and run the following commands: 
+- `cd Udb-vscode`
+- `npm install`
+- `npm run compile`
+
+Open the Run & Debug panel on the left hand side of VSCode
+
+Choose Run Extension and start (This will open the Extension Development Host, which appears as a new VSCode window)
+
+On your very first run, make sure you point to Java 21, in the top menu of VS Code, select:
+Code>Settings>Settings
+Search “UDB: Java Path”
+For me, I filled in the Java Path as: (I’m on mac, this may be different for you)
+- `/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/java`
+
+If you don’t have a mac/just check path to make sure, this should give you your path(make sure you use the 21 version)
+/usr/libexec/java_home -V
+
+Now, in the Extension Development Host window, create a new udb file by going to File>New File>, then enter any file name ending in .udb (like “test.udb”).
+
+Try typing in this file. If you see the csr class being suggested and red squiggles under invalid grammar, your VSCode extension is working.
 
 ---
 
