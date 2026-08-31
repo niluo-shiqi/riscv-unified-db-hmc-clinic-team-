@@ -212,12 +212,34 @@ After running the script, you should see the following in `/tools/eclipse/udb-vs
 
 ### Simulating the Extension(Packaged Language Server) in VSCode
 
-The VSCode Extension Wrapper consists of multiple files all within the folder tools/eclipse/udb-vscode. 
+The VSCode Extension Wrapper consists of multiple files all within the folder tools/eclipse/udb-vscode:
+
+vscode/ — editor workspace settings and debug configurations for development
+vscodeignore — patterns to exclude from the packaged VSIX
+CHANGELOG.md — release notes and version history
+LICENSE.txt — project license text (recommended for publishing)
+README.md — user-facing documentation and usage instructions (recommended for Marketplace)
+aube-workspace.yaml — Aube build/workspace configuration (development/build helper)
+language-configuration.json — editor language settings (comments, brackets, auto-closing) (required)
+syntaxes/udb.tmLanguage.json — TextMate grammar for UDB syntax highlighting (required)
+package.json — VS Code extension manifest, scripts, and dependency metadata (required)
+package-lock.json — npm lockfile for reproducible installs
+tsconfig.json — TypeScript compiler configuration for building the extension (development-only)
+src/ — source directory containing extension code and tests (development-only)
+- src/extension.ts — TypeScript implementation of the extension and language-client setup
+- src/extension.js — compiled JavaScript runtime present in repo (the published package must include the runtime JS at the path declared in package.json)
+- src/extension.d.ts & .map files — type declarations and source maps for debugging
+- src/test/ — test harness and tests (development only)
+test-fixtures/ — example files used by tests or as examples
+
+The language server jar file itself is NOT ever pushed to the GitHub repository since its size is quite large and also because it can be generated quite quickly and easily using the provided script detailed in the section above. Once the script is ran, the generated language server and its idlc and vendor folder will be located within a new folder named server under udb-vscode. Once its present, the extension is complete. To see it in action, follow the steps below. 
 
 ### Prerequisites
-Pull the repository into your local VSCode Editor.
+Pull the repository with the complete packaged extension into your local VSCode Editor.
 
 Open the folder udb-vscode/ in VSCode (located under the root directory but make sure to not open the entire root directory).
+
+Note that at this point, udb-vscode should contain the server folder with the .jar file, idlc, and vendorfolders.
 
 Open a new terminal and run the following commands: 
 - `cd Udb-vscode`
@@ -240,6 +262,8 @@ If you don’t have a mac/just check path to make sure, this should give you you
 Now, in the Extension Development Host window, create a new udb file by going to File>New File>, then enter any file name ending in .udb (like “test.udb”).
 
 Try typing in this file. If you see the csr class being suggested and red squiggles under invalid grammar, your VSCode extension is working.
+
+If you do not see the grammar functionality showing up, check the messages within the error logs to narrow down the exact cause.
 
 ---
 
