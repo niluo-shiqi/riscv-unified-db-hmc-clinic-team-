@@ -168,11 +168,64 @@ Currently, we've only done testing in the `org.xtext.udb.tests` package. They al
 
 It should be noted that these JUnit tests are written in Xtend ([documentation here](https://eclipse.dev/Xtext/xtend/documentation/index.html)). This programming language is a dialect of Java which is more flexible and statically-typed. You can think of it as a more modern version of Java.
 
-### Continuous Integration
+## Continuous Integration
 
-All of our JUnit tests have been incorporated into the standard CI stuff --
+All of our JUnit tests have been incorporated into the standard CI workflow. This additionally includes headless VSCode Extension tests ensuring a valid language server and thus VSCode Extension can be generated with the current state of the grammar in the repository.
 
-**TODO:** finish this seciton, (mention regress.yml and anything else we had to add/change)
+### Test Stack
+
+- **Framework**: Mocha (see `package.json` line 176)
+- **VS Code Testing**: @vscode/test-electron (headless testing)
+- **Language**: TypeScript (compiled to JavaScript for execution)
+
+### CI Tests Structure
+
+Under .github/workflow/
+- regress.yml: Github Actions Pipeline, runs Xtext JUnit tests and headless VSCode tests 
+Under /udb-vscode/
+- Package.json: packages, terminal command to run tests: 
+- Tsconfig.json: typescript configurations
+Under src/test/
+- runTests.ts: script which runs tests for test-fixtures
+Under /suite
+- index.ts: consolidates and simplifies exports and imports 
+- basic.test.ts: Main Testing File (Mocha tests are written here)
+Under test-fixtures/
+- Valid test cases of actual example files
+  - A.udb,
+  - vsstatus.udb,
+  - andn.udb
+- Error test cases of actual example files
+  - AErr.udb,
+  - andnErr.udb,
+  - vsstatusErr.udb
+
+### Running Tests Locally
+To run the VS Code tests on your machine:
+```bash
+npm install
+npm test
+```
+
+### Triggered upon
+The `regress.yml` workflow is triggered on:
+- Pull requests to `main`
+- Pushes to `main`
+- Manual workflow dispatch
+
+### Troubleshooting Tests
+
+- **Tests fail locally but pass in CI**: Ensure you're using the correct Node version (24.18.0 as specified in `package.json`)
+- **VSCode display errors**: The CI pipeline runs tests headless using `xvfb-run` on Linux
+- **Compilation fails**: Run `npm run compile` or `aube run compile` before testing
+
+### Adding New Test Cases
+
+1. Create a new `.udb` file in `test-fixtures/` 
+2. Add corresponding test logic in `src/test/suite/basic.test.ts`
+3. Tests will automatically pick up the new fixture file
+4. For error cases, follow the naming pattern: `{name}Err.udb`
+
 
 ---
 
@@ -210,29 +263,39 @@ After running the script, you should see the following in `/tools/eclipse/udb-vs
 - `idlc` folder
 - `vendor` folder
 
-### Simulating the Extension(Packaged Language Server) in VSCode
+### Simulating the Extension (Packaged Language Server) in VSCode
 
-The VSCode Extension Wrapper consists of multiple files all within the folder tools/eclipse/udb-vscode:
+The VSCode Extension Wrapper consists of multiple files all within the folder `tools/eclipse/udb-vscode`:
 
-vscode/ — editor workspace settings and debug configurations for development
-vscodeignore — patterns to exclude from the packaged VSIX
-CHANGELOG.md — release notes and version history
-LICENSE.txt — project license text (recommended for publishing)
-README.md — user-facing documentation and usage instructions (recommended for Marketplace)
-aube-workspace.yaml — Aube build/workspace configuration (development/build helper)
-language-configuration.json — editor language settings (comments, brackets, auto-closing) (required)
-syntaxes/udb.tmLanguage.json — TextMate grammar for UDB syntax highlighting (required)
-package.json — VS Code extension manifest, scripts, and dependency metadata (required)
-package-lock.json — npm lockfile for reproducible installs
-tsconfig.json — TypeScript compiler configuration for building the extension (development-only)
-src/ — source directory containing extension code and tests (development-only)
-- src/extension.ts — TypeScript implementation of the extension and language-client setup
-- src/extension.js — compiled JavaScript runtime present in repo (the published package must include the runtime JS at the path declared in package.json)
-- src/extension.d.ts & .map files — type declarations and source maps for debugging
-- src/test/ — test harness and tests (development only)
-test-fixtures/ — example files used by tests or as examples
+#### Required Files (for publishing/runtime)
+- `package.json` — VS Code extension manifest, scripts, and dependency metadata
+- `language-configuration.json` — editor language settings (comments, brackets, auto-closing)
+- `syntaxes/udb.tmLanguage.json` — TextMate grammar for UDB syntax highlighting
 
-The language server jar file itself is NOT ever pushed to the GitHub repository since its size is quite large and also because it can be generated quite quickly and easily using the provided script detailed in the section above. Once the script is ran, the generated language server and its idlc and vendor folder will be located within a new folder named server under udb-vscode. Once its present, the extension is complete. To see it in action, follow the steps below. 
+#### Recommended Files (for distribution)
+- `README.md` — user-facing documentation and usage instructions
+- `LICENSE.txt` — project license text
+
+#### Configuration & Build Files
+- `.vscode/` — editor workspace settings and debug configurations for development
+- `.vscodeignore` — patterns to exclude from the packaged VSIX
+- `aube-workspace.yaml` — Aube build/workspace configuration (development/build helper)
+- `package-lock.json` — npm lockfile for reproducible installs
+- `tsconfig.json` — TypeScript compiler configuration for building the extension
+
+#### Development Files (source code)
+- `src/extension.ts` — TypeScript implementation of the extension and language-client setup
+- `src/extension.js` — compiled JavaScript runtime (published package must include at path declared in `package.json`)
+- `src/extension.d.ts` & `.map` files — type declarations and source maps for debugging
+- `src/test/` — test harness and tests
+
+#### Documentation & Examples
+- `CHANGELOG.md` — release notes and version history
+- `test-fixtures/` — example files used by tests or as examples
+
+#### Important Note: Language Server
+
+The language server jar file is **NOT** pushed to the GitHub repository due to its large size. It can be generated quickly and easily using the provided build script (see section above). Once generated, the language server and its associated `idlc` and `vendor` folders will be located in a new `server/` directory under `udb-vscode/`. Once present, the extension is complete and ready to use.
 
 ### Prerequisites
 Pull the repository with the complete packaged extension into your local VSCode Editor.
