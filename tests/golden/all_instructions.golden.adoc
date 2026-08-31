@@ -42959,6 +42959,64 @@ Included in::
 
 
 
+[#udb:doc:inst:vfext_vf2]
+== vfext.vf2
+
+Synopsis::
+Vector OFP4 to OFP8 widening conversion
+
+Base::
+
+[cols="1,1"]
+|===
+| RV32 | RV64
+
+| &#x2713;
+| &#x2713;
+|===
+
+Assembly::
+vfext.vf2 vd, vs2, vm
+
+Encoding::
+[wavedrom, ,svg,subs='attributes',width="100%"]
+....
+{"reg":[{"bits":7,"name": 0x57,"type":2},{"bits":5,"name": "vd","type":4},{"bits":8,"name": 0xb2,"type":2},{"bits":5,"name": "vs2","type":4},{"bits":1,"name": "vm","type":4},{"bits":6,"name": 0x12,"type":2}]}
+....
+
+Description::
+Converts a vector of OFP4 E2M1 values in vector register vs2 (EEW=4,
+EMUL=LMUL/2) to a vector of OFP8 E4M3 values in vector register vd
+(EEW=8, EMUL=LMUL), according to mask vm. Defined only for SEW=8,
+altfmt=0, and LMUL >= 1/4. No rounding occurs, and no floating-point
+exception flags are set. This instruction does not access the fcsr
+and is not considered a floating-point instruction for the purposes
+of the floating-point context status (FS) setting.
+
+
+Decode Variables::
+[width="100%", cols="1,2", options="header"]
+|===
+|Variable Name |Location
+|vm |$encoding[25]
+|vs2 |$encoding[24:20]
+|vd |$encoding[11:7]
+|===
+
+Included in::
+
+
+[width="100%",cols="1,2",options="header"]
+|===
+| Extension | Version
+
+| *Zvfofp4min*
+| any
+|===
+
+
+
+
 [#udb:doc:inst:vfirst_m]
 == vfirst.m
 
