@@ -6,9 +6,9 @@
 [tools]
 ruby = "3.4.10"
 prek = "0.4.14"
-aube = "1.40.0"
-uv = "0.12.5"
-cmake = "4.4.2"
+aube = "2.1.0"
+uv = "0.12.6"
+cmake = "4.4.3"
 make = "4.4.1"
 shellcheck = "0.11.0"
 "github-cli" = "2.98.0"
