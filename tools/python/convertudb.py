@@ -517,18 +517,27 @@ def convert_yaml_to_udb(yaml_file):
         file.writelines(output_lines)
 
 
+def print_usage():
+    print("USAGE: python convertudb.py [INPUT]")
+    print("where INPUT is either a .udb file or a .yaml file to convert to the other format.\n")
+    sys.exit(1)
+
+
 if __name__ == "__main__":
     # Get CLI arguments
     if len(sys.argv) == 2:
+        if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+            print("Script for converting between .udb and .yaml files.\n")
+            print_usage()
+
         INPUT_FILE = sys.argv[1]  # .udb file or .yml file to convert
     else:
-        print("USAGE: python convertudb.py [INPUT]")
-        print("where INPUT is either a .udb file or a .yaml file to convert to the other format.")
-        sys.exit()
+        print_usage()
 
     if INPUT_FILE.endswith(".udb"):
         convert_udb_to_yaml(INPUT_FILE)
     elif INPUT_FILE.endswith((".yml", ".yaml")):
         convert_yaml_to_udb(INPUT_FILE)
     else:
-        raise ValueError("INPUT must be either a .udb file or a .yaml file.")
+        print("INPUT must be either a .udb file or a .yaml file.")
+        print_usage()

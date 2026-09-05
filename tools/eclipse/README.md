@@ -368,6 +368,19 @@ After running the script, a new file will be created in the same directory with 
 
 This conversion script allows for two possible workflows for users. See our [user guide](udb-vscode/README.md) for more details.
 
+Note that there's also a help option to print usage information:
+
+```bash
+python convertudb.py -h
+```
+
+or
+
+```bash
+
+python convertudb.py --help
+```
+
 ### Modifying the Conversion Script
 
 As UDB gets updated, the conversion script must also be updated to ensure expected behavior for end users.
