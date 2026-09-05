@@ -126,8 +126,6 @@ class UdbParsingTest {
 		var satalias = vxsat.getAlias().getAliasName().getName();
 		Assertions.assertEquals("vxrm.VALUE[1:0]", vxalias);
 		Assertions.assertEquals("vxsat.VALUE[0]", satalias);
-
-
 	}
 
 	@Test
