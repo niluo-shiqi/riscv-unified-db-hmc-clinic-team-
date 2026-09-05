@@ -176,11 +176,5 @@ class UdbParsingTest {
 		// requirements testing
 		var reqs = ext.getRequirements();
 		System.out.println(reqs.getRequirements());
-
-
-
 	}
-
-
-
 }
