@@ -15,6 +15,25 @@ set -euo pipefail
 #   VSCODE_DIR   path to udb-vscode
 # ─────────────────────────────────────────────
 
+usage() {
+    cat <<'EOF'
+regen-udb-ls.sh  -  rebuild the UDB language server and install it
+                    into the udb-vscode extension's server/ folder.
+
+Usage:
+  ./regen-udb-ls.sh        Rebuild and install the language server.
+  ./regen-udb-ls.sh -h     Show this help.
+
+Environment overrides:
+  PARENT_DIR   Path to org.xtext.udb.parent
+  VSCODE_DIR   Path to udb-vscode  (server/ is created inside it)
+EOF
+}
+
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+esac
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 PARENT_DIR="${PARENT_DIR:-$SCRIPT_DIR/tools/eclipse/dev/org.xtext.udb.parent}"
 VSCODE_SERVER_DIR="${VSCODE_DIR:-$SCRIPT_DIR/udb-vscode}/server"
@@ -55,9 +74,9 @@ info "Working directory: $PARENT_DIR"
 
 run_build() {
     info "Running: mvn clean verify -DskipTests"
-    mvn clean verify -DskipTests
+    mvn clean verify -DskipTests || return 1
     info "Running: mvn -DskipTests package"
-    mvn -DskipTests package
+    mvn -DskipTests package || return 1
 }
 
 if ! run_build; then
