@@ -181,14 +181,14 @@ All of our JUnit tests have been incorporated into the standard CI workflow. Thi
 ### CI Tests Structure
 
 Under .github/workflow/
-- regress.yml: Github Actions Pipeline, runs Xtext JUnit tests and headless VSCode tests 
+- regress.yml: Github Actions Pipeline, runs Xtext JUnit tests and headless VSCode tests
 Under /udb-vscode/
-- Package.json: packages, terminal command to run tests: 
+- Package.json: packages, terminal command to run tests:
 - Tsconfig.json: typescript configurations
 Under src/test/
 - runTests.ts: script which runs tests for test-fixtures
 Under /suite
-- index.ts: consolidates and simplifies exports and imports 
+- index.ts: consolidates and simplifies exports and imports
 - basic.test.ts: Main Testing File (Mocha tests are written here)
 Under test-fixtures/
 - Valid test cases of actual example files
@@ -221,7 +221,7 @@ The `regress.yml` workflow is triggered on:
 
 ### Adding New Test Cases
 
-1. Create a new `.udb` file in `test-fixtures/` 
+1. Create a new `.udb` file in `test-fixtures/`
 2. Add corresponding test logic in `src/test/suite/basic.test.ts`
 3. Tests will automatically pick up the new fixture file
 4. For error cases, follow the naming pattern: `{name}Err.udb`
@@ -304,7 +304,7 @@ Open the folder udb-vscode/ in VSCode (located under the root directory but make
 
 Note that at this point, udb-vscode should contain the server folder with the .jar file, idlc, and vendorfolders.
 
-Open a new terminal and run the following commands: 
+Open a new terminal and run the following commands:
 - `cd Udb-vscode`
 - `npm install`
 - `npm run compile`
