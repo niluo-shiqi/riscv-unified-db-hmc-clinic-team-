@@ -186,7 +186,7 @@
 			            <configuration>
 			                <target>
 			                    <!-- Copy and rename jar to udb-ls-all.jar -->
-			                    <copy file="${project.build.directory}/${project.build.finalName}-ls.jar" 
+			                    <copy file="${project.build.directory}/${project.build.finalName}-ls.jar"
 									tofile="${project.basedir}/../../../udb-vscode/server/udb-ls-all.jar"/>
 			                    <!-- Copy idlc from ruby-gems -->
 			                    <copy todir="${project.basedir}/../../../udb-vscode/server/idlc">
