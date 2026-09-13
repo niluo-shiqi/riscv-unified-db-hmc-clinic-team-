@@ -4,12 +4,50 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+if /i "%~1"=="-h"     goto :usage
+if /i "%~1"=="--help" goto :usage
+if /i "%~1"=="/?"     goto :usage
+goto :main
+
+:usage
+echo regen-udb-ls.bat  -  rebuild the UDB language server and install it
+echo                      into the udb-vscode extension's server/ folder.
+echo.
+echo Usage:
+echo   regen-udb-ls.bat        Rebuild and install the language server.
+echo   regen-udb-ls.bat -h     Show this help.
+echo.
+echo Environment overrides:
+echo   PARENT_DIR   Path to org.xtext.udb.parent
+echo   VSCODE_DIR   Path to udb-vscode  (server/ is created inside it)
+exit /b 0
+
+:main
+
 :: ─────────────────────────────────────────────
-:: regen-udb-ls.bat  (Windows)
-:: Rebuilds udb-ls-all.jar and copies it into the
-:: udb-vscode extension's server folder.
+:: regen-udb-ls.bat  (Windows; see regen-udb-ls.sh for macOS/Linux)
 ::
-:: Override paths via env vars if needed:
+:: WHAT THIS DOES
+::   Rebuilds the UDB language server and installs it into the VS Code
+::   extension so the extension has a server to launch.
+::
+::   The UDB VS Code extension provides editing support (syntax checking,
+::   validation) for UDB spec files. That support is powered by a Java
+::   language server built from the Xtext project under tools/eclipse.
+::   This script (1) builds that server into a fat jar via Maven, then
+::   (2) copies it, renamed to udb-ls-all.jar, into the extension's
+::   server/ folder, along with the idlc/ and vendor/ Ruby folders the
+::   server needs at runtime for IDL parsing.
+::
+::   Run this after changing the grammar or server code to refresh what
+::   the extension ships. It builds the server and installs it with
+::   prerequisite checks and a build-retry fallback for flaky builds.
+::
+:: USAGE
+::   regen-udb-ls.bat            rebuild and install
+::   regen-udb-ls.bat -h         show help
+::
+:: ENV OVERRIDES
 ::   PARENT_DIR   path to org.xtext.udb.parent
 ::   VSCODE_DIR   path to udb-vscode
 :: ─────────────────────────────────────────────
